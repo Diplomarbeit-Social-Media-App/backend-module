@@ -1,8 +1,14 @@
-FROM node:16
-WORKDIR /usr/src/app
-COPY package*.json ./
+FROM node:18.16.0-alpine as base
+COPY package.json ./
 RUN npm install
+COPY src ./src
+COPY tsconfig.json ./tsconfig.json
 RUN npm run build
-COPY . .
+FROM node:18.16.0-alpine
+
+COPY --from=base ./node_modules ./node_modules
+COPY --from=base ./package.json ./package.json
+COPY --from=base /dist /dist
+
 EXPOSE 3000
-CMD [ "node", "./dist/index.js" ]
+CMD ["npm", "run", "start"]
