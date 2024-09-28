@@ -9,6 +9,49 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Location {
+  lId Int @id @default(autoincrement())
+  city String 
+  street String
+  houseNumber String
+  postCode String
+  country String @default("Austria")
+}
+
+model User {
+  uId Int @id @default(autoincrement())
+}
+
+model Host {
+  hId Int @id @default(autoincrement())
+  isVerified Boolean @default(false)
+}
+
+model Account {
+  aId Int @id @default(autoincrement())
+  userName String @unique
+  firstName String
+  lastName String
+  password String
+  email String @unique
+  description String
+  picture String?
+}
+
+model Message {
+  mId Int @id @default(autoincrement())
+  text String
+  timeStamp DateTime @default(now())
+}
+
+model Event {
+  eId Int @id @default(autoincrement())
+  name String 
+  isPublic Boolean @default(false)
+  startsAt DateTime?
+  endsAt DateTime?
 }
