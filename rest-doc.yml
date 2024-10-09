@@ -1,0 +1,15 @@
+openapi: '3.0.3'
+info:
+  title: Bonfire API GUide
+  version: '0.1'
+servers:
+  - url: http://localhost:3000/
+  - url: https://backend-module.onrender.com
+paths:
+  /test:
+    get:
+      responses:
+        '200':
+          description: OK
+  /auth:
+    description: All routes for authentication
