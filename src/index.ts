@@ -9,7 +9,7 @@ const PORT = env.PORT;
 
 const app = express();
 
-app.listen(PORT, () =>
+export const server = app.listen(PORT, () =>
   console.log(`🚀 REST SERVICE SUCCESFULLY STARTED ON PORT ${PORT}`)
 );
 
