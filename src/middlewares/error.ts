@@ -1,0 +1,61 @@
+import { NextFunction, Request, Response } from "express";
+import { ApiError } from "../utils/api-error-util";
+import statusCode from "http-status";
+import config from "../config/config";
+import type errorResFormat from "../types/error-types";
+import { server } from "../index";
+import db from "../utils/db-util";
+import logger from "../logger/logger";
+
+export const convertError = (
+  err: Error,
+  _req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  let error = err;
+  if (!(err instanceof ApiError)) {
+    error = new ApiError(statusCode.INTERNAL_SERVER_ERROR, err.message, false);
+  }
+  next(error);
+};
+
+export const handleError = async (
+  err: ApiError,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) => {
+  if (!err.isOperational) {
+    return await handleSevereErrors();
+  }
+  if (res.headersSent) return;
+  let errorFormat: errorResFormat = {
+    error: true,
+    message: err.message,
+    name: err.name,
+    statusCode: err.statusCode,
+  };
+  if (config.NODE_ENV === "development") {
+    errorFormat.stack = err.stack;
+  }
+  return res
+    .status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR)
+    .json(errorFormat);
+};
+
+export const handleSevereErrors = async () => {
+  logger.error(`An uncaught problem was encountered! Shutting down...`);
+  try {
+    logger.error(`Closing db connection if open...`);
+    await db.$disconnect();
+  } catch (err) {
+    logger.error(`Uncaught problem encountered! Error disconnecting database`);
+  }
+  if (server)
+    await Promise.resolve(
+      new Promise((resolve, _reject) => server.close(resolve))
+    );
+  logger.error("Exiting process...");
+  process.exit(1);
+};
