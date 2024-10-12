@@ -1,3 +1,6 @@
+import { ZodObject } from "zod";
+import { loginSchema, signUpSchema } from "../schema/auth-schema";
+
 export type accountSchema = {
   userName: string;
   firstName: string;
@@ -14,7 +17,10 @@ export type hostSchema = accountSchema & {
   isVerified: boolean;
 };
 
-export type loginSchema = {
-  userName: string;
-  password: string;
+const loginSchemaBody = loginSchema.shape.body;
+export type loginSchema = Zod.infer<typeof loginSchemaBody>;
+
+const signUpSchemaBody = signUpSchema.shape.body;
+export type signUpSchema = Zod.infer<typeof signUpSchemaBody> & {
+  isUserSignUp: boolean;
 };
