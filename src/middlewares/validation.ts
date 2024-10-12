@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AnyZodObject } from "zod";
 import { ApiError } from "../utils/api-error-util";
 import logger from "../logger/logger";
+import httpStatus from "http-status";
 
 export const validate =
   (schema: AnyZodObject) =>
@@ -16,7 +17,7 @@ export const validate =
       logger.debug(`Validation failed: ${validationError}`);
       return next(
         new ApiError(
-          400,
+          httpStatus.BAD_REQUEST,
           `Malformed request body! Please check arguments! (hint: ${validationError})`,
           true
         )
