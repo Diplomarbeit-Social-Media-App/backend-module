@@ -14,28 +14,39 @@ datasource db {
 }
 
 model Location {
-  lId         Int    @id @default(autoincrement())
+  lId         Int       @id @default(autoincrement())
   city        String
   street      String
   houseNumber String
   postCode    String
-  country     String @default("Austria")
+  country     String    @default("Austria")
+  Activity    Activity?
+  Event       Event?
 }
 
 model User {
-  uId     Int     @id @default(autoincrement())
-  aId     Int     @unique
-  account Account @relation(fields: [aId], references: [aId])
-
-  friends    Friendship[] @relation("UserFriends")
-  friendedBy Friendship[] @relation("UserFriendedBy")
+  uId           Int            @id @default(autoincrement())
+  aId           Int            @unique
+  account       Account        @relation(fields: [aId], references: [aId])
+  friends       Friendship[]   @relation("UserFriends")
+  friendedBy    Friendship[]   @relation("UserFriendedBy")
+  owner         Group[]
+  joinedGroups  GroupMember[]
+  notifications Notification[]
+  Message       Message[]
+  followedHosts Host[]         @relation("HostFollowers")
+  events        Event[]        @relation("Participates")
 }
 
 model Host {
-  hId      Int     @id @default(autoincrement())
-  verified Boolean @default(false)
-  aId      Int     @unique
-  account  Account @relation(fields: [aId], references: [aId])
+  hId         Int        @id @default(autoincrement())
+  verified    Boolean    @default(false)
+  companyName String
+  aId         Int        @unique
+  account     Account    @relation(fields: [aId], references: [aId])
+  Activity    Activity[]
+  Event       Event[]
+  followedBy  User[]     @relation("HostFollowers")
 }
 
 model Account {
@@ -58,14 +69,49 @@ model Message {
   mId       Int      @id @default(autoincrement())
   text      String
   timeStamp DateTime @default(now())
+  group     Group    @relation(fields: [groupGId], references: [gId])
+  groupGId  Int
+  sentBy    Int
+  user      User     @relation(fields: [sentBy], references: [uId])
+}
+
+model Activity {
+  aId          Int        @id @default(autoincrement())
+  openingTimes String
+  description  String
+  minAge       Int
+  category     Category[] @relation("BelongsToCategory")
+  locationId   Int        @unique
+  location     Location   @relation(fields: [locationId], references: [lId])
+  creatorId    Int
+  host         Host       @relation(fields: [creatorId], references: [hId])
+  groups       Group[]    @relation("AttachedActivites")
+}
+
+model Category {
+  cId         Int        @id @default(autoincrement())
+  description String
+  name        String
+  icon        String
+  seasonal    Boolean
+  activity    Activity[] @relation("BelongsToCategory")
 }
 
 model Event {
-  eId      Int       @id @default(autoincrement())
-  name     String
-  isPublic Boolean   @default(false)
-  startsAt DateTime?
-  endsAt   DateTime?
+  eId         Int       @id @default(autoincrement())
+  name        String
+  public      Boolean   @default(false)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  lId         Int
+  minAge      Int
+  description String
+  locationId  Int       @unique
+  location    Location  @relation(fields: [locationId], references: [lId])
+  creatorId   Int
+  host        Host      @relation(fields: [creatorId], references: [hId])
+  groups      Group[]   @relation("AttachedEvents")
+  users       User[]    @relation("Participates")
 }
 
 model Friendship {
@@ -87,4 +133,35 @@ model Token {
   backlisted Boolean
   aId        Int
   account    Account  @relation("UserTokens", fields: [aId], references: [aId])
+}
+
+model Group {
+  gId          Int           @id @default(autoincrement())
+  picture      String?
+  name         String        @default("Party gurrrls")
+  creationDate DateTime
+  description  String?
+  owningUser   Int
+  owner        User          @relation(fields: [owningUser], references: [uId])
+  members      GroupMember[]
+  messages     Message[]
+  events       Event[]       @relation("AttachedEvents")
+  activities   Activity[]    @relation("AttachedActivites")
+}
+
+model GroupMember {
+  gmId    Int      @id @default(autoincrement())
+  userId  Int
+  user    User     @relation(fields: [userId], references: [uId])
+  groupId Int
+  group   Group    @relation(fields: [groupId], references: [gId])
+  joined  DateTime
+}
+
+model Notification {
+  nId       Int      @id @default(autoincrement())
+  text      String
+  timeStamp DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [uId])
 }
