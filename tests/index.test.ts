@@ -1,6 +1,6 @@
-const assert = require("assert");
-const supertest = require("supertest");
+import supertest from "supertest";
 
-test("asd", async () => {
-  assert.equal(true, true);
+
+test("if unknown route returns 404", async () => {
+  
 });
