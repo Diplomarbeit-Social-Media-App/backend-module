@@ -14,44 +14,77 @@ datasource db {
 }
 
 model Location {
-  lId Int @id @default(autoincrement())
-  city String 
-  street String
+  lId         Int    @id @default(autoincrement())
+  city        String
+  street      String
   houseNumber String
-  postCode String
-  country String @default("Austria")
+  postCode    String
+  country     String @default("Austria")
 }
 
 model User {
-  uId Int @id @default(autoincrement())
+  uId     Int     @id @default(autoincrement())
+  aId     Int     @unique
+  account Account @relation(fields: [aId], references: [aId])
+
+  friends    Friendship[] @relation("UserFriends")
+  friendedBy Friendship[] @relation("UserFriendedBy")
 }
 
 model Host {
-  hId Int @id @default(autoincrement())
-  isVerified Boolean @default(false)
+  hId      Int     @id @default(autoincrement())
+  verified Boolean @default(false)
+  aId      Int     @unique
+  account  Account @relation(fields: [aId], references: [aId])
 }
 
 model Account {
-  aId Int @id @default(autoincrement())
-  userName String @unique
-  firstName String
-  lastName String
-  password String
-  email String @unique
+  aId         Int      @id @default(autoincrement())
+  userName    String   @unique
+  firstName   String
+  lastName    String
+  password    String
+  dateOfBirth DateTime
+  email       String   @unique
   description String
-  picture String?
+  picture     String?
+  disabled    Boolean  @default(false)
+  host        Host?
+  user        User?
+  token       Token[]  @relation("UserTokens")
 }
 
 model Message {
-  mId Int @id @default(autoincrement())
-  text String
+  mId       Int      @id @default(autoincrement())
+  text      String
   timeStamp DateTime @default(now())
 }
 
 model Event {
-  eId Int @id @default(autoincrement())
-  name String 
-  isPublic Boolean @default(false)
+  eId      Int       @id @default(autoincrement())
+  name     String
+  isPublic Boolean   @default(false)
   startsAt DateTime?
-  endsAt DateTime?
+  endsAt   DateTime?
+}
+
+model Friendship {
+  userId    Int
+  friendId  Int
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [uId])
+  friend User @relation("UserFriendedBy", fields: [friendId], references: [uId])
+
+  @@id([userId, friendId])
+}
+
+model Token {
+  tId        Int      @id @default(autoincrement())
+  iat        DateTime @default(now())
+  exp        DateTime
+  type       String
+  backlisted Boolean
+  aId        Int
+  account    Account  @relation("UserTokens", fields: [aId], references: [aId])
 }
