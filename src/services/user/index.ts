@@ -1,10 +1,13 @@
 import { ApiError } from "@utils/api-error-util";
 import db from "@utils/db-util";
-import httpStatus, { NOT_FOUND } from "http-status";
+import httpStatus, { NOT_FOUND, UNAUTHORIZED } from "http-status";
 import service from "@services/index";
-import { Account, User } from "@prisma/client";
+import { Account } from "@prisma/client";
 
-export const findUser = async (userName: string, password: string): Promise<Account> => {
+export const findUser = async (
+  userName: string,
+  password: string
+): Promise<Account> => {
   const found = await db.account.findFirst({
     where: {
       userName,
@@ -14,6 +17,8 @@ export const findUser = async (userName: string, password: string): Promise<Acco
     throw new ApiError(NOT_FOUND, "Username or password not found!", true);
   if (!service.auth.comparePassword(password, found.password))
     throw new ApiError(NOT_FOUND, "Username or password not found", true);
+  if (found.disabled)
+    throw new ApiError(UNAUTHORIZED, "Your account has been disabled", true);
   return found;
 };
 
