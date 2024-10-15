@@ -2,17 +2,15 @@ import express from "express";
 import "tsconfig-paths/register";
 import { cpus } from "os";
 
-import allRoutes from "@routes/index";
 import { getHealthCheck } from "@utils/db-util";
 import { ApiError } from "@utils/api-error-util";
 import { handleSevereErrors } from "@middlewares/error";
 import logger from "@logger/logger";
 import config from "@config/config";
+import app from "./server";
 
 process.env.UV_THREADPOOL = `${cpus.length}`;
 const PORT = config.PORT;
-
-const app = express();
 
 export const server = app.listen(PORT, async () => {
   const health = await getHealthCheck();
@@ -24,5 +22,3 @@ export const server = app.listen(PORT, async () => {
 
 process.on("uncaughtException", () => handleSevereErrors());
 process.on("unhandledRejection", () => handleSevereErrors());
-
-app.use(allRoutes);

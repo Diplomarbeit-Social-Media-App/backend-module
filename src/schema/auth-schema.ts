@@ -1,6 +1,6 @@
 import validator from "validator";
 import isEmail from "validator/lib/isEmail";
-import { date, object, string } from "zod";
+import { date, object, string, coerce } from "zod";
 
 export const loginSchema = object({
   body: object({
@@ -18,7 +18,7 @@ export const signUpSchema = object({
       message: "Please use a strong password!",
     }),
     email: string().email({ message: "Please use a valid email address" }),
-    dateOfBirth: date().min(new Date("2009-01-01"), { message: "You are too young to use our app!"}),
+    dateOfBirth: coerce.date().max(new Date("2009-01-01"), { message: "You are too young to use our app!"}),
     firstName: string().min(2),
     lastName: string().min(2),
   }),

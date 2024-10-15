@@ -1,10 +1,15 @@
 import { format, createLogger, transports } from "winston";
 import config from "../config/config";
+const { combine, timestamp, label, printf } = format;
 
 const jsonFormat = format.json();
-const consoleFormat = format.prettyPrint({ colorize: true, depth: 4 });
+// const consoleFormat = format.prettyPrint({ colorize: true, depth: 4 });
 
 const combinedLogLevel = config.NODE_ENV === "development" ? "debug" : "info";
+
+const consoleFormat = printf(({ level, message, label, timestamp }) => {
+  return `${timestamp} [${label}] ${level}: ${message}`;
+});
 
 const logger = createLogger({
   format: jsonFormat,
@@ -18,7 +23,11 @@ const logger = createLogger({
       level: combinedLogLevel,
     }),
     new transports.Console({
-      format: consoleFormat,
+      format: combine(
+        label({ label: "REST-SERVICE" }),
+        timestamp(),
+        consoleFormat
+      ),
       level: combinedLogLevel,
     }),
   ],

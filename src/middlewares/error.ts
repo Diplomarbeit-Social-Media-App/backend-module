@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { ApiError } from "../utils/api-error-util";
-import statusCode from "http-status";
+import statusCode, { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "http-status";
 import config from "../config/config";
 import type errorResFormat from "../types/error-types";
 import { server } from "../index";
 import db from "../utils/db-util";
 import logger from "../logger/logger";
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from "@prisma/client/runtime/library";
 
 export const convertError = (
   err: Error,
@@ -13,10 +17,31 @@ export const convertError = (
   _res: Response,
   next: NextFunction
 ) => {
-  let error = err;
-  if (!(err instanceof ApiError)) {
+  let error: Error | ApiError = err;
+
+  if (err instanceof PrismaClientValidationError) {
+    const validationError: PrismaClientValidationError = err;
+    error = new ApiError(
+      INTERNAL_SERVER_ERROR,
+      validationError.message.toString(),
+      true
+    );
+  }
+
+  if (err instanceof PrismaClientKnownRequestError) {
+    const dbError: PrismaClientKnownRequestError = err;
+    error = new ApiError(
+      INTERNAL_SERVER_ERROR,
+      "Error occurred with db transaction;" +
+        ` code: ${dbError.code} | meta: ${dbError.meta} | message: ${dbError.message}`,
+      true
+    );
+  }
+
+  if (!(error instanceof ApiError)) {
     error = new ApiError(statusCode.INTERNAL_SERVER_ERROR, err.message, false);
   }
+
   next(error);
 };
 

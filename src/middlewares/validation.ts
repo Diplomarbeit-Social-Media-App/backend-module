@@ -6,8 +6,8 @@ import httpStatus from "http-status";
 
 export const validate =
   (schema: AnyZodObject) =>
-  async (req: Request, res: Response, next: NextFunction) => {
-    const parsed = await schema.safeParseAsync({
+  (req: Request, res: Response, next: NextFunction) => {
+    const parsed = schema.safeParse({
       body: req.body,
       params: req.params,
       query: req.query,

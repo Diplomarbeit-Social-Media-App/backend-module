@@ -1,10 +1,12 @@
 import bcrypt from "bcrypt";
-import { signUpSchema } from "../types/auth-types";
+import { accountSchema, signUpSchema } from "../types/auth-types";
 import db from "../utils/db-util";
 import { TOKEN_TYPES, tokenSchema } from "../types/token-types";
 import jwt from "jsonwebtoken";
 import dayjs, { ManipulateType } from "dayjs";
 import config from "../config/config";
+import pick from "lodash/pick";
+import * as tokenService from "@services/token-services";
 
 export const hashPassword = async (password: string, salt: number) => {
   return await bcrypt.hash(password, salt);
@@ -15,7 +17,23 @@ export const comparePassword = async (password: string, hashed: string) => {
 };
 
 export const createAccount = async (account: signUpSchema) => {
-  return db.account.create({ data: { ...account, description: "" } });
+  const { dateOfBirth, email, firstName, lastName, userName, password } = pick(
+    account,
+    ["dateOfBirth", "email", "firstName", "lastName", "userName", "password"]
+  );
+  const date: Date =
+    account.dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
+  return db.account.create({
+    data: {
+      dateOfBirth: date,
+      description: "",
+      email,
+      firstName,
+      lastName,
+      userName,
+      password,
+    },
+  });
 };
 
 export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
@@ -38,7 +56,9 @@ export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
   );
 };
 
-export const generateAndSaveTokens = async (account: number) => {
-  // if(db.token.findMany({
-  // }))
+export const generateAndSaveTokens = async (accountId: number) => {
+  const refresh = await generateToken(accountId, TOKEN_TYPES.REFRESH);
+  const access = await generateToken(accountId, TOKEN_TYPES.ACCESS);
+
+  await tokenService.deleteAccountTokens(accountId);
 };

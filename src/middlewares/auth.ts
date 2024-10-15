@@ -33,8 +33,6 @@ const verifyJwt = async (payload: tokenSchema, done: DoneCallback) => {
 };
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
-  // return new (Promise as any).resolve((resolve: (data: unknown) => {}, reject: (err: Error) => {}) => {
-  // })
   return new Promise((resolve, reject) => {
     passport.authenticate("jwt", { session: false }, () => {})(req, res, next);
   });
