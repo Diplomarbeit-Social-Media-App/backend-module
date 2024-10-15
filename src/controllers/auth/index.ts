@@ -9,7 +9,16 @@ export const postLogin = catchAsync(
     req: Request<{}, {}, loginSchema>,
     res: Response,
     _next: NextFunction
-  ) => {}
+  ) => {
+    let data = req.body;
+    const foundUser = await service.user.findUser(data.userName, data.password);
+
+    const { access, refresh } = await service.auth.generateAndSaveTokens(
+      foundUser.aId
+    );
+
+    return res.status(200).json({ access, refresh });
+  }
 );
 
 export const postSignUp = catchAsync(
@@ -27,5 +36,11 @@ export const postSignUp = catchAsync(
     const account = await service.auth.createAccount(data);
 
     const { user } = await service.user.createUserByAccount(account.aId);
+
+    const { refresh, access } = await service.auth.generateAndSaveTokens(
+      account.aId
+    );
+
+    return res.status(201).json({ access, refresh });
   }
 );

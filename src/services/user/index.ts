@@ -1,15 +1,20 @@
 import { ApiError } from "@utils/api-error-util";
-import db from "../utils/db-util";
-import httpStatus from "http-status";
+import db from "@utils/db-util";
+import httpStatus, { NOT_FOUND } from "http-status";
+import service from "@services/index";
+import { Account, User } from "@prisma/client";
 
-export const findUser = async (userName: string, password: string) => {
-  const hashed = ""; //TODO: hash password!
-  const found = db.account.findFirst({
+export const findUser = async (userName: string, password: string): Promise<Account> => {
+  const found = await db.account.findFirst({
     where: {
       userName,
-      password,
     },
   });
+  if (!found)
+    throw new ApiError(NOT_FOUND, "Username or password not found!", true);
+  if (!service.auth.comparePassword(password, found.password))
+    throw new ApiError(NOT_FOUND, "Username or password not found", true);
+  return found;
 };
 
 export const createUserByAccount = async (accountId: number) => {

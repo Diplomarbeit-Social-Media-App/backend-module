@@ -8,8 +8,8 @@ export enum TOKEN_TYPES {
  * sub should be used to store the pk of account field
  */
 export type tokenSchema = {
-  iat: Date;
-  exp: Date;
+  iat: number;
+  exp: number;
   type: TOKEN_TYPES;
   sub: number; 
 }

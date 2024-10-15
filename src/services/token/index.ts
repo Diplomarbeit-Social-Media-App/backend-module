@@ -9,7 +9,7 @@ export const deleteAccountTokens = async (accountId: number) => {
   });
 };
 
-export const saveAccountToken = async (token: Token) => {
+export const saveAccountToken = async (token: Omit<Token, "tId">) => {
   return await db.token.create({
     data: {
       ...token,

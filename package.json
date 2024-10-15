@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node ./dist/index.js",
-    "dev": "cross-env NODE_ENV=production ts-node-dev --respawn --transpile-only -r tsconfig-paths ./src/index",
+    "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only -r tsconfig-paths ./src/index",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "author": "",

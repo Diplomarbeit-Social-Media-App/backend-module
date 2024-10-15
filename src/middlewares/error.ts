@@ -52,7 +52,7 @@ export const handleError = async (
   _next: NextFunction
 ) => {
   if (!err.isOperational) {
-    return await handleSevereErrors();
+    return await handleSevereErrors(err.message);
   }
   if (res.headersSent) return;
   let errorFormat: errorResFormat = {
@@ -69,8 +69,9 @@ export const handleError = async (
     .json(errorFormat);
 };
 
-export const handleSevereErrors = async () => {
+export const handleSevereErrors = async (e?: string) => {
   logger.error(`An uncaught problem was encountered! Shutting down...`);
+  if (e) logger.error(`Error message: ${e}`);
   try {
     logger.error(`Closing db connection if open...`);
     await db.$disconnect();
