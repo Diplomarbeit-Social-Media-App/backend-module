@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { loginSchema, signUpSchema } from "../../types/auth-types";
 import catchAsync from "@utils/catch-async-util";
-import * as authService from "@services/auth-services";
-import * as userService from "@services/user-services";
+import service from "@services/index";
 import config from "@config/config";
 
 export const postLogin = catchAsync(
@@ -20,13 +19,13 @@ export const postSignUp = catchAsync(
     next: NextFunction
   ) => {
     let data = req.body;
-    const hashedPwd = await authService.hashPassword(
+    const hashedPwd = await service.auth.hashPassword(
       data.password,
       config.SALT
     );
     data.password = hashedPwd;
-    const account = await authService.createAccount(data);
+    const account = await service.auth.createAccount(data);
 
-    const { user } = await userService.createUserByAccount(account.aId);
+    const { user } = await service.user.createUserByAccount(account.aId);
   }
 );

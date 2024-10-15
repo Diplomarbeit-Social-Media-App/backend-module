@@ -7,7 +7,7 @@ import passport, { DoneCallback } from "passport";
 import { TOKEN_TYPES, tokenSchema } from "../types/token-types";
 import { ApiError } from "@utils/api-error-util";
 import httpStatus from "http-status";
-import * as accountService from "@services/accounts-services";
+import * as accountService from "@services/account";
 import { NextFunction, Request, Response } from "express";
 import config from "@config/config";
 

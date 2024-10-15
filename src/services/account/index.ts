@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
-import { ApiError } from "../utils/api-error-util";
-import db from "../utils/db-util";
+import { ApiError } from "../../utils/api-error-util";
+import db from "../../utils/db-util";
 
 export const findAccountByPk = async (aId: number) => {
   const found = db.account.findFirst({

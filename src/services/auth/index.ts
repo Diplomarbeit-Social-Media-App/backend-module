@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import dayjs, { ManipulateType } from "dayjs";
 import config from "../config/config";
 import pick from "lodash/pick";
-import * as tokenService from "@services/token-services";
+import * as tokenService from "@services/token";
 
 export const hashPassword = async (password: string, salt: number) => {
   return await bcrypt.hash(password, salt);
