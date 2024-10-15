@@ -1,6 +1,5 @@
 import validator from "validator";
-import isEmail from "validator/lib/isEmail";
-import { date, object, string, coerce } from "zod";
+import { object, string, coerce } from "zod";
 
 export const loginSchema = object({
   body: object({

@@ -16,7 +16,7 @@ export const postLogin = catchAsync(
     const { access, refresh } = await service.auth.generateAndSaveTokens(
       foundUser.aId
     );
-
+ 
     return res.status(200).json({ access, refresh });
   }
 );
@@ -25,7 +25,7 @@ export const postSignUp = catchAsync(
   async (
     req: Request<{}, {}, signUpSchema>,
     res: Response,
-    next: NextFunction
+    _next: NextFunction
   ) => {
     let data = req.body;
     const hashedPwd = await service.auth.hashPassword(

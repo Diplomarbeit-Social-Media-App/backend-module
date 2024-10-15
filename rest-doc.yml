@@ -1,15 +1,113 @@
-openapi: '3.0.3'
+openapi: "3.0.3"
 info:
   title: Bonfire API GUide
-  version: '0.1'
+  version: "0.1"
+  contact:
+    email: diplomarbeit.sma@gmail.com
 servers:
   - url: http://localhost:3000/
   - url: https://backend-module.onrender.com
+tags:
+  - name: authentication
+    description: user authentication
+components:
+  schemas:
+    SignUpSchema:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        userName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        dateOfBirth:
+          type: string
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+        statusCode:
+          type: integer
+        message:
+          type: string
+        name:
+          type: string
+    Tokens:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
 paths:
-  /test:
-    get:
+  /auth/signup:
+    post:
+      tags:
+        - authentication
+      description: For user registration used
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpSchema"
+      # parameters:
+      # - name: firstName
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: "first name"
+      # - name: lastName
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: "last name"
+      # - name: email
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: "valid email address"
+      # - name: userName
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: "unique username"
+      # - name: dateOfBirth
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: user birthdate in iso format 'yyyy-mm-dd'
+      # - name: password
+      #   in: header
+      #   required: true
+      #   schema:
+      #     type: string
+      #   description: strong password (min 8 letters, uppercase, lowercase, number, special char)
       responses:
-        '200':
+        "201":
           description: OK
-  /auth:
-    description: All routes for authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Tokens"
+        "400":
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Error"

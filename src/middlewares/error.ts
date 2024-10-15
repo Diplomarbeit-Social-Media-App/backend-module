@@ -19,6 +19,8 @@ export const convertError = (
 ) => {
   let error: Error | ApiError = err;
 
+  logger.debug("Error handling middleware invoked: " + error.message.toString());
+
   if (err instanceof PrismaClientValidationError) {
     const validationError: PrismaClientValidationError = err;
     error = new ApiError(
