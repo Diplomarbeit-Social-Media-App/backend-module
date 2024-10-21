@@ -5,6 +5,8 @@ COPY package*.json ./
 RUN npm install
 COPY prisma/schema.prisma ./prisma/schema.prisma
 RUN npx prisma generate
+RUN npm uninstall bcrypt
+RUN npm install bcrypt
 COPY . .
-CMD ["ts-node", "-r", "tsconfig-paths/register", "src/index.ts"]
+CMD ["npm", "start"]
 EXPOSE 3000
