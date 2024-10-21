@@ -6,7 +6,9 @@
     "build": "tsc",
     "start": "cross-env NODE_ENV=production node -r tsconfig-paths/register ./dist/index.js",
     "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only --require tsconfig-paths/register ./src/index",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
   },
   "author": "",
   "license": "ISC",
