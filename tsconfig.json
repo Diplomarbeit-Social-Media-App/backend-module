@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@config/*": ["./src/config/*"],
-      "@controllers/*": ["./src/controllers/*"],
-      "@routes/*": ["./src/routes/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@schema/*": ["./src/schema/*"],
-      "@services/*": ["./src/services/*"],
-      "@types/*": ["./src/types/*"],
-      "@workers/*": ["./src/workers/*"],
-      "@logger/*": ["./src/logger/*"],
-      "@middlewares/*": ["./src/middlewares/*"]
-    },
+    // "baseUrl": ".",
+    // "paths": {
+    //   "@config/*": ["./src/config/*"],
+    //   "@controllers/*": ["./src/controllers/*"],
+    //   "@routes/*": ["./src/routes/*"],
+    //   "@utils/*": ["./src/utils/*"],
+    //   "@schema/*": ["./src/schema/*"],
+    //   "@services/*": ["./src/services/*"],
+    //   "@types/*": ["./src/types/*"],
+    //   "@workers/*": ["./src/workers/*"],
+    //   "@logger/*": ["./src/logger/*"],
+    //   "@middlewares/*": ["./src/middlewares/*"]
+    // },
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */

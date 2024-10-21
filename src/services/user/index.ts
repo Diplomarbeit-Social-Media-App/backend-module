@@ -1,7 +1,7 @@
-import { ApiError } from "@utils/api-error-util";
-import db from "@utils/db-util";
+import { ApiError } from "../../utils/api-error-util";
+import db from "../../utils/db-util";
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from "http-status";
-import service from "@services/index";
+import service from "../../services/index";
 import { Account } from "@prisma/client";
 
 export const findUser = async (

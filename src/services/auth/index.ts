@@ -1,12 +1,12 @@
 import bcrypt from "bcrypt";
 import { signUpSchema } from "../../types/auth-types";
-import db from "@utils/db-util";
+import db from "../../utils/db-util";
 import { TOKEN_TYPES, tokenSchema } from "../../types/token-types";
 import jwt from "jsonwebtoken";
 import dayjs, { ManipulateType } from "dayjs";
-import config from "@config/config";
+import config from "../../config/config";
 import pick from "lodash/pick";
-import service from "@services/index";
+import service from "../index";
 import { Account } from "@prisma/client";
 
 export const hashPassword = async (password: string, salt: number) => {

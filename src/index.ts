@@ -2,11 +2,11 @@ import express from "express";
 import "tsconfig-paths/register";
 import { cpus } from "os";
 
-import { getHealthCheck } from "@utils/db-util";
-import { ApiError } from "@utils/api-error-util";
-import { handleSevereErrors } from "@middlewares/error";
-import logger from "@logger/logger";
-import config from "@config/config";
+import { getHealthCheck } from "./utils/db-util";
+import { ApiError } from "./utils/api-error-util";
+import { handleSevereErrors } from "./middlewares/error";
+import logger from "./logger/logger";
+import config from "./config/config";
 import app from "./server";
 
 process.env.UV_THREADPOOL = `${cpus.length}`;

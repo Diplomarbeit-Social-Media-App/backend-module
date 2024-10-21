@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { loginSchema, signUpSchema } from "../../types/auth-types";
-import catchAsync from "@utils/catch-async-util";
-import service from "@services/index";
-import config from "@config/config";
+import catchAsync from "../../utils/catch-async-util";
+import service from "../../services/index";
+import config from "../../config/config";
 
 export const postLogin = catchAsync(
   async (

@@ -5,11 +5,11 @@ import {
 } from "passport-jwt";
 import passport, { DoneCallback } from "passport";
 import { TOKEN_TYPES, tokenSchema } from "../types/token-types";
-import { ApiError } from "@utils/api-error-util";
+import { ApiError } from "../utils/api-error-util";
 import httpStatus, { UNAUTHORIZED } from "http-status";
-import * as accountService from "@services/account";
+import * as accountService from "../services/account";
 import { NextFunction, Request, Response } from "express";
-import config from "@config/config";
+import config from "../config/config";
 
 const jwtOptions: StrategyOptionsWithoutRequest = {
   secretOrKey: config.JWT_SECRET,

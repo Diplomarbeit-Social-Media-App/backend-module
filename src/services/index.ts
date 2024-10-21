@@ -1,7 +1,7 @@
-import * as user from "@services/user";
-import * as token from "@services/token";
-import * as account from "@services/account";
-import * as auth from "@services/auth";
+import * as user from "./user";
+import * as token from "./token";
+import * as account from "./account";
+import * as auth from "./auth";
 
 const service = {
   user,
