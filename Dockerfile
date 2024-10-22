@@ -8,6 +8,6 @@ COPY prisma/schema.prisma ./prisma/schema.prisma
 RUN npx prisma generate
 COPY . .
 RUN npm run build
-RUN mkdir -p /logs && touch /logs/requests.log
+RUN mkdir -p /app/logs && touch /app/logs/requests.log
 CMD ["npm", "start"]
 EXPOSE 3000
