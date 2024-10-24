@@ -13,6 +13,6 @@ export class ApiError extends Error {
     this.isOperational = isOperational;
     stack
       ? (this.stack = stack)
-      : (this.stack = Error.captureStackTrace(this, this.constructor) + "");
+      : (Error.captureStackTrace(this, this.constructor));
   }
 }
