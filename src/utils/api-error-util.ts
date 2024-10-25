@@ -5,7 +5,7 @@ export class ApiError extends Error {
   constructor(
     statusCode: number,
     message: string,
-    isOperational: boolean,
+    isOperational: boolean = true,
     stack = ""
   ) {
     super(message);
@@ -13,6 +13,6 @@ export class ApiError extends Error {
     this.isOperational = isOperational;
     stack
       ? (this.stack = stack)
-      : (Error.captureStackTrace(this, this.constructor));
+      : Error.captureStackTrace(this, this.constructor);
   }
 }

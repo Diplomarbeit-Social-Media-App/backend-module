@@ -1,4 +1,3 @@
-import { ZodObject } from "zod";
 import { loginSchema, signUpSchema } from "../schema/auth-schema";
 
 export type accountSchema = {
