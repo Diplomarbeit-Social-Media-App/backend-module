@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import { ApiError } from "../../utils/api-error-util";
 import db from "../../utils/db-util";
+import { Account } from "@prisma/client";
 
 export const findAccountByPk = async (aId: number) => {
   const found = db.account.findFirst({
@@ -15,4 +16,8 @@ export const findAccountByPk = async (aId: number) => {
       true
     );
   return found;
+};
+
+export const isHostAccount = async (account: Partial<Account>): Promise<boolean> => {
+  return !!(await db.host.findFirst({ where: { aId: account.aId } }));
 };
