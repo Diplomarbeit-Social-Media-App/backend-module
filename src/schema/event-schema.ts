@@ -1,5 +1,4 @@
-import dayjs from "dayjs";
-import { coerce, date, object, string } from "zod";
+import { coerce, object, string } from "zod";
 
 export const eventSchema = object({
   body: object({

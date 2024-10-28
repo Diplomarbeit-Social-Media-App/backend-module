@@ -3,7 +3,6 @@ import config from "../config/config";
 const { combine, timestamp, label, printf } = format;
 
 const jsonFormat = format.json();
-// const consoleFormat = format.prettyPrint({ colorize: true, depth: 4 });
 
 const combinedLogLevel = config.NODE_ENV === "development" ? "debug" : "info";
 

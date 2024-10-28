@@ -13,12 +13,18 @@ export const loginSchema = object({
 export const signUpSchema = object({
   body: object({
     userName: string().min(3).max(15),
-    password: string().refine((data) => validator.isStrongPassword(data), {
-      message: "Please use a strong password!",
+    password: string()
+      .max(256)
+      .refine((data) => validator.isStrongPassword(data), {
+        message: "Please use a strong password!",
+      }),
+    email: string()
+      .email({ message: "Please use a valid email address" })
+      .max(100),
+    dateOfBirth: coerce.date().max(new Date("2009-01-01"), {
+      message: "You are too young to use our app!",
     }),
-    email: string().email({ message: "Please use a valid email address" }),
-    dateOfBirth: coerce.date().max(new Date("2009-01-01"), { message: "You are too young to use our app!"}),
-    firstName: string().min(2),
-    lastName: string().min(2),
+    firstName: string().min(2).max(30),
+    lastName: string().min(2).max(30),
   }),
 });

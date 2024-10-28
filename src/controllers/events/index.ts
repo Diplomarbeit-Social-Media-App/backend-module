@@ -1,9 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import catchAsync from "../../utils/catch-async-util";
 import service from "../../services";
+import { eventType } from "../../types/event-types";
 
 export const postEvent = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request<{}, {}, eventType>,
+    res: Response,
+    next: NextFunction
+  ) => {
     
   }
 );
