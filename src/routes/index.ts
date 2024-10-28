@@ -8,7 +8,6 @@ const allRoutes = Router();
 
 allRoutes.use("/auth", authRoutes);
 allRoutes.use("/health", healthRoutes);
-allRoutes.use(auth);
-allRoutes.use("/events", eventRoutes);
+allRoutes.use("/event", [auth], eventRoutes);
 
 export default allRoutes;
