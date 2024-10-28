@@ -1,6 +1,10 @@
 import dayjs from "dayjs";
 import type { eventType } from "../../src/types/event-types";
 import { eventSchema } from "../../src/schema/event-schema";
+import supertest from "supertest";
+import { server } from "../../src/index";
+import { UNAUTHORIZED } from "http-status";
+import db from "../../src/utils/db-util";
 
 interface IBodyEventType {
   body: eventType;
@@ -13,50 +17,79 @@ const baseEvent: eventType = {
   name: "Welser-Fest",
 };
 
+const app = supertest(server);
+
 const buildBody = (values?: Partial<eventType>): IBodyEventType => {
   return { body: { ...baseEvent, ...values } };
 };
 
-test("if event schema fails if end date is earlier than start date", async () => {
-  const event: IBodyEventType = buildBody({
-    startsAt: dayjs().add(2, "day").toDate(),
+describe("Checking of event validation", () => {
+  test("if event schema fails if end date is earlier than start date", async () => {
+    const event: IBodyEventType = buildBody({
+      startsAt: dayjs().add(2, "day").toDate(),
+    });
+    const parsed = eventSchema.safeParse(event);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toBeDefined();
   });
-  const parsed = eventSchema.safeParse(event);
-  expect(parsed.success).toBe(false);
-  expect(parsed.error).toBeDefined();
+
+  test("if event schema fails if description is too short", async () => {
+    const event: IBodyEventType = buildBody({
+      description: "",
+    });
+    const parsed = eventSchema.safeParse(event);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toBeDefined();
+  });
+
+  test("if event schema fails if name is too short", async () => {
+    const event: IBodyEventType = buildBody({
+      name: "",
+    });
+    const parsed = eventSchema.safeParse(event);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toBeDefined();
+  });
+
+  test("if event schema fails is start date is earlier than now", async () => {
+    const event: IBodyEventType = buildBody({
+      startsAt: dayjs().subtract(5, "day").toDate(),
+    });
+    const parsed = eventSchema.safeParse(event);
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toBeDefined();
+  });
+
+  test("if event is parsed successfully", async () => {
+    const event: IBodyEventType = buildBody();
+    const parsed = eventSchema.safeParse(event);
+    expect(parsed.success).toBe(true);
+    expect(parsed.error).toBeFalsy();
+    expect(parsed.data).toBeDefined();
+  });
 });
 
-test("if event schema fails if description is too short", async () => {
-  const event: IBodyEventType = buildBody({
-    description: "",
+describe("Checking event creation via request", () => {
+  test("if event creation fails if not authorized to do so", async () => {
+    await app
+      .post("/event")
+      .expect("Content-Type", /json/)
+      .expect(UNAUTHORIZED)
+      .catch((err) => {
+        expect(err).toContain({ error: true });
+      });
   });
-  const parsed = eventSchema.safeParse(event);
-  expect(parsed.success).toBe(false);
-  expect(parsed.error).toBeDefined();
 });
 
-test("if event schema fails if name is too short", async () => {
-  const event: IBodyEventType = buildBody({
-    name: "",
+afterAll(async () => {
+  await new Promise(async (resolve, reject) => {
+    await db.$disconnect();
+    server.close((err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
   });
-  const parsed = eventSchema.safeParse(event);
-  expect(parsed.success).toBe(false);
-  expect(parsed.error).toBeDefined();
-});
-
-test("if event schema fails is start date is earlier than now", async () => {
-  const event: IBodyEventType = buildBody({
-    startsAt: dayjs().subtract(5, "day").toDate(),
-  });
-  const parsed = eventSchema.safeParse(event);
-  expect(parsed.success).toBe(false);
-  expect(parsed.error).toBeDefined();
-});
-
-test("if event is parsed successfully", async () => {
-  const event: IBodyEventType = buildBody();
-  const parsed = eventSchema.safeParse(event);
-  expect(parsed.success).toBe(true);
-  expect(parsed.error).toBeFalsy();
-  expect(parsed.data).toBeDefined();
 });
