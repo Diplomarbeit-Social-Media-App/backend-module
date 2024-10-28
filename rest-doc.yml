@@ -12,21 +12,34 @@ tags:
     description: user authentication
 components:
   schemas:
+    LoginSchema:
+      type: object
+      properties:
+        userName:
+          type: string
+          default: "Max"
+        password:
+          type: string
     SignUpSchema:
       type: object
       properties:
         firstName:
           type: string
+          default: "Max"
         lastName:
           type: string
+          default: "Mustermann"
         userName:
           type: string
+          default: "maxmusstermann"
         email:
           type: string
+          default: "max@mustermann.com"
         password:
           type: string
         dateOfBirth:
           type: string
+          default: "2000-01-01"
     Error:
       type: object
       properties:
@@ -46,6 +59,42 @@ components:
         access:
           type: string
 paths:
+  /auth/login:
+    post:
+      tags:
+        - authentication
+      description: Used for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginSchema"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Tokens"
+        "400":
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Error"
+        "500":
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Error"
   /auth/signup:
     post:
       tags:
@@ -57,46 +106,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SignUpSchema"
-      # parameters:
-      # - name: firstName
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: "first name"
-      # - name: lastName
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: "last name"
-      # - name: email
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: "valid email address"
-      # - name: userName
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: "unique username"
-      # - name: dateOfBirth
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: user birthdate in iso format 'yyyy-mm-dd'
-      # - name: password
-      #   in: header
-      #   required: true
-      #   schema:
-      #     type: string
-      #   description: strong password (min 8 letters, uppercase, lowercase, number, special char)
       responses:
         "201":
-          description: OK
+          description: CREATED
           content:
             application/json:
               schema:
@@ -105,6 +117,14 @@ paths:
                   $ref: "#/components/schemas/Tokens"
         "400":
           description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Error"
+        "500":
+          description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
