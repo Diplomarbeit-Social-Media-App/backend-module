@@ -44,13 +44,14 @@ export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
     type === TOKEN_TYPES.ACCESS
       ? { unit: "minute", value: config.JWT_ACCESS_EXPIRATION_MINUTES }
       : { unit: "day", value: config.JWT_REFRESH_EXPIRATION_DAYS };
-  const exp = dayjs(Date.now())
-    .add(expiresFormat.value, expiresFormat.unit)
-    .unix();
-  const iat = dayjs(Date.now()).unix();
+
+  const currDate = dayjs();
+  const exp = currDate.add(expiresFormat.value, expiresFormat.unit);
+  const iat = currDate;
+
   const payload: tokenSchema = {
-    iat: iat,
-    exp: exp,
+    iat: iat.unix(),
+    exp: exp.unix(),
     sub: accountId,
     type,
   };
@@ -70,8 +71,8 @@ export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
   await service.token.saveAccountToken({
     aId: accountId,
     backlisted: false,
-    exp: dayjs(exp).toDate(),
-    iat: dayjs(iat).toDate(),
+    exp: exp.toDate(),
+    iat: iat.toDate(),
     token,
     type: type.toString(),
   });
