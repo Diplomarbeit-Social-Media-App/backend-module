@@ -30,3 +30,6 @@ jobs:
           VALIDATE_JSON: false
           VALIDATE_MARKDOWN: false
           VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_SQL: false
+        with:
+          include: "src/**/*.{js,jsx,ts,tsx}"
