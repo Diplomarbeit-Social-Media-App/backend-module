@@ -1,5 +1,8 @@
 
 ---
+[![Lines of Code](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/lines-of-code.yml/badge.svg)](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/lines-of-code.yml)
+[![Lint Code Base](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/super-linter.yml/badge.svg)](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/super-linter.yml)
+[![Run Tests](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Diplomarbeit-Social-Media-App/backend-module/actions/workflows/run-tests.yml)
 
 # 🔥 Bonfire
 
