@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
-import { ApiError } from "../../utils/api-error-util";
-import db from "../../utils/db-util";
+import { ApiError } from "../../utils/apiError";
+import db from "../../utils/db";
 import { Account } from "@prisma/client";
 
 export const findAccountByPk = async (aId: number) => {

@@ -4,17 +4,17 @@ import catchAsync from "../utils/catchAsync";
 import { UNAUTHORIZED } from "http-status";
 import service from "../services";
 
+const unauthorizedError = new ApiError(
+  UNAUTHORIZED,
+  "Du musst dich als Partner bewerben, um dies machen zu dürfen!"
+);
+
 export const hasHostPermission = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    if (!user)
-      throw new ApiError(UNAUTHORIZED, "You have to be authorized to do that!");
+    if (!user) throw unauthorizedError;
     const isHost = await service.account.isHostAccount(user);
-    if (!isHost)
-      throw new ApiError(
-        UNAUTHORIZED,
-        "You need to signup as an event host in order to get access to these features"
-      );
+    if (!isHost) throw unauthorizedError;
     return next();
   }
 );

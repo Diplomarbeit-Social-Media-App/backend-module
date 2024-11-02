@@ -18,7 +18,7 @@ export const validate =
       return next(
         new ApiError(
           httpStatus.BAD_REQUEST,
-          `Malformed request body! Please check arguments! (hint: ${validationError})`,
+          `${validationError}`,
           true
         )
       );

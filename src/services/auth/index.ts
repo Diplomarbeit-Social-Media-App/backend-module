@@ -8,6 +8,48 @@ import config from "../../config/config";
 import pick from "lodash/pick";
 import service from "../index";
 import { Account } from "@prisma/client";
+import { ApiError } from "../../utils/apiError";
+import { UNAUTHORIZED } from "http-status";
+import assert from "assert";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+
+export const handleRenewToken = async (
+  refresh: string
+): Promise<{ access: string }> => {
+  try {
+    const tokenFound = await db.token.findFirst({
+      where: {
+        token: refresh,
+        type: TOKEN_TYPES.REFRESH.toString(),
+      },
+    });
+    assert.ok(tokenFound != null);
+
+    const exp = dayjs(tokenFound.exp);
+    const expired: boolean = exp.isBefore(dayjs());
+    assert.ok(!expired);
+
+    const accountFound = await db.account.findFirst({
+      where: {
+        aId: tokenFound.aId,
+      },
+    });
+    assert.ok(accountFound != null);
+
+    await db.token.deleteMany({
+      where: {
+        aId: tokenFound.aId,
+        type: TOKEN_TYPES.ACCESS.toString(),
+      },
+    });
+
+    return {
+      access: await generateToken(accountFound.aId, TOKEN_TYPES.ACCESS),
+    };
+  } catch (err) {
+    throw new ApiError(UNAUTHORIZED, "Anmeldung abgelaufen");
+  }
+};
 
 export const hashPassword = async (password: string, salt: number) => {
   return await bcrypt.hash(password, salt);
@@ -24,19 +66,37 @@ export const createAccount = async (
     account,
     ["dateOfBirth", "email", "firstName", "lastName", "userName", "password"]
   );
-  const date: Date =
-    account.dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
-  return db.account.create({
-    data: {
-      dateOfBirth: date,
-      description: "",
-      email,
-      firstName,
-      lastName,
-      userName,
-      password,
-    },
-  });
+
+  const date: Date = dayjs(dateOfBirth).toDate();
+  try {
+    return await db.account.create({
+      data: {
+        dateOfBirth: date,
+        description: "",
+        email,
+        firstName,
+        lastName,
+        userName,
+        password,
+      },
+    });
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        const fields = error.meta?.target as string[] | undefined;
+        const formatted =
+          fields && fields?.length > 0
+            ? fields?.map((str, index) =>
+                index === 0
+                  ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+                  : str.toLowerCase()
+              )
+            : fields;
+        throw new ApiError(400, `Bitte verwende andere Werte für ${formatted}`);
+      }
+    }
+    throw new ApiError(500, "Leider ist etwas schief gelaufen!");
+  }
 };
 
 export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
