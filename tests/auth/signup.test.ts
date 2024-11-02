@@ -1,33 +1,27 @@
 import service from "../../src/services/index";
 import assert from "assert";
-import { signUpSchema } from "../../src/schema/auth-schema";
-import { SafeParseReturnType, ZodSchema } from "zod";
-import type { signUpSchema as signUp } from "../../src/types/auth-types";
+import { signUpSchema } from "../../src/schema/auth";
+import type { signUpSchema as signUp } from "../../src/types/auth";
 import { faker } from "@faker-js/faker";
+import dayjs from "dayjs";
+import { shouldPass, shouldFail } from "../../src/utils/testUtils";
+
+interface ISignUpSchema {
+  body: signUp;
+}
 
 const baseSignUp: signUp = {
-  dateOfBirth: faker.date.birthdate(),
+  dateOfBirth: dayjs(faker.date.birthdate()).subtract(14, "year").toDate(),
   email: faker.internet.email(),
   firstName: faker.person.firstName(),
   lastName: faker.person.lastName(),
   isUserSignUp: true,
-  userName: faker.internet.username(),
-  password: faker.internet.password(),
+  userName: "UserTest1",
+  password: faker.internet.password({ length: 10, prefix: "a!D:_3"}),
 };
 
-const buildSignUp = (values?: Partial<signUp>): signUp => {
-  return { ...baseSignUp, ...values };
-};
-
-const shouldFail = <T>(
-  schema: ZodSchema,
-  test: object
-): SafeParseReturnType<T, T> => {
-  const parsed = schema.safeParse(test);
-  expect(parsed.data).toBeUndefined;
-  expect(parsed.error).toBeDefined;
-  expect(parsed.success).toBe(false);
-  return parsed;
+const buildSignUp = (values?: Partial<signUp>): ISignUpSchema => {
+  return { body: { ...baseSignUp, ...values } };
 };
 
 test("if hashing and comparing password functions work properly", async () => {
@@ -105,5 +99,38 @@ describe("Checking of signup validation", () => {
     shouldFail(signUpSchema, buildSignUp({ userName: tooLong }));
     shouldFail(signUpSchema, buildSignUp({ userName: notDefined }));
     shouldFail(signUpSchema, buildSignUp({ userName: empty }));
+  });
+
+  test("if validation fails on age < 14", async () => {
+    const date = new Date();
+    const parsed = signUpSchema.safeParse(buildSignUp({ dateOfBirth: date }));
+    expect(parsed.data).toBeUndefined();
+    expect(parsed.success).toBe(false);
+    expect(parsed.error).toBeDefined();
+  });
+
+  test("if person one day before turning 14 will fail", async () => {
+    const date = dayjs(new Date())
+      .subtract(14, "year")
+      .add(1, "day")
+      .toDate();
+    const test = buildSignUp({ dateOfBirth: date });
+    shouldFail(signUpSchema, test);
+  });
+
+  test("if valid fields will pass validation", async () => {
+    shouldPass(signUpSchema, buildSignUp());
+  });
+
+  test("if person exactly 14 will be allowed", async () => {
+    const date = dayjs(new Date()).subtract(14, "year").toDate();
+    const test = buildSignUp({ dateOfBirth: date });
+    shouldPass(signUpSchema, test);
+  });
+
+  test("if person aged 14 will pass", async () => {
+    const date = dayjs().subtract(15, "year").toDate();
+    const test = buildSignUp({ dateOfBirth: date });
+    shouldPass(signUpSchema, test);
   });
 });
