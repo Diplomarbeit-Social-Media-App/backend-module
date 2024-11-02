@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import { signUpSchema } from "../../types/auth-types";
-import db from "../../utils/db-util";
-import { TOKEN_TYPES, tokenSchema } from "../../types/token-types";
+import { signUpSchema } from "../../types/auth";
+import db from "../../utils/db";
+import { TOKEN_TYPES, tokenSchema } from "../../types/token";
 import jwt from "jsonwebtoken";
 import dayjs, { ManipulateType } from "dayjs";
 import config from "../../config/config";

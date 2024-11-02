@@ -2,8 +2,8 @@ import express from "express";
 import "tsconfig-paths/register";
 import { cpus } from "os";
 
-import { getHealthCheck } from "./utils/db-util";
-import { ApiError } from "./utils/api-error-util";
+import { getHealthCheck } from "./utils/db";
+import { ApiError } from "./utils/apiError";
 import { handleSevereErrors } from "./middlewares/error";
 import logger from "./logger/logger";
 import config from "./config/config";
@@ -17,7 +17,7 @@ export const server = app.listen(PORT, async () => {
   if (!health) throw new ApiError(500, "CONNECTION TO DATABASE FAILED!", false);
 
   logger.info("✨ SERVICE CONNECTED TO DB");
-  logger.info(`🚀 REST SERVICE SUCCESFULLY STARTED ON PORT ${PORT}`);
+  logger.info(`🚀 REST SERVICE SUCCESFULLY STARTED ON http://localhost:${PORT}/`);
 });
 
 process.on("uncaughtException", () => handleSevereErrors());

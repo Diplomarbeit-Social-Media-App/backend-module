@@ -2,7 +2,7 @@ import express, { json, urlencoded } from "express";
 import cors from "cors";
 import allRoutes from "./routes";
 import { convertError, handleError } from "./middlewares/error";
-import { notFound } from "./middlewares/not-found";
+import { notFound } from "./middlewares/404";
 import morgan from "./middlewares/morgan";
 import passport from "passport";
 import JwtStrategy from "./middlewares/auth";

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AnyZodObject } from "zod";
-import { ApiError } from "../utils/api-error-util";
+import { ApiError } from "../utils/apiError";
 import logger from "../logger/logger";
 import httpStatus from "http-status";
 

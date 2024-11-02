@@ -11,8 +11,10 @@ export class ApiError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    stack
-      ? (this.stack = stack)
-      : Error.captureStackTrace(this, this.constructor);
+    this.name = "APIError";
+    this.stack = stack;
+    if (!this.stack) {
+      Error.captureStackTrace(this, this.constructor);
+    }
   }
 }

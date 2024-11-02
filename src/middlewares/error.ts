@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiError } from "../utils/api-error-util";
+import { ApiError } from "../utils/apiError";
 import statusCode, { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "http-status";
 import config from "../config/config";
-import type errorResFormat from "../types/error-types";
+import type errorResFormat from "../types/error";
 import { server } from "../index";
-import db from "../utils/db-util";
+import db from "../utils/db";
 import logger from "../logger/logger";
 import {
   PrismaClientKnownRequestError,
@@ -19,7 +19,9 @@ export const convertError = (
 ) => {
   let error: Error | ApiError = err;
 
-  logger.debug("Error handling middleware invoked: " + error.message.toString());
+  logger.debug(
+    "Error handling middleware invoked: " + error.message.toString()
+  );
 
   if (err instanceof PrismaClientValidationError) {
     const validationError: PrismaClientValidationError = err;

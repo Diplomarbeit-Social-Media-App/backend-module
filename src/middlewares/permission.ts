@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiError } from "../utils/api-error-util";
-import catchAsync from "../utils/catch-async-util";
+import { ApiError } from "../utils/apiError";
+import catchAsync from "../utils/catchAsync";
 import { UNAUTHORIZED } from "http-status";
 import service from "../services";
 

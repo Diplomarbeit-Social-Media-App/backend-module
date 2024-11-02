@@ -1,11 +1,15 @@
 import { Router } from "express";
-import { getEvents, postEvent } from "../../controllers/events";
+import controllers from "../../controllers";
 import { hasHostPermission } from "../../middlewares/permission";
-import { eventSchema } from "../../schema/event-schema";
+import { eventSchema } from "../../schema/event";
 import { validate } from "../../middlewares/validation";
 const router = Router();
 
-router.post("/", [hasHostPermission, validate(eventSchema)], postEvent);
-router.get("/", getEvents);
+router.post(
+  "/",
+  [hasHostPermission, validate(eventSchema)],
+  controllers.events.postEvent
+);
+router.get("/", controllers.events.getEvents);
 
 export default router;

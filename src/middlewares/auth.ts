@@ -4,8 +4,8 @@ import {
   StrategyOptionsWithoutRequest,
 } from "passport-jwt";
 import passport, { DoneCallback } from "passport";
-import { TOKEN_TYPES, tokenSchema } from "../types/token-types";
-import { ApiError } from "../utils/api-error-util";
+import { TOKEN_TYPES, tokenSchema } from "../types/token";
+import { ApiError } from "../utils/apiError";
 import httpStatus, { UNAUTHORIZED } from "http-status";
 import * as accountService from "../services/account";
 import { NextFunction, Request, Response } from "express";
@@ -16,7 +16,7 @@ const jwtOptions: StrategyOptionsWithoutRequest = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 };
 
-const verifyJwt = async (payload: tokenSchema, done: DoneCallback) => {
+const verifyAccessToken = async (payload: tokenSchema, done: DoneCallback) => {
   try {
     if (payload.type !== TOKEN_TYPES.ACCESS)
       throw new ApiError(
@@ -36,7 +36,7 @@ const verifyAuth =
   (req: Request, resolve: Function, reject: Function) =>
   (err: Error, user: unknown, info: unknown) => {
     if (err || !user || info)
-      throw new ApiError(UNAUTHORIZED, "please authenticate", true);
+      throw new ApiError(UNAUTHORIZED, "Bitte logge dich erneut ein!", true);
     req.user = user;
     resolve();
   };
@@ -53,6 +53,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     .catch((err) => next(err));
 };
 
-const JwtStrategy = new Strategy(jwtOptions, verifyJwt);
+const JwtStrategy = new Strategy(jwtOptions, verifyAccessToken);
 
 export default JwtStrategy;

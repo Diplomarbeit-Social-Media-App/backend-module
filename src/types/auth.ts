@@ -1,4 +1,8 @@
-import { loginSchema, signUpSchema } from "../schema/auth-schema";
+import {
+  loginSchema,
+  renewTokenSchema,
+  signUpSchema,
+} from "../schema/auth";
 
 export type accountSchema = {
   userName: string;
@@ -23,3 +27,6 @@ const signUpSchemaBody = signUpSchema.shape.body;
 export type signUpSchema = Zod.infer<typeof signUpSchemaBody> & {
   isUserSignUp: boolean;
 };
+
+const renewTokenSchemaBody = renewTokenSchema.shape.body;
+export type renewTokenSchema = Zod.infer<typeof renewTokenSchemaBody>;

@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
-import type { eventType } from "../../src/types/event-types";
-import { eventSchema } from "../../src/schema/event-schema";
+import type { eventType } from "../../src/types/event";
+import { eventSchema } from "../../src/schema/event";
 import supertest from "supertest";
 import { server } from "../../src/index";
 import { UNAUTHORIZED } from "http-status";
-import db from "../../src/utils/db-util";
+import db from "../../src/utils/db";
 
 interface IBodyEventType {
   body: eventType;

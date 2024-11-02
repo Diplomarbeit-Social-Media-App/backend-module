@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import catchAsync from "../../utils/catch-async-util";
+import catchAsync from "../../utils/catchAsync";
 import { healthCheck } from "../../services/health";
 import httpStatus, { INTERNAL_SERVER_ERROR, OK } from "http-status";
 

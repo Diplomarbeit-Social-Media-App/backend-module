@@ -1,5 +1,5 @@
 import { Token } from "@prisma/client";
-import db from "../../utils/db-util";
+import db from "../../utils/db";
 
 export const deleteAccountTokens = async (accountId: number) => {
   await db.token.deleteMany({

@@ -1,4 +1,4 @@
-import { getHealthCheck } from "../../utils/db-util";
+import { getHealthCheck } from "../../utils/db";
 
 export const healthCheck = async () => {
   return await getHealthCheck();
