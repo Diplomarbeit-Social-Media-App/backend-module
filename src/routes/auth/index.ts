@@ -10,5 +10,10 @@ const router = Router();
 
 router.post("/login", validate(loginSchema), controllers.auth.postLogin);
 router.post("/signup", validate(signUpSchema), controllers.auth.postSignUp);
+router.post(
+  "/renew",
+  validate(renewTokenSchema),
+  controllers.auth.postRenewToken
+);
 
 export default router;

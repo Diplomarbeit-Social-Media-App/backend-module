@@ -8,6 +8,20 @@ import catchAsync from "../../utils/catchAsync";
 import service from "../../services/index";
 import config from "../../config/config";
 
+export const postRenewToken = catchAsync(
+  async (
+    req: Request<{}, {}, renewTokenSchema>,
+    res: Response,
+    _next: NextFunction
+  ) => {
+    const { refresh } = req.body;
+
+    const tokens = await service.auth.handleRenewToken(refresh);
+
+    return res.status(200).json(tokens);
+  }
+);
+
 export const postLogin = catchAsync(
   async (
     req: Request<{}, {}, loginSchema>,
@@ -20,7 +34,7 @@ export const postLogin = catchAsync(
     const { access, refresh } = await service.auth.generateAndSaveTokens(
       foundUser.aId
     );
- 
+
     return res.status(200).json({ access, refresh });
   }
 );
