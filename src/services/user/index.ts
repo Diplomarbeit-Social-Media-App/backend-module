@@ -13,15 +13,15 @@ export const findUser = async (
       userName,
     },
   });
-  if (!found) throw new ApiError(NOT_FOUND, "Username or password not found!");
+  if (!found) throw new ApiError(NOT_FOUND, "Username oder Passwort falsch");
   const pwdCorrect = await service.auth.comparePassword(
     password,
     found.password
   );
   if (!pwdCorrect)
-    throw new ApiError(NOT_FOUND, "Username or password not found");
+    throw new ApiError(NOT_FOUND, "Username oder Passwort falsch");
   if (found.disabled)
-    throw new ApiError(UNAUTHORIZED, "Your account has been disabled");
+    throw new ApiError(UNAUTHORIZED, "Dein Account wurde gesperrt");
   return found;
 };
 
@@ -34,8 +34,7 @@ export const createUserByAccount = async (accountId: number) => {
   if (!account)
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      "No account found with accountId in userService/createUserByAccount",
-      true
+      "Kein Account wurde mit dieser ID gefundens"
     );
   const found = await db.user.findFirst({
     where: {

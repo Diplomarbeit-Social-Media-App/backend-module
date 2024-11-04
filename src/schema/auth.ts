@@ -10,46 +10,42 @@ export const renewTokenSchema = object({
 
 export const loginSchema = object({
   body: object({
-    userName: string(),
-    password: string(),
+    userName: string().trim(),
+    password: string().trim(),
   }),
 });
 
 export const signUpSchema = object({
   body: object({
-    userName: string({
-      errorMap: () => ({
-        message: "Username muss 3 bis 15 Zeichen lang sein",
+    userName: string()
+      .trim()
+      .min(3, { message: "Username zu kurz" })
+      .max(15, { message: "Username zu lang" })
+      .refine((userName) => validator.isAlphanumeric(userName), {
+        message: "Username enthält Sonderzeichen!",
       }),
-    })
-      .min(3)
-      .max(15),
     password: string()
+      .trim()
       .max(256)
-      .refine((data) => validator.isStrongPassword(data), {
+      .refine((pwd) => validator.isStrongPassword(pwd), {
         message: "Bitte verwende ein starkes Passwort",
       }),
     email: string()
-      .email({ message: "Ungueltige Email-Adresse" })
+      .trim()
+      .email({ message: "Ungültige Email-Adresse" })
       .max(128, { message: "Maximal 128 Zeichen erlaubt" }),
     dateOfBirth: coerce
-      .date({ message: "Bitte gib das Datum im gueltigen Format ein" })
+      .date({ message: "Bitte gib das Datum im gültigen Format ein" })
       .refine((data) => dayjs().diff(dayjs(data), "year", true) >= 14, {
         message: "Du musst mindestens 14 sein, um die App verwenden zu dürfen",
       }),
-    firstName: string({
-      errorMap: () => ({
-        message: "Vorname ungültig (2 bis 30 Zeichen)",
-      }),
-    })
-      .min(2)
-      .max(30),
-    lastName: string({
-      errorMap: () => ({
-        message: "Nachname ungültig (2 bis 30 Zeichen)",
-      }),
-    })
-      .min(2)
-      .max(30),
+    firstName: string()
+      .trim()
+      .min(2, { message: "Vorname zu kurz" })
+      .max(30, { message: "Vorname zu lang" }),
+    lastName: string()
+      .trim()
+      .min(2, { message: "Nachname zu kurz" })
+      .max(50, { message: "Nachname zu lang" }),
   }),
 });
