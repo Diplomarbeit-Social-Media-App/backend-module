@@ -13,12 +13,15 @@ export const findUser = async (
       userName,
     },
   });
-  if (!found)
-    throw new ApiError(NOT_FOUND, "Username or password not found!", true);
-  if (!service.auth.comparePassword(password, found.password))
-    throw new ApiError(NOT_FOUND, "Username or password not found", true);
+  if (!found) throw new ApiError(NOT_FOUND, "Username or password not found!");
+  const pwdCorrect = await service.auth.comparePassword(
+    password,
+    found.password
+  );
+  if (!pwdCorrect)
+    throw new ApiError(NOT_FOUND, "Username or password not found");
   if (found.disabled)
-    throw new ApiError(UNAUTHORIZED, "Your account has been disabled", true);
+    throw new ApiError(UNAUTHORIZED, "Your account has been disabled");
   return found;
 };
 
