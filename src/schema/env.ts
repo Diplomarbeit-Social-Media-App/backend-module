@@ -18,4 +18,11 @@ export const env = object({
   JWT_REFRESH_EXPIRATION_DAYS: coerce.number({
     message: "Refresh token expiration must be defined in days",
   }),
+  MAIL_TOKEN: string({ message: "Mail token must be specified" }),
+  MAIL_FROM_ADDRESS: string({
+    message: "From mail address must be specified",
+  }).refine((email) => validator.isEmail(email), {
+    message: "Value not a valid email",
+  }),
+  MAIL_FROM_NAME: string({ message: "Mail sender name must be specified" }),
 });

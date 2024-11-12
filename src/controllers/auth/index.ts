@@ -1,12 +1,25 @@
 import { NextFunction, Request, Response } from "express";
 import {
   loginSchema,
+  passwordResetSchema,
   renewTokenSchema,
   signUpSchema,
 } from "../../types/auth";
 import catchAsync from "../../utils/catchAsync";
 import service from "../../services/index";
 import config from "../../config/config";
+
+export const postResetPassword = catchAsync(
+  async (
+    req: Request<{}, {}, passwordResetSchema>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const { email, userName } = req.body;
+    const account = await service.user.findUserByUserName(userName);
+    
+  }
+);
 
 export const postRenewToken = catchAsync(
   async (

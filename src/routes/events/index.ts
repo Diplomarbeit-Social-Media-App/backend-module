@@ -11,5 +11,6 @@ router.post(
   controllers.events.postEvent
 );
 router.get("/", controllers.events.getEvents);
+router.get("/filter", controllers.events.getEventsFilterCategory);
 
 export default router;

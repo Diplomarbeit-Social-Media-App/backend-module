@@ -4,6 +4,13 @@ import httpStatus, { NOT_FOUND, UNAUTHORIZED } from "http-status";
 import service from "../../services/index";
 import { Account } from "@prisma/client";
 
+export const findUserByUserName = async (userName: string) => {
+  const found = await db.account.findFirst({ where: { userName } });
+  if (!found || found.disabled)
+    return Promise.reject("User nicht gefunden oder gesperrt");
+  return found;
+};
+
 export const findUser = async (
   userName: string,
   password: string
