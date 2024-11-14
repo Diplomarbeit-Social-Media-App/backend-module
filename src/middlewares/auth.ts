@@ -42,7 +42,7 @@ const verifyAuth =
   };
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
-  return new Promise((resolve, reject) => {
+  await new Promise((resolve, reject) => {
     passport.authenticate(
       "jwt",
       { session: false },
