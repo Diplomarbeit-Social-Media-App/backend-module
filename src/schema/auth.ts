@@ -41,11 +41,9 @@ export const signUpSchema = object({
       .trim()
       .email({ message: "Ungültige Email-Adresse" })
       .max(128, { message: "Maximal 128 Zeichen erlaubt" }),
-    dateOfBirth: coerce
-      .date({ message: "Bitte gib das Datum im gültigen Format ein" })
-      .refine((data) => dayjs().diff(dayjs(data), "year", true) >= 14, {
-        message: "Du musst mindestens 14 sein, um die App verwenden zu dürfen",
-      }),
+    dateOfBirth: coerce.date({
+      message: "Bitte gib das Datum im gültigen Format ein",
+    }),
     firstName: string({ message: "Vorname muss enthalten sein" })
       .trim()
       .min(2, { message: "Vorname zu kurz" })
