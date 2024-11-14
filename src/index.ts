@@ -12,10 +12,14 @@ const PORT = config.PORT;
 export const server = app.listen(PORT, async () => {
   const health = await getHealthCheck();
   if (!health) throw new ApiError(500, "CONNECTION TO DATABASE FAILED!", false);
-  
+
   logger.info("✨ SERVICE CONNECTED TO DB");
-  logger.info(`🚀 REST SERVICE SUCCESFULLY STARTED ON http://localhost:${PORT}/`);
+  logger.info(
+    `🚀 REST SERVICE SUCCESFULLY STARTED ON http://localhost:${PORT}/`
+  );
 });
 
-process.on("uncaughtException", () => handleSevereErrors());
-process.on("unhandledRejection", () => handleSevereErrors());
+process.on("uncaughtException", (e: Error) => handleSevereErrors(e.message));
+process.on("unhandledRejection", (reason: Error | any, promise: Promise<any>) =>
+  handleSevereErrors(reason?.message ?? "unknown promise")
+);
