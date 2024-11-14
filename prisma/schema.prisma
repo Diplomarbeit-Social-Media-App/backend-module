@@ -100,7 +100,7 @@ model Event {
   lId         Int
   locationId  Int       @unique
   minAge      Int
-  public      Boolean   @default(false)
+  isPublic    Boolean   @default(false)
   creatorId   Int
   host        Host      @relation(fields: [creatorId], references: [hId])
   location    Location  @relation(fields: [locationId], references: [lId])
