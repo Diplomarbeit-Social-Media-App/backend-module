@@ -1,3 +1,1 @@
-export const postGroup = async () => {
-  
-}
+export const postGroup = async () => {};

@@ -1,5 +1,5 @@
-import { MailtrapClient } from "mailtrap";
-import config from "../config/config";
+import { MailtrapClient } from 'mailtrap';
+import config from '../config/config';
 
 const client = new MailtrapClient({ token: config.MAIL_TOKEN });
 
@@ -12,7 +12,7 @@ export const sendMail = async (
   subject: string,
   to: [{ email: string }],
   text?: string,
-  html?: string
+  html?: string,
 ) => {
   return await client.send({
     from: sender,

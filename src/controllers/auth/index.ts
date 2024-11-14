@@ -1,67 +1,66 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from 'express';
 import {
   loginSchema,
   passwordResetSchema,
   renewTokenSchema,
   signUpSchema,
-} from "../../types/auth";
-import catchAsync from "../../utils/catchAsync";
-import service from "../../services/index";
-import config from "../../config/config";
+} from '../../types/auth';
+import catchAsync from '../../utils/catchAsync';
+import service from '../../services/index';
+import config from '../../config/config';
 
 export const postResetPassword = catchAsync(
   async (
     req: Request<{}, {}, passwordResetSchema>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     const { email, userName } = req.body;
     const account = await service.user.findUserByUserName(userName);
-    
-  }
+  },
 );
 
 export const postRenewToken = catchAsync(
   async (
     req: Request<{}, {}, renewTokenSchema>,
     res: Response,
-    _next: NextFunction
+    _next: NextFunction,
   ) => {
     const { refresh } = req.body;
 
     const tokens = await service.auth.handleRenewToken(refresh);
 
     return res.status(200).json(tokens);
-  }
+  },
 );
 
 export const postLogin = catchAsync(
   async (
     req: Request<{}, {}, loginSchema>,
     res: Response,
-    _next: NextFunction
+    _next: NextFunction,
   ) => {
     let data = req.body;
     const foundUser = await service.user.findUser(data.userName, data.password);
 
     const { access, refresh } = await service.auth.generateAndSaveTokens(
-      foundUser.aId
+      foundUser.aId,
     );
 
     return res.status(200).json({ access, refresh });
-  }
+  },
 );
 
 export const postSignUp = catchAsync(
   async (
     req: Request<{}, {}, signUpSchema>,
     res: Response,
-    _next: NextFunction
+    _next: NextFunction,
   ) => {
     let data = req.body;
     const hashedPwd = await service.auth.hashPassword(
       data.password,
-      config.SALT
+      config.SALT,
     );
     data.password = hashedPwd;
     const account = await service.auth.createAccount(data);
@@ -69,9 +68,9 @@ export const postSignUp = catchAsync(
     const { user } = await service.user.createUserByAccount(account.aId);
 
     const { refresh, access } = await service.auth.generateAndSaveTokens(
-      account.aId
+      account.aId,
     );
 
     return res.status(201).json({ access, refresh });
-  }
+  },
 );

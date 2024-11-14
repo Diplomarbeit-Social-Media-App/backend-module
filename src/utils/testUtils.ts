@@ -1,8 +1,8 @@
-import { SafeParseReturnType, ZodSchema } from "zod";
+import { SafeParseReturnType, ZodSchema } from 'zod';
 
 const shouldFail = <T>(
   schema: ZodSchema,
-  test: object
+  test: object,
 ): SafeParseReturnType<T, T> => {
   const parsed = schema.safeParse(test);
   expect(parsed.data).toBeUndefined;
@@ -13,7 +13,7 @@ const shouldFail = <T>(
 
 const shouldPass = <T>(
   schema: ZodSchema,
-  test: object
+  test: object,
 ): SafeParseReturnType<T, T> => {
   const parsed = schema.safeParse(test);
   expect(parsed.data).toBeDefined();

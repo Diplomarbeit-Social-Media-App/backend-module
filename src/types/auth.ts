@@ -3,7 +3,7 @@ import {
   passwordReset,
   renewTokenSchema,
   signUpSchema,
-} from "../schema/auth";
+} from '../schema/auth';
 
 export type accountSchema = {
   userName: string;

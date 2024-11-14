@@ -1,6 +1,6 @@
-import { eventSearch } from "../../types/event";
-import db from "../../utils/db";
-import lodash from "lodash";
+import { eventSearch } from '../../types/event';
+import db from '../../utils/db';
+import lodash from 'lodash';
 
 export const getAllEvents = async () => {
   const events = await db.event.findMany({
@@ -12,7 +12,7 @@ export const getAllEvents = async () => {
   });
   return events.map((event) => {
     const participantCount: Number = event._count.users;
-    return { ...lodash.omit(event, "_count"), participantCount };
+    return { ...lodash.omit(event, '_count'), participantCount };
   });
 };
 

@@ -1,6 +1,3 @@
-import supertest from "supertest";
+import supertest from 'supertest';
 
-
-test("if unknown route returns 404", async () => {
-  
-});
+test('if unknown route returns 404', async () => {});
