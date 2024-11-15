@@ -25,4 +25,5 @@ export const env = object({
     message: 'Value not a valid email',
   }),
   EMAIL_FROM_NAME: string({ message: 'Mail sender name must be specified' }),
+  EMAIL_HOST: string({ message: 'Please provide email service host' }),
 });
