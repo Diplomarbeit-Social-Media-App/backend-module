@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import validator from 'validator';
 import { object, string, coerce } from 'zod';
 
@@ -17,8 +16,16 @@ export const loginSchema = object({
 
 export const passwordReset = object({
   body: object({
-    userName: string({ message: 'Username fehlt' }),
-    email: string({ message: 'Email fehlt' }),
+    userName: string({ message: 'Username ist ungültig' }),
+    token: string({ message: 'Der Token ist ungültig' }).length(6, {
+      message: 'Token ist 6 Zeichen lang',
+    }),
+    updatedPassword: string({ message: 'Neues Passwort muss enthalten sein' })
+      .trim()
+      .max(256)
+      .refine((pwd) => validator.isStrongPassword(pwd), {
+        message: 'Bitte verwende ein starkes Passwort',
+      }),
   }),
 });
 

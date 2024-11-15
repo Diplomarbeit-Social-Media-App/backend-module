@@ -7,6 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model PasswordResetToken {
+  prtId   Int      @id @default(autoincrement())
+  token   String
+  exp     DateTime
+  account Account  @relation(fields: [aId], references: [aId])
+  aId     Int      @unique
+}
+
 model Location {
   lId         Int       @id @default(autoincrement())
   city        String
@@ -44,19 +52,20 @@ model Host {
 }
 
 model Account {
-  aId         Int      @id @default(autoincrement())
-  userName    String   @unique
-  firstName   String
-  lastName    String
-  password    String
-  email       String   @unique
-  description String
-  picture     String?
-  dateOfBirth DateTime
-  disabled    Boolean  @default(false)
-  host        Host?
-  token       Token[]  @relation("UserTokens")
-  user        User?
+  aId                Int                 @id @default(autoincrement())
+  userName           String              @unique
+  firstName          String
+  lastName           String
+  password           String
+  email              String              @unique
+  description        String
+  picture            String?
+  dateOfBirth        DateTime
+  disabled           Boolean             @default(false)
+  host               Host?
+  token              Token[]             @relation("UserTokens")
+  user               User?
+  passwordResetToken PasswordResetToken?
 }
 
 model Message {

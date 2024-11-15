@@ -13,6 +13,52 @@ import { UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
+export const handleRequestPwdResetToken = async (userName: string) => {
+  const acc = await db.account.findFirst({ where: { userName } });
+  assert(acc != null, 'Account wurde nicht gefunden');
+  const aId = acc.aId;
+  await db.passwordResetToken.deleteMany({ where: { aId: aId } });
+  const randomToken =
+    Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  await db.passwordResetToken.create({
+    data: {
+      exp: dayjs().add(30, 'minute').toDate(),
+      token: randomToken.toString(),
+      aId: aId,
+    },
+  });
+  const account = await service.account.findAccountByPk(aId);
+
+  assert(
+    account != null && account.email != null,
+    'Fehler ist aufgetreten, da keine Email bei dem Account hinterlegt wurde',
+  );
+
+  await service.mail.sendPwdResetMail(randomToken.toString(), account.email);
+};
+
+export const updatePassword = async (
+  token: string,
+  userName: string,
+  hashedNewPwd: string,
+) => {
+  const account = await db.account.findFirst({ where: { userName } });
+  assert(account != null, 'Account wurde nicht gefunden');
+  const foundToken = await db.passwordResetToken.findFirst({
+    where: {
+      token,
+    },
+  });
+  assert(foundToken?.aId == account.aId, 'Token ist ungültig');
+  assert(foundToken != null, 'Token ist ungültig');
+  assert(dayjs().isBefore(foundToken.exp), 'Token ist abgelaufen');
+  await db.passwordResetToken.delete({ where: { prtId: foundToken.prtId } });
+  await db.account.update({
+    where: { aId: account.aId },
+    data: { password: hashedNewPwd },
+  });
+};
+
 export const handleRenewToken = async (
   refresh: string,
 ): Promise<{ access: string }> => {
@@ -46,7 +92,7 @@ export const handleRenewToken = async (
     return {
       access: await generateToken(accountFound.aId, TOKEN_TYPES.ACCESS),
     };
-  } catch (err) {
+  } catch (_err) {
     throw new ApiError(UNAUTHORIZED, 'Anmeldung abgelaufen');
   }
 };

@@ -1,7 +1,7 @@
-openapi: "3.0.3"
+openapi: '3.0.3'
 info:
   title: Bonfire API GUide
-  version: "0.1"
+  version: '0.1'
   contact:
     email: diplomarbeit.sma@gmail.com
 servers:
@@ -21,12 +21,17 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    MessageSchema:
+      type: object
+      properties:
+        message:
+          type: string
     LoginSchema:
       type: object
       properties:
         userName:
           type: string
-          default: "Max"
+          default: 'Max'
         password:
           type: string
     SignUpSchema:
@@ -34,21 +39,21 @@ components:
       properties:
         firstName:
           type: string
-          default: "Max"
+          default: 'Max'
         lastName:
           type: string
-          default: "Mustermann"
+          default: 'Mustermann'
         userName:
           type: string
-          default: "maxmusstermann"
+          default: 'maxmusstermann'
         email:
           type: string
-          default: "max@mustermann.com"
+          default: 'max@mustermann.com'
         password:
           type: string
         dateOfBirth:
           type: string
-          default: "2000-01-01"
+          default: '2000-01-01'
     Error:
       type: object
       properties:
@@ -86,7 +91,7 @@ components:
       properties:
         events:
           type: array
-          $ref: "#/components/schemas/Event"
+          $ref: '#/components/schemas/Event'
     Tokens:
       type: object
       properties:
@@ -99,7 +104,7 @@ components:
       properties:
         position:
           type: object
-          $ref: "#/components/schemas/LongLatPositionFilter"
+          $ref: '#/components/schemas/LongLatPositionFilter'
     LongLatPositionFilter:
       type: object
       properties:
@@ -121,7 +126,7 @@ components:
           description: Die Entfernung von der Aktivität in km
         position:
           type: object
-          $ref: "#/components/schemas/PositionFilter"
+          $ref: '#/components/schemas/PositionFilter'
     Filter:
       type: object
       properties:
@@ -135,7 +140,7 @@ components:
           nullable: true
         location:
           type: object
-          $ref: "#/components/schemas/LocationFilter"
+          $ref: '#/components/schemas/LocationFilter'
           required: false
         category:
           type: string
@@ -144,6 +149,15 @@ components:
       type: object
       properties:
         access:
+          type: string
+    ResetPwdBody:
+      type: object
+      properties:
+        token:
+          type: string
+        userName:
+          type: string
+        updatedPassword:
           type: string
 security:
   - auth: []
@@ -154,22 +168,22 @@ paths:
         - health
       description: Used for checking db/ server health
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/HealthResponse"
-        "500":
+                  $ref: '#/components/schemas/HealthResponse'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'
   /auth/login:
     post:
       tags:
@@ -180,32 +194,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginSchema"
+              $ref: '#/components/schemas/LoginSchema'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Tokens"
-        "400":
+                  $ref: '#/components/schemas/Tokens'
+        '400':
           description: BAD REQUEST
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
-        "500":
+                  $ref: '#/components/schemas/Error'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'
   /auth/signup:
     post:
       tags:
@@ -216,95 +230,130 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignUpSchema"
+              $ref: '#/components/schemas/SignUpSchema'
       responses:
-        "201":
+        '201':
           description: CREATED
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Tokens"
-        "400":
+                  $ref: '#/components/schemas/Tokens'
+        '400':
           description: BAD REQUEST
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
-        "500":
+                  $ref: '#/components/schemas/Error'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'
   /auth/renew:
     post:
       description: Renew access token with refresh token
       tags:
         - authentication
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/RenewAccessToken"
-        "500":
+                  $ref: '#/components/schemas/RenewAccessToken'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'
   /auth/reset:
     post:
-      description: Reset password for account
+      description: Resets password for user
+      tags:
+        - authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPwdBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/MessageSchema'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/reset/{userId}:
+    get:
+      description: Requests token reset email
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: Username
       tags:
         - authentication
       responses:
-        "200":
+        '200':
           description: OK
-        "500":
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
-  /event/:
+                  $ref: '#/components/schemas/Error'
+  /event:
     get:
-      description: "Loading of all events"
+      description: 'Loading of all events'
       tags:
         - events
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/EventResponse"
-        "500":
+                  $ref: '#/components/schemas/EventResponse'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'
   /event/filter:
     get:
-      description: "Loading of all events with filter"
+      description: 'Loading of all events with filter'
       tags:
         - events
       requestBody:
@@ -312,21 +361,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Filter"
+              $ref: '#/components/schemas/Filter'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/EventResponse"
-        "500":
+                  $ref: '#/components/schemas/EventResponse'
+        '500':
           description: INTERNAL SERVER ERROR
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Error"
+                  $ref: '#/components/schemas/Error'

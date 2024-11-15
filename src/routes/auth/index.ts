@@ -11,6 +11,7 @@ router.post(
   validate(renewTokenSchema),
   controllers.auth.postRenewToken,
 );
+router.get('/reset/:userName', controllers.auth.postRequestResetPwdToken);
 router.post('/reset', controllers.auth.postResetPassword);
 
 export default router;

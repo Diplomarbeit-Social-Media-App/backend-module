@@ -48,7 +48,7 @@ export const createUserByAccount = async (accountId: number) => {
       aId: accountId,
     },
   });
-  if (!!found)
+  if (found)
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
       'User already found with given accound-id',
