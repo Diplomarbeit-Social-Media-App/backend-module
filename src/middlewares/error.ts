@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ApiError } from '../utils/apiError';
-import statusCode, { BAD_REQUEST, INTERNAL_SERVER_ERROR } from 'http-status';
+import statusCode, { INTERNAL_SERVER_ERROR } from 'http-status';
 import config from '../config/config';
 import type errorResFormat from '../types/error';
 import { server } from '../index';
@@ -20,7 +20,7 @@ export const convertError = (
   let error: Error | ApiError = err;
 
   logger.debug(
-    'Error handling middleware invoked: ' + error.message.toString(),
+    `Error handling middleware invoked: ${error.message.toString()}`,
   );
 
   if (err instanceof PrismaClientValidationError) {
@@ -42,7 +42,7 @@ export const convertError = (
     );
   }
 
-  if (!(error instanceof ApiError)) {
+  if (!(err instanceof ApiError)) {
     error = new ApiError(statusCode.INTERNAL_SERVER_ERROR, err.message, false);
   }
 
@@ -59,7 +59,7 @@ export const handleError = async (
     return await handleSevereErrors(err.message);
   }
   if (res.headersSent) return;
-  let errorFormat: errorResFormat = {
+  const errorFormat: errorResFormat = {
     error: true,
     message: err.message,
     name: err.name,
@@ -79,7 +79,7 @@ export const handleSevereErrors = async (e?: string) => {
   try {
     logger.error(`Closing db connection if open...`);
     await db.$disconnect();
-  } catch (err) {
+  } catch {
     logger.error(`Uncaught problem encountered! Error disconnecting database`);
   }
   if (server)

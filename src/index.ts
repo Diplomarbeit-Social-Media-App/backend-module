@@ -20,6 +20,6 @@ export const server = app.listen(PORT, async () => {
 });
 
 process.on('uncaughtException', (e: Error) => handleSevereErrors(e.message));
-process.on('unhandledRejection', (reason: Error | any, promise: Promise<any>) =>
-  handleSevereErrors(reason?.message ?? 'unknown promise'),
+process.on('unhandledRejection', (reason: Error) =>
+  handleSevereErrors(`${reason?.message}|${reason?.name}`),
 );
