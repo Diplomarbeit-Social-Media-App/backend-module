@@ -11,7 +11,7 @@ export const getAllEvents = async () => {
     },
   });
   return events.map((event) => {
-    const participantCount: Number = event._count.users;
+    const participantCount: number = event._count.users;
     return { ...lodash.omit(event, '_count'), participantCount };
   });
 };
