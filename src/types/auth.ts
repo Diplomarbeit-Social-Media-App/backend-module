@@ -21,16 +21,16 @@ export type hostSchema = accountSchema & {
   isVerified: boolean;
 };
 
-const loginSchemaBody = loginSchema.shape.body;
-export type loginSchema = Zod.infer<typeof loginSchemaBody>;
+type loginSchemaBody = typeof loginSchema.shape.body;
+export type loginSchema = Zod.infer<loginSchemaBody>;
 
-const signUpSchemaBody = signUpSchema.shape.body;
-export type signUpSchema = Zod.infer<typeof signUpSchemaBody> & {
+type signUpSchemaBody = typeof signUpSchema.shape.body;
+export type signUpSchema = Zod.infer<signUpSchemaBody> & {
   isUserSignUp: boolean;
 };
 
-const renewTokenSchemaBody = renewTokenSchema.shape.body;
-export type renewTokenSchema = Zod.infer<typeof renewTokenSchemaBody>;
+type renewTokenSchemaBody = typeof renewTokenSchema.shape.body;
+export type renewTokenSchema = Zod.infer<renewTokenSchemaBody>;
 
-const passwordResetBody = passwordReset.shape.body;
-export type passwordResetSchema = Zod.infer<typeof passwordResetBody>;
+type passwordResetBody = typeof passwordResetSchema.shape.body;
+export type passwordResetSchema = Zod.infer<passwordResetBody>;
