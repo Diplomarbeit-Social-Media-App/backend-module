@@ -14,7 +14,7 @@ export const loginSchema = object({
   }),
 });
 
-export const passwordReset = object({
+export const passwordResetSchema = object({
   body: object({
     userName: string({ message: 'Username ist ungültig' }),
     token: string({ message: 'Der Token ist ungültig' }).length(6, {

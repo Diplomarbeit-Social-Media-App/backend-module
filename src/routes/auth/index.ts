@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { validate } from '../../middlewares/validation';
-import { loginSchema, renewTokenSchema, signUpSchema } from '../../schema/auth';
+import {
+  loginSchema,
+  passwordResetSchema,
+  renewTokenSchema,
+  signUpSchema,
+} from '../../schema/auth';
 import controllers from '../../controllers/index';
 const router = Router();
 
@@ -12,6 +17,10 @@ router.post(
   controllers.auth.postRenewToken,
 );
 router.get('/reset/:userName', controllers.auth.postRequestResetPwdToken);
-router.post('/reset', controllers.auth.postResetPassword);
+router.post(
+  '/reset',
+  validate(passwordResetSchema),
+  controllers.auth.postResetPassword,
+);
 
 export default router;
