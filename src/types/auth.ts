@@ -1,6 +1,6 @@
 import {
   loginSchema,
-  passwordReset,
+  passwordResetSchema,
   renewTokenSchema,
   signUpSchema,
 } from '../schema/auth';
