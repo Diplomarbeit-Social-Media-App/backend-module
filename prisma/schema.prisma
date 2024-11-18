@@ -1,14 +1,170 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model PasswordResetToken {
+  prtId   Int      @id @default(autoincrement())
+  token   String
+  exp     DateTime
+  account Account  @relation(fields: [aId], references: [aId])
+  aId     Int      @unique
+}
+
+model Location {
+  lId         Int       @id @default(autoincrement())
+  city        String
+  street      String
+  houseNumber String
+  postCode    String
+  country     String    @default("Austria")
+  Activity    Activity?
+  Event       Event?
+}
+
+model User {
+  uId           Int            @id @default(autoincrement())
+  aId           Int            @unique
+  friendedBy    Friendship[]   @relation("UserFriendedBy")
+  friends       Friendship[]   @relation("UserFriends")
+  owner         Group[]
+  joinedGroups  GroupMember[]
+  Message       Message[]
+  notifications Notification[]
+  account       Account        @relation(fields: [aId], references: [aId])
+  followedHosts Host[]         @relation("HostFollowers")
+  events        Event[]        @relation("Participates")
+}
+
+model Host {
+  hId         Int        @id @default(autoincrement())
+  aId         Int        @unique
+  verified    Boolean    @default(false)
+  companyName String
+  Activity    Activity[]
+  Event       Event[]
+  account     Account    @relation(fields: [aId], references: [aId])
+  followedBy  User[]     @relation("HostFollowers")
+}
+
+model Account {
+  aId                Int                 @id @default(autoincrement())
+  userName           String              @unique
+  firstName          String
+  lastName           String
+  password           String
+  email              String              @unique
+  description        String
+  picture            String?
+  dateOfBirth        DateTime
+  disabled           Boolean             @default(false)
+  host               Host?
+  token              Token[]             @relation("UserTokens")
+  user               User?
+  passwordResetToken PasswordResetToken?
+}
+
+model Message {
+  mId       Int      @id @default(autoincrement())
+  text      String
+  timeStamp DateTime @default(now())
+  groupGId  Int
+  sentBy    Int
+  group     Group    @relation(fields: [groupGId], references: [gId])
+  user      User     @relation(fields: [sentBy], references: [uId])
+}
+
+model Activity {
+  aId          Int        @id @default(autoincrement())
+  openingTimes String
+  description  String
+  minAge       Int
+  locationId   Int        @unique
+  creatorId    Int
+  host         Host       @relation(fields: [creatorId], references: [hId])
+  location     Location   @relation(fields: [locationId], references: [lId])
+  groups       Group[]    @relation("AttachedActivites")
+  category     Category[] @relation("BelongsToCategory")
+}
+
+model Category {
+  cId         Int        @id @default(autoincrement())
+  description String
+  name        String
+  icon        String
+  seasonal    Boolean
+  activity    Activity[] @relation("BelongsToCategory")
+}
+
+model Event {
+  eId         Int       @id @default(autoincrement())
+  name        String
+  startsAt    DateTime?
+  endsAt      DateTime?
+  description String
+  lId         Int
+  locationId  Int       @unique
+  minAge      Int
+  isPublic    Boolean   @default(false)
+  creatorId   Int
+  host        Host      @relation(fields: [creatorId], references: [hId])
+  location    Location  @relation(fields: [locationId], references: [lId])
+  groups      Group[]   @relation("AttachedEvents")
+  users       User[]    @relation("Participates")
+}
+
+model Friendship {
+  userId    Int
+  friendId  Int
+  createdAt DateTime @default(now())
+  friend    User     @relation("UserFriendedBy", fields: [friendId], references: [uId])
+  user      User     @relation("UserFriends", fields: [userId], references: [uId])
+
+  @@id([userId, friendId])
+}
+
+model Token {
+  tId        Int      @id @default(autoincrement())
+  iat        DateTime @default(now())
+  exp        DateTime
+  type       String
+  backlisted Boolean
+  aId        Int
+  token      String   @unique
+  account    Account  @relation("UserTokens", fields: [aId], references: [aId])
+}
+
+model Group {
+  gId          Int           @id @default(autoincrement())
+  picture      String?
+  name         String        @default("Party gurrrls")
+  creationDate DateTime
+  description  String?
+  owningUser   Int
+  owner        User          @relation(fields: [owningUser], references: [uId])
+  members      GroupMember[]
+  messages     Message[]
+  activities   Activity[]    @relation("AttachedActivites")
+  events       Event[]       @relation("AttachedEvents")
+}
+
+model GroupMember {
+  gmId    Int      @id @default(autoincrement())
+  userId  Int
+  groupId Int
+  joined  DateTime
+  group   Group    @relation(fields: [groupId], references: [gId])
+  user    User     @relation(fields: [userId], references: [uId])
+}
+
+model Notification {
+  nId       Int      @id @default(autoincrement())
+  text      String
+  timeStamp DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [uId])
 }

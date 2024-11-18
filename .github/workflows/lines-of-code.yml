@@ -1,0 +1,36 @@
+name: Count Lines of Code
+
+on:
+  push:
+    branches:
+      - main # Change this to your default branch if needed
+  pull_request:
+    branches:
+      - main # Change this to your default branch if needed
+
+jobs:
+  lines_of_code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install cloc
+        run: sudo apt-get install -y cloc
+
+      - name: Count lines of code in src/ directory
+        id: loc
+        run: |
+          cloc src --json > loc-results.json
+          echo "::set-output name=loc::$(jq '.src | .lines' loc-results.json)"
+
+      - name: Output Lines of Code
+        run: |
+          echo "Lines of Code in src/: ${{ steps.loc.outputs.loc }}"

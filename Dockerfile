@@ -1,14 +1,13 @@
-FROM node:18.16.0-alpine as base
-COPY package.json ./
+FROM node:18-alpine
+WORKDIR /app
+RUN npm install -g ts-node prisma
+COPY package*.json ./
 RUN npm install
-COPY src ./src
-COPY tsconfig.json ./tsconfig.json
+RUN npx prisma init
+COPY prisma/schema.prisma ./prisma/schema.prisma
+RUN npx prisma generate
+COPY . .
 RUN npm run build
-FROM node:18.16.0-alpine
-
-COPY --from=base ./node_modules ./node_modules
-COPY --from=base ./package.json ./package.json
-COPY --from=base /dist /dist
-
+RUN mkdir -p /app/logs && touch /app/logs/requests.log
+CMD ["npm", "start"]
 EXPOSE 3000
-CMD ["npm", "run", "start"]

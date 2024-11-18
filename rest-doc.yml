@@ -1,0 +1,381 @@
+openapi: '3.0.3'
+info:
+  title: Bonfire API GUide
+  version: '0.1'
+  contact:
+    email: diplomarbeit.sma@gmail.com
+servers:
+  - url: http://localhost:3000/
+  - url: https://backend-module.onrender.com
+tags:
+  - name: authentication
+    description: authentication module
+  - name: events
+    description: event module
+  - name: health
+    description: health module
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageSchema:
+      type: object
+      properties:
+        message:
+          type: string
+    LoginSchema:
+      type: object
+      properties:
+        userName:
+          type: string
+          default: 'Max'
+        password:
+          type: string
+    SignUpSchema:
+      type: object
+      properties:
+        firstName:
+          type: string
+          default: 'Max'
+        lastName:
+          type: string
+          default: 'Mustermann'
+        userName:
+          type: string
+          default: 'maxmusstermann'
+        email:
+          type: string
+          default: 'max@mustermann.com'
+        password:
+          type: string
+        dateOfBirth:
+          type: string
+          default: '2000-01-01'
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+        statusCode:
+          type: integer
+        message:
+          type: string
+        name:
+          type: string
+    HealthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        healthy:
+          type: boolean
+    Event:
+      type: object
+      properties:
+        name:
+          type: string
+          minimum: 3
+          maximum: 40
+        startsAt:
+          type: string
+        endsAt:
+          type: string
+        description:
+          type: string
+          minimum: 10
+    EventResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          $ref: '#/components/schemas/Event'
+    Tokens:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+    PositionFilter:
+      type: object
+      properties:
+        position:
+          type: object
+          $ref: '#/components/schemas/LongLatPositionFilter'
+    LongLatPositionFilter:
+      type: object
+      properties:
+        longtitude:
+          type: number
+          minimum: -180
+          maximum: 180
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+    LocationFilter:
+      type: object
+      properties:
+        radius:
+          type: number
+          minimum: 0
+          maximum: 400
+          description: Die Entfernung von der Aktivität in km
+        position:
+          type: object
+          $ref: '#/components/schemas/PositionFilter'
+    Filter:
+      type: object
+      properties:
+        startDate:
+          type: string
+          description: Startdatum des Events
+          nullable: true
+        endDate:
+          type: string
+          description: Enddatum des Events
+          nullable: true
+        location:
+          type: object
+          $ref: '#/components/schemas/LocationFilter'
+          required: false
+        category:
+          type: string
+          nullable: false
+    RenewAccessToken:
+      type: object
+      properties:
+        access:
+          type: string
+    ResetPwdBody:
+      type: object
+      properties:
+        token:
+          type: string
+        userName:
+          type: string
+        updatedPassword:
+          type: string
+security:
+  - auth: []
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      description: Used for checking db/ server health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/login:
+    post:
+      tags:
+        - authentication
+      description: Used for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginSchema'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Tokens'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/signup:
+    post:
+      tags:
+        - authentication
+      description: For user registration used
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpSchema'
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Tokens'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/renew:
+    post:
+      description: Renew access token with refresh token
+      tags:
+        - authentication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/RenewAccessToken'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/reset:
+    post:
+      description: Resets password for user
+      tags:
+        - authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPwdBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/MessageSchema'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /auth/reset/{userId}:
+    get:
+      description: Requests token reset email
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: Username
+      tags:
+        - authentication
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /event:
+    get:
+      description: 'Loading of all events'
+      tags:
+        - events
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+  /event/filter:
+    get:
+      description: 'Loading of all events with filter'
+      tags:
+        - events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Filter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
