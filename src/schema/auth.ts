@@ -16,9 +16,9 @@ export const loginSchema = object({
 
 export const passwordResetSchema = object({
   body: object({
-    userName: string({ message: 'Username ist ungültig' }),
-    token: string({ message: 'Der Token ist ungültig' }).length(6, {
-      message: 'Token ist 6 Zeichen lang',
+    userName: string({ message: 'Ein Username muss enthalten sein' }),
+    token: string({ message: 'Ein Token muss enthalten sein' }).length(6, {
+      message: 'Token ist keine 6 Zeichen lang',
     }),
     updatedPassword: string({ message: 'Neues Passwort muss enthalten sein' })
       .trim()

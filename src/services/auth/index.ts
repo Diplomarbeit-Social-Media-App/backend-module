@@ -9,7 +9,7 @@ import pick from 'lodash/pick';
 import service from '../index';
 import { Account } from '@prisma/client';
 import { ApiError } from '../../utils/apiError';
-import { UNAUTHORIZED } from 'http-status';
+import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
@@ -49,9 +49,18 @@ export const updatePassword = async (
       token,
     },
   });
-  assert(foundToken?.aId == account.aId, 'Token ist ungültig');
-  assert(foundToken != null, 'Token ist ungültig');
-  assert(dayjs().isBefore(foundToken.exp), 'Token ist abgelaufen');
+  assert(
+    foundToken?.aId == account.aId,
+    new ApiError(NOT_FOUND, 'Token wurde nicht gefunden'),
+  );
+  assert(
+    foundToken != null,
+    new ApiError(NOT_FOUND, 'Token wurde nicht gefunden'),
+  );
+  assert(
+    dayjs().isBefore(foundToken.exp),
+    new ApiError(GONE, 'Token ist abgelaufen'),
+  );
   await db.passwordResetToken.delete({ where: { prtId: foundToken.prtId } });
   await db.account.update({
     where: { aId: account.aId },
