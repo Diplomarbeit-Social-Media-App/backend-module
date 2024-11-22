@@ -1,7 +1,7 @@
 import { eventSchema, eventSearch } from '../schema/event';
 
-const eventSchemaBody = eventSchema.shape.body;
-export type eventType = Zod.infer<typeof eventSchemaBody>;
+type eventSchemaBody = typeof eventSchema.shape.body;
+export type eventType = Zod.infer<eventSchemaBody>;
 
-const eventSearchBody = eventSearch.shape.body;
-export type eventSearch = Zod.infer<typeof eventSearchBody>;
+type eventSearchBody = typeof eventSearch.shape.body;
+export type eventSearch = Zod.infer<eventSearchBody>;

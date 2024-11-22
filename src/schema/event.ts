@@ -26,9 +26,23 @@ export const eventSchema = object({
     startsAt: coerce.date().min(dayjs().add(6, 'hour').toDate(), {
       message: 'Das Event muss mindestens 6 Stunden vor Beginn angelegt werden',
     }),
+    minAge: coerce
+      .number({ message: 'Bitte gib ein Mindestalter ein' })
+      .min(0, { message: 'Alter zu klein' })
+      .max(99, { message: 'Alter zu groß' }),
     endsAt: coerce.date(),
     description: string().trim().min(10, { message: 'Beschreibung zu kurz' }),
-    position: positionSchema,
+    location: object({
+      plz: coerce
+        .number({ message: 'Bitte gib eine Plz ein' })
+        .min(1000, { message: 'Plz zu niedrig' })
+        .max(9999, { message: 'Plz zu hoch' }),
+      street: string({ message: 'Bitte gib eine Straße an' }).min(3, {
+        message: 'Straßenname zu kurz',
+      }),
+      houseNumber: string({ message: 'Bitte gib eine Hausnummer an' }),
+      city: string({ message: 'Bitte gib einen Ortsnamen an' }),
+    }),
   }).refine((data) => data.endsAt >= data.startsAt, {
     message: 'Enddatum darf nicht vor Anfangsdatum sein!',
   }),
