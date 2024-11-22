@@ -4,6 +4,7 @@ import {
   loginSchema,
   passwordResetSchema,
   renewTokenSchema,
+  requestPasswordResetSchema,
   signUpSchema,
 } from '../../schema/auth';
 import controllers from '../../controllers/index';
@@ -16,7 +17,11 @@ router.post(
   validate(renewTokenSchema),
   controllers.auth.postRenewToken,
 );
-router.get('/reset/:userName', controllers.auth.postRequestResetPwdToken);
+router.get(
+  '/reset/:userName',
+  validate(requestPasswordResetSchema),
+  controllers.auth.postRequestResetPwdToken,
+);
 router.post(
   '/reset',
   validate(passwordResetSchema),

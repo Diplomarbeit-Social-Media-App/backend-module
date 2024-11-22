@@ -11,7 +11,7 @@ const app = express();
 
 app.use(cors());
 app.use(urlencoded({ extended: false }));
-app.use(json());
+app.use(json({ limit: '900kb', strict: true }));
 app.use(morgan);
 app.use(passport.initialize());
 passport.use(JwtStrategy);

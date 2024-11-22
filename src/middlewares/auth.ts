@@ -24,34 +24,34 @@ const verifyAccessToken = async (payload: tokenSchema, done: DoneCallback) => {
         'Token must be an access token!',
         false,
       );
-
     const account = await accountService.findAccountByPk(payload.sub);
-    done(false, account);
+    done(null, account);
   } catch (e) {
-    done(e, false);
+    done(e, null);
   }
 };
 
 const verifyAuth =
-  (req: Request, resolve: Function, reject: Function) =>
+  (req: Request, resolve: (value: unknown) => void, _reject: () => void) =>
   (err: Error, user: unknown, info: unknown) => {
     if (err || !user || info)
       throw new ApiError(UNAUTHORIZED, 'Bitte logge dich erneut ein!', true);
     req.user = user;
-    resolve();
+    resolve(user);
   };
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
-  await new Promise((resolve, reject) => {
+export const auth = async (req: Request, res: Response, next: NextFunction) =>
+  new Promise((resolve, reject) => {
     passport.authenticate(
       'jwt',
       { session: false },
       verifyAuth(req, resolve, reject),
     )(req, res, next);
   })
-    .then(next)
-    .catch((err) => next(err));
-};
+    .then(() => next())
+    .catch((err) =>
+      next(new ApiError(UNAUTHORIZED, `Fehler beim Anmelden: ${err.message}`)),
+    );
 
 const JwtStrategy = new Strategy(jwtOptions, verifyAccessToken);
 
