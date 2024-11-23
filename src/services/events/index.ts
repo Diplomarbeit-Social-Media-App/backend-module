@@ -6,11 +6,34 @@ import lodash from 'lodash';
 import { ApiError } from '../../utils/apiError';
 import { INTERNAL_SERVER_ERROR } from 'http-status';
 
+export const getEventDetails = async (eId: number) => {
+  return await db.event.findFirst({
+    where: {
+      eId,
+    },
+    select: {
+      coverImage: true,
+      name: true,
+      users: true,
+      minAge: true,
+      galleryImages: true,
+      isPublic: true,
+      location: true,
+      endsAt: true,
+    },
+  });
+};
+
 export const getAllEvents = async () => {
   const events = await db.event.findMany({
-    include: {
+    select: {
+      coverImage: true,
+      name: true,
+      startsAt: true,
       _count: {
-        select: { users: true },
+        select: {
+          users: true,
+        },
       },
     },
   });
@@ -47,10 +70,14 @@ export const createEvent = async (event: eventType, aId: number) => {
     );
     const e = await db.event.create({
       data: {
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
         description: event.description,
         lId: location.lId,
         minAge: event.minAge,
         name: event.name,
+        coverImage: event.coverImage,
+        galleryImages: event.galleryImages,
         location: {
           connect: {
             lId: location.lId,

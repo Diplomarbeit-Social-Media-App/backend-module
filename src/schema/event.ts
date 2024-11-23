@@ -1,4 +1,4 @@
-import { coerce, nativeEnum, object, string } from 'zod';
+import { array, coerce, nativeEnum, object, string } from 'zod';
 import validator from 'validator';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
@@ -32,6 +32,10 @@ export const eventSchema = object({
       .max(99, { message: 'Alter zu groß' }),
     endsAt: coerce.date(),
     description: string().trim().min(10, { message: 'Beschreibung zu kurz' }),
+    coverImage: string({
+      message: 'Bitte gib einen Image-Path für das Coverimage ein',
+    }),
+    galleryImages: array(string({})),
     location: object({
       plz: coerce
         .number({ message: 'Bitte gib eine Plz ein' })

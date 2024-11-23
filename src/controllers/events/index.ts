@@ -4,7 +4,12 @@ import service from '../../services';
 import { eventSearch, eventType } from '../../types/event';
 import assert from 'assert';
 import { ApiError } from '../../utils/apiError';
-import { CREATED, INTERNAL_SERVER_ERROR } from 'http-status';
+import {
+  BAD_REQUEST,
+  CREATED,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+} from 'http-status';
 import { User } from '@prisma/client';
 
 export const postEvent = catchAsync(
@@ -51,3 +56,13 @@ export const getEventsFilterCategory = catchAsync(
       return res.status(200).json({ ...(await service.events.getAllEvents()) });
   },
 );
+export const getEventDetails = catchAsync(async (req, res, _next) => {
+  const eventId = req.params.eventId;
+  assert(
+    eventId != null,
+    new ApiError(BAD_REQUEST, 'Es muss eine eventId mitgegeben werden'),
+  );
+  const event = await service.events.getEventDetails(Number(eventId));
+  assert(event != null, new ApiError(NOT_FOUND, 'Event wurde nicht gefunden'));
+  return res.status(200).json({ event });
+});
