@@ -5,6 +5,7 @@ import db from '../../utils/db';
 import lodash from 'lodash';
 import { ApiError } from '../../utils/apiError';
 import { INTERNAL_SERVER_ERROR } from 'http-status';
+import dayjs from 'dayjs';
 
 export const getEventDetails = async (eId: number) => {
   return await db.event.findFirst({
@@ -19,6 +20,7 @@ export const getEventDetails = async (eId: number) => {
       galleryImages: true,
       isPublic: true,
       location: true,
+      startsAt: true,
       endsAt: true,
     },
   });
@@ -30,6 +32,7 @@ export const getAllEvents = async () => {
       coverImage: true,
       name: true,
       startsAt: true,
+      eId: true,
       _count: {
         select: {
           users: true,
@@ -70,8 +73,8 @@ export const createEvent = async (event: eventType, aId: number) => {
     );
     const e = await db.event.create({
       data: {
-        startsAt: event.startsAt,
-        endsAt: event.endsAt,
+        startsAt: dayjs(event.startsAt).toDate(),
+        endsAt: dayjs(event.endsAt).toDate(),
         description: event.description,
         lId: location.lId,
         minAge: event.minAge,

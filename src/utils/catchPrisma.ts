@@ -1,11 +1,16 @@
 import { Prisma } from '@prisma/client';
 import { ApiError } from './apiError';
-import httpStatus from 'http-status';
+import httpStatus, { BAD_REQUEST } from 'http-status';
+import { PrismaClientValidationError } from '@prisma/client/runtime/library';
+import db from '../utils/db';
 
 export const catchPrisma = async <T>(cb: () => T): Promise<T> => {
   try {
     return await cb();
   } catch (err) {
+    if (err instanceof PrismaClientValidationError) {
+      throw new ApiError(BAD_REQUEST, err.message);
+    }
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === 'P2002'
@@ -22,6 +27,11 @@ export const catchPrisma = async <T>(cb: () => T): Promise<T> => {
         `${fieldFailed} ist leider bereits vergeben`,
       );
     }
-    throw new ApiError(500, 'Fehler bei der DB');
+    throw new ApiError(500, String(err));
   }
 };
+
+export const catchWithTransaction = async <T>(cb: () => T): Promise<T> =>
+  await catchPrisma(
+    async () => await db.$transaction(async (_tx) => await cb()),
+  );

@@ -19,7 +19,6 @@ export const postEvent = catchAsync(
     _next: NextFunction,
   ) => {
     const user = req.user;
-    console.log(req.user);
     assert(
       user != null,
       new ApiError(INTERNAL_SERVER_ERROR, 'Ein Fehler ist aufgetreten'),
