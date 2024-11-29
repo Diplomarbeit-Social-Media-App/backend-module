@@ -22,6 +22,7 @@ export const getEventDetails = async (eId: number) => {
       location: true,
       startsAt: true,
       endsAt: true,
+      description: true,
     },
   });
 };
