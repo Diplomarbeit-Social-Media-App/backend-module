@@ -1,11 +1,39 @@
 import { assert } from 'console';
-import { eventSearch, eventType } from '../../types/event';
+import { eventSearch, eventType, updateEventSchema } from '../../types/event';
 import { catchPrisma } from '../../utils/catchPrisma';
 import db from '../../utils/db';
 import lodash from 'lodash';
 import { ApiError } from '../../utils/apiError';
-import { INTERNAL_SERVER_ERROR } from 'http-status';
+import { INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import dayjs from 'dayjs';
+import { User } from '@prisma/client';
+
+export const updateEvent = async (update: updateEventSchema, user: User) => {
+  const { eId } = update;
+  const eventFound = await catchPrisma(
+    async () => await db.event.findFirst({ where: { eId } }),
+  );
+  assert(eventFound != null, new ApiError(NOT_FOUND, 'Event nicht gefunden'));
+
+  if (eventFound?.creatorId != user.aId)
+    throw new ApiError(
+      UNAUTHORIZED,
+      'Du darfst ein anderes Event nicht bearbeiten',
+    );
+
+  return await db.event.update({
+    where: {
+      eId,
+    },
+    data: {
+      coverImage: update.coverImage ?? eventFound?.coverImage,
+      description: update.description ?? eventFound?.description,
+      name: update.name ?? eventFound?.name,
+      galleryImages: update.galleryImages ?? eventFound?.galleryImages,
+      minAge: update.minAge ?? eventFound?.minAge,
+    },
+  });
+};
 
 export const getEventDetails = async (eId: number) => {
   return await db.event.findFirst({

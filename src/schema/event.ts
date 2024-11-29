@@ -1,4 +1,4 @@
-import { array, coerce, nativeEnum, object, string } from 'zod';
+import { array, coerce, nativeEnum, number, object, string } from 'zod';
 import validator from 'validator';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
@@ -12,6 +12,49 @@ export const positionSchema = object({
     .number({ message: 'Latitude muss eine Zahl sein' })
     .min(-90, { message: 'Mindestwert für Latitude ist -90' })
     .max(90, { message: 'Maxwert für Latitude ist 90' }),
+});
+
+export const updateSchema = object({
+  body: object({
+    eId: number({ message: 'Die event-Id muss mitgegeben werden' }),
+    name: string()
+      .trim()
+      .min(3, { message: 'Eventname zu kurz' })
+      .max(40, { message: 'Eventname zu lang' })
+      .refine((name) => validator.isAlphanumeric(name), {
+        message: 'Keine Sonderzeichen im Namen erlaubt',
+      })
+      .optional(),
+    minAge: coerce
+      .number({ message: 'Bitte gib ein Mindestalter ein' })
+      .min(0, { message: 'Alter zu klein' })
+      .max(99, { message: 'Alter zu groß' })
+      .optional(),
+    description: string()
+      .trim()
+      .min(10, { message: 'Beschreibung zu kurz' })
+      .optional(),
+    coverImage: string({
+      message: 'Bitte gib einen Image-Path für das Coverimage ein',
+    }).optional(),
+    galleryImages: array(string({})).optional(),
+    location: object({
+      plz: coerce
+        .number({ message: 'Bitte gib eine Plz ein' })
+        .min(1000, { message: 'Plz zu niedrig' })
+        .max(9999, { message: 'Plz zu hoch' })
+        .optional(),
+      street: string({ message: 'Bitte gib eine Straße an' })
+        .min(3, {
+          message: 'Straßenname zu kurz',
+        })
+        .optional(),
+      houseNumber: string({
+        message: 'Bitte gib eine Hausnummer an',
+      }).optional(),
+      city: string({ message: 'Bitte gib einen Ortsnamen an' }).optional(),
+    }).optional(),
+  }),
 });
 
 export const eventSchema = object({

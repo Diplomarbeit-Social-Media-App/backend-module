@@ -31,6 +31,14 @@ export const postEvent = catchAsync(
   },
 );
 
+export const updateEvent = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const user = req.user as User;
+    const event = await service.events.updateEvent(req.body, user);
+    return res.status(200).json({ event });
+  },
+);
+
 export const getEvents = catchAsync(
   async (_req: Request, res: Response, _next: NextFunction) => {
     const events = await service.events.getAllEvents();
