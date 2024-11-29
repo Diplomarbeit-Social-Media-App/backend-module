@@ -23,6 +23,12 @@ export const getEventDetails = async (eId: number) => {
       startsAt: true,
       endsAt: true,
       description: true,
+      host: {
+        select: {
+          companyName: true,
+          verified: true,
+        },
+      },
     },
   });
 };
