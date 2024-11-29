@@ -35,6 +35,19 @@ export const updateEvent = async (update: updateEventSchema, user: User) => {
   });
 };
 
+export const searchByName = async (query: string) => {
+  return await catchPrisma(
+    async () =>
+      await db.event.findMany({
+        where: {
+          name: {
+            contains: query,
+          },
+        },
+      }),
+  );
+};
+
 export const getEventDetails = async (eId: number) => {
   return await db.event.findFirst({
     where: {

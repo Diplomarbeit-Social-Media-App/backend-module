@@ -14,6 +14,14 @@ export const positionSchema = object({
     .max(90, { message: 'Maxwert für Latitude ist 90' }),
 });
 
+export const nameSearchSchema = object({
+  params: object({
+    query: string({ message: 'Es muss eine query angegeben sein' }).min(1, {
+      message: 'Mindestens 1 Zeichen',
+    }),
+  }),
+});
+
 export const updateSchema = object({
   body: object({
     eId: number({ message: 'Die event-Id muss mitgegeben werden' }),

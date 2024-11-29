@@ -12,6 +12,14 @@ import {
 } from 'http-status';
 import { User } from '@prisma/client';
 
+export const getSearchByQuery = catchAsync(
+  async (req, res: Response, _next: NextFunction) => {
+    const { query } = req.params;
+    const events = await service.events.searchByName(query);
+    return res.status(200).json({ events });
+  },
+);
+
 export const postEvent = catchAsync(
   async (
     req: Request<object, object, eventType>,
