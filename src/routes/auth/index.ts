@@ -28,6 +28,7 @@ router.post(
   validate(passwordResetSchema),
   controllers.auth.postResetPassword,
 );
+router.post('/logout', [auth], controllers.auth.postLogout);
 router.get('/profile', [auth], controllers.auth.getProfileDetails);
 
 export default router;

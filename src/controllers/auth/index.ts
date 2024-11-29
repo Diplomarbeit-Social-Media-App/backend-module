@@ -10,6 +10,15 @@ import service from '../../services/index';
 import config from '../../config/config';
 import { assert } from 'console';
 import lodash from 'lodash';
+import { User } from '@prisma/client';
+
+export const postLogout = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const user = req.user as User;
+    await service.auth.handleLogout(user.aId);
+    return res.status(200).json({});
+  },
+);
 
 export const getProfileDetails = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
