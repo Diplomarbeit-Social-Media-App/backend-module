@@ -9,6 +9,23 @@ import catchAsync from '../../utils/catchAsync';
 import service from '../../services/index';
 import config from '../../config/config';
 import { assert } from 'console';
+import lodash from 'lodash';
+
+export const getProfileDetails = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const user = req.user;
+    const pickedData = lodash.pick(user, [
+      'aId',
+      'firstName',
+      'lastName',
+      'email',
+      'picture',
+      'dateOfBirth',
+      'disabled',
+    ]);
+    return res.status(200).json({ ...pickedData });
+  },
+);
 
 export const postRequestResetPwdToken = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {

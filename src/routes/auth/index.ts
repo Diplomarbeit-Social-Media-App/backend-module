@@ -8,6 +8,7 @@ import {
   signUpSchema,
 } from '../../schema/auth';
 import controllers from '../../controllers/index';
+import { auth } from '../../middlewares/auth';
 const router = Router();
 
 router.post('/login', validate(loginSchema), controllers.auth.postLogin);
@@ -27,5 +28,6 @@ router.post(
   validate(passwordResetSchema),
   controllers.auth.postResetPassword,
 );
+router.get('/profile', [auth], controllers.auth.getProfileDetails);
 
 export default router;
