@@ -42,6 +42,7 @@ export const searchByName = async (query: string) => {
         where: {
           name: {
             contains: query,
+            mode: 'insensitive',
           },
         },
       }),
