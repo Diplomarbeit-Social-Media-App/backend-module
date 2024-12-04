@@ -45,6 +45,9 @@ export const searchByName = async (query: string) => {
             mode: 'insensitive',
           },
         },
+        include: {
+          _count: true,
+        },
       }),
   );
 };
