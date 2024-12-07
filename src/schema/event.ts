@@ -29,39 +29,31 @@ export const updateSchema = object({
       .trim()
       .min(3, { message: 'Eventname zu kurz' })
       .max(40, { message: 'Eventname zu lang' })
-      .refine((name) => validator.isAlphanumeric(name), {
+      .refine((name) => validator.isAscii(name), {
         message: 'Keine Sonderzeichen im Namen erlaubt',
-      })
-      .optional(),
+      }),
     minAge: coerce
       .number({ message: 'Bitte gib ein Mindestalter ein' })
       .min(0, { message: 'Alter zu klein' })
-      .max(99, { message: 'Alter zu groß' })
-      .optional(),
-    description: string()
-      .trim()
-      .min(10, { message: 'Beschreibung zu kurz' })
-      .optional(),
+      .max(99, { message: 'Alter zu groß' }),
+    description: string().trim().min(10, { message: 'Beschreibung zu kurz' }),
     coverImage: string({
       message: 'Bitte gib einen Image-Path für das Coverimage ein',
-    }).optional(),
-    galleryImages: array(string({})).optional(),
+    }),
+    galleryImages: array(string({})),
     location: object({
       plz: coerce
         .number({ message: 'Bitte gib eine Plz ein' })
         .min(1000, { message: 'Plz zu niedrig' })
-        .max(9999, { message: 'Plz zu hoch' })
-        .optional(),
-      street: string({ message: 'Bitte gib eine Straße an' })
-        .min(3, {
-          message: 'Straßenname zu kurz',
-        })
-        .optional(),
+        .max(9999, { message: 'Plz zu hoch' }),
+      street: string({ message: 'Bitte gib eine Straße an' }).min(3, {
+        message: 'Straßenname zu kurz',
+      }),
       houseNumber: string({
         message: 'Bitte gib eine Hausnummer an',
-      }).optional(),
+      }),
       city: string({ message: 'Bitte gib einen Ortsnamen an' }).optional(),
-    }).optional(),
+    }),
   }),
 });
 
