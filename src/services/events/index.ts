@@ -86,12 +86,19 @@ export const getAllEvents = async () => {
       name: true,
       startsAt: true,
       eId: true,
+      location: {
+        select: {
+          city: true,
+          postCode: true,
+        },
+      },
       _count: {
         select: {
           users: true,
         },
       },
     },
+    take: 100,
   });
   return events.map((event) => {
     const participantCount: number = event._count.users;
