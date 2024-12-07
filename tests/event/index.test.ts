@@ -5,6 +5,7 @@ import supertest from 'supertest';
 import { server } from '../../src/index';
 import { UNAUTHORIZED } from 'http-status';
 import db from '../../src/utils/db';
+import { expect, describe, test, afterAll } from 'vitest';
 
 interface IBodyEventType {
   body: eventType;
@@ -13,8 +14,17 @@ interface IBodyEventType {
 const baseEvent: eventType = {
   description: 'A very cool festival in Wels',
   endsAt: dayjs().add(1, 'day').toDate(),
-  startsAt: dayjs().toDate(),
-  name: 'Welser-Fest',
+  startsAt: dayjs().add(7, 'hour').toDate(),
+  name: 'WelserFest',
+  coverImage: 'image_asdasd.webp',
+  galleryImages: ['asd'],
+  location: {
+    city: 'Wels',
+    houseNumber: '145',
+    plz: 4600,
+    street: 'Messegelände',
+  },
+  minAge: 6,
 };
 
 const app = supertest(server);
@@ -51,7 +61,7 @@ describe('Checking of event validation', () => {
     expect(parsed.error).toBeDefined();
   });
 
-  test('if event schema fails is start date is earlier than now', async () => {
+  test('if event schema fails if start date is earlier than now', async () => {
     const event: IBodyEventType = buildBody({
       startsAt: dayjs().subtract(5, 'day').toDate(),
     });
@@ -61,7 +71,7 @@ describe('Checking of event validation', () => {
   });
 
   test('if event is parsed successfully', async () => {
-    const event: IBodyEventType = buildBody();
+    const event: IBodyEventType = buildBody({});
     const parsed = eventSchema.safeParse(event);
     expect(parsed.success).toBe(true);
     expect(parsed.error).toBeFalsy();
@@ -82,6 +92,7 @@ describe('Checking event creation via request', () => {
 });
 
 afterAll(async () => {
+  // eslint-disable-next-line no-async-promise-executor
   await new Promise(async (resolve, reject) => {
     await db.$disconnect();
     server.close((err) => {
