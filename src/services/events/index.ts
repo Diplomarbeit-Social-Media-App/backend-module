@@ -47,6 +47,7 @@ export const searchByName = async (query: string) => {
         },
         include: {
           _count: true,
+          location: true,
         },
       }),
   );
