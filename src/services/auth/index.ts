@@ -114,6 +114,14 @@ export const comparePassword = async (password: string, hashed: string) => {
   return await bcrypt.compare(password, hashed);
 };
 
+export const handleLogout = async (aId: number) => {
+  await db.token.deleteMany({
+    where: {
+      aId,
+    },
+  });
+};
+
 export const createAccount = async (
   account: signUpSchema,
 ): Promise<Account> => {

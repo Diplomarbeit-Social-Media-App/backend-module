@@ -2,17 +2,53 @@ import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services';
 import { eventSearch, eventType } from '../../types/event';
+import assert from 'assert';
+import { ApiError } from '../../utils/apiError';
+import {
+  BAD_REQUEST,
+  CREATED,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+} from 'http-status';
+import { User } from '@prisma/client';
+
+export const getSearchByQuery = catchAsync(
+  async (req, res: Response, _next: NextFunction) => {
+    const { query } = req.params;
+    const events = await service.events.searchByName(query);
+    return res.status(200).json({ events });
+  },
+);
 
 export const postEvent = catchAsync(
   async (
-    req: Request<{}, {}, eventType>,
+    req: Request<object, object, eventType>,
     res: Response,
-    next: NextFunction,
-  ) => {},
+    _next: NextFunction,
+  ) => {
+    const user = req.user;
+    assert(
+      user != null,
+      new ApiError(INTERNAL_SERVER_ERROR, 'Ein Fehler ist aufgetreten'),
+    );
+    const event = await service.events.createEvent(
+      req.body,
+      (user as User).aId,
+    );
+    return res.status(CREATED).json({ event });
+  },
+);
+
+export const updateEvent = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const user = req.user as User;
+    const event = await service.events.updateEvent(req.body, user);
+    return res.status(200).json({ event });
+  },
 );
 
 export const getEvents = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (_req: Request, res: Response, _next: NextFunction) => {
     const events = await service.events.getAllEvents();
     return res.status(200).json({ events });
   },
@@ -20,9 +56,9 @@ export const getEvents = catchAsync(
 
 export const getEventsFilterCategory = catchAsync(
   async (
-    req: Request<{}, {}, eventSearch>,
+    req: Request<object, object, eventSearch>,
     res: Response,
-    next: NextFunction,
+    _next: NextFunction,
   ) => {
     const { category, endDate, location, startDate } = req.body;
     const filter = {
@@ -35,3 +71,13 @@ export const getEventsFilterCategory = catchAsync(
       return res.status(200).json({ ...(await service.events.getAllEvents()) });
   },
 );
+export const getEventDetails = catchAsync(async (req, res, _next) => {
+  const eventId = req.params.eventId;
+  assert(
+    eventId != null,
+    new ApiError(BAD_REQUEST, 'Es muss eine eventId mitgegeben werden'),
+  );
+  const event = await service.events.getEventDetails(Number(eventId));
+  assert(event != null, new ApiError(NOT_FOUND, 'Event wurde nicht gefunden'));
+  return res.status(200).json({ event });
+});

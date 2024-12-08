@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ApiError } from '../utils/apiError';
-import statusCode, { INTERNAL_SERVER_ERROR } from 'http-status';
+import statusCode, { BAD_REQUEST, INTERNAL_SERVER_ERROR } from 'http-status';
 import config from '../config/config';
 import type errorResFormat from '../types/error';
 import { server } from '../index';
@@ -42,7 +42,11 @@ export const convertError = (
     );
   }
 
-  if (!(err instanceof ApiError)) {
+  if (err instanceof SyntaxError && 'body' in err) {
+    error = new ApiError(BAD_REQUEST, 'Dein JSON ist nicht in Ordnung');
+  }
+
+  if (!(error instanceof ApiError)) {
     error = new ApiError(statusCode.INTERNAL_SERVER_ERROR, err.message, false);
   }
 
@@ -56,7 +60,7 @@ export const handleError = async (
   _next: NextFunction,
 ) => {
   if (!err.isOperational) {
-    return await handleSevereErrors(err.message);
+    return await handleSevereErrors(err.message, err.stack);
   }
   if (res.headersSent) return;
   const errorFormat: errorResFormat = {
@@ -73,8 +77,9 @@ export const handleError = async (
     .json(errorFormat);
 };
 
-export const handleSevereErrors = async (e?: string) => {
+export const handleSevereErrors = async (e?: string, stack: string = '') => {
   logger.error(`An uncaught problem was encountered! Shutting down...`);
+  logger.error(stack);
   if (e) logger.error(`Error message: ${e}`);
   try {
     logger.error(`Closing db connection if open...`);

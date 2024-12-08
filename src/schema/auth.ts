@@ -14,6 +14,12 @@ export const loginSchema = object({
   }),
 });
 
+export const requestPasswordResetSchema = object({
+  params: object({
+    userName: string({ message: 'Ein Username muss enthalten sein' }),
+  }),
+});
+
 export const passwordResetSchema = object({
   body: object({
     userName: string({ message: 'Ein Username muss enthalten sein' }),

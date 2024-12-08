@@ -1,4 +1,4 @@
-import { coerce, nativeEnum, object, string } from 'zod';
+import { array, coerce, nativeEnum, number, object, string } from 'zod';
 import validator from 'validator';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
@@ -14,6 +14,49 @@ export const positionSchema = object({
     .max(90, { message: 'Maxwert für Latitude ist 90' }),
 });
 
+export const nameSearchSchema = object({
+  params: object({
+    query: string({ message: 'Es muss eine query angegeben sein' }).min(1, {
+      message: 'Mindestens 1 Zeichen',
+    }),
+  }),
+});
+
+export const updateSchema = object({
+  body: object({
+    eId: number({ message: 'Die event-Id muss mitgegeben werden' }),
+    name: string()
+      .trim()
+      .min(3, { message: 'Eventname zu kurz' })
+      .max(40, { message: 'Eventname zu lang' })
+      .refine((name) => validator.isAscii(name), {
+        message: 'Keine Sonderzeichen im Namen erlaubt',
+      }),
+    minAge: coerce
+      .number({ message: 'Bitte gib ein Mindestalter ein' })
+      .min(0, { message: 'Alter zu klein' })
+      .max(99, { message: 'Alter zu groß' }),
+    description: string().trim().min(10, { message: 'Beschreibung zu kurz' }),
+    coverImage: string({
+      message: 'Bitte gib einen Image-Path für das Coverimage ein',
+    }),
+    galleryImages: array(string({})),
+    location: object({
+      plz: coerce
+        .number({ message: 'Bitte gib eine Plz ein' })
+        .min(1000, { message: 'Plz zu niedrig' })
+        .max(9999, { message: 'Plz zu hoch' }),
+      street: string({ message: 'Bitte gib eine Straße an' }).min(3, {
+        message: 'Straßenname zu kurz',
+      }),
+      houseNumber: string({
+        message: 'Bitte gib eine Hausnummer an',
+      }),
+      city: string({ message: 'Bitte gib einen Ortsnamen an' }).optional(),
+    }),
+  }),
+});
+
 export const eventSchema = object({
   body: object({
     name: string()
@@ -26,9 +69,27 @@ export const eventSchema = object({
     startsAt: coerce.date().min(dayjs().add(6, 'hour').toDate(), {
       message: 'Das Event muss mindestens 6 Stunden vor Beginn angelegt werden',
     }),
+    minAge: coerce
+      .number({ message: 'Bitte gib ein Mindestalter ein' })
+      .min(0, { message: 'Alter zu klein' })
+      .max(99, { message: 'Alter zu groß' }),
     endsAt: coerce.date(),
     description: string().trim().min(10, { message: 'Beschreibung zu kurz' }),
-    position: positionSchema,
+    coverImage: string({
+      message: 'Bitte gib einen Image-Path für das Coverimage ein',
+    }),
+    galleryImages: array(string({})),
+    location: object({
+      plz: coerce
+        .number({ message: 'Bitte gib eine Plz ein' })
+        .min(1000, { message: 'Plz zu niedrig' })
+        .max(9999, { message: 'Plz zu hoch' }),
+      street: string({ message: 'Bitte gib eine Straße an' }).min(3, {
+        message: 'Straßenname zu kurz',
+      }),
+      houseNumber: string({ message: 'Bitte gib eine Hausnummer an' }),
+      city: string({ message: 'Bitte gib einen Ortsnamen an' }),
+    }),
   }).refine((data) => data.endsAt >= data.startsAt, {
     message: 'Enddatum darf nicht vor Anfangsdatum sein!',
   }),

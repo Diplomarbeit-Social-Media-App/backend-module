@@ -101,20 +101,22 @@ model Category {
 }
 
 model Event {
-  eId         Int       @id @default(autoincrement())
-  name        String
-  startsAt    DateTime?
-  endsAt      DateTime?
-  description String
-  lId         Int
-  locationId  Int       @unique
-  minAge      Int
-  isPublic    Boolean   @default(false)
-  creatorId   Int
-  host        Host      @relation(fields: [creatorId], references: [hId])
-  location    Location  @relation(fields: [locationId], references: [lId])
-  groups      Group[]   @relation("AttachedEvents")
-  users       User[]    @relation("Participates")
+  eId           Int       @id @default(autoincrement())
+  name          String
+  startsAt      DateTime?
+  endsAt        DateTime?
+  description   String
+  lId           Int
+  locationId    Int       @unique
+  minAge        Int
+  isPublic      Boolean   @default(false)
+  creatorId     Int
+  coverImage    String?
+  galleryImages String[]
+  host          Host      @relation(fields: [creatorId], references: [hId])
+  location      Location  @relation(fields: [locationId], references: [lId])
+  groups        Group[]   @relation("AttachedEvents")
+  users         User[]    @relation("Participates")
 }
 
 model Friendship {
