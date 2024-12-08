@@ -5,6 +5,7 @@ import type { signUpSchema as signUp } from '../../src/types/auth';
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
 import { shouldPass, shouldFail } from '../../src/utils/testUtils';
+import { describe, test } from 'vitest';
 
 interface ISignUpSchema {
   body: signUp;
@@ -60,7 +61,7 @@ describe('Checking of signup validation', () => {
 
   test('if validation fails on invalid lastName', async () => {
     const tooShort = 'a';
-    const tooLong = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const tooLong = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     const empty = '';
     const notDefined = undefined;
 
