@@ -2,6 +2,7 @@ import { array, coerce, nativeEnum, number, object, string } from 'zod';
 import validator from 'validator';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
+import { isUtf8 } from 'buffer';
 
 export const positionSchema = object({
   longitutude: coerce
@@ -29,8 +30,8 @@ export const updateSchema = object({
       .trim()
       .min(3, { message: 'Eventname zu kurz' })
       .max(40, { message: 'Eventname zu lang' })
-      .refine((name) => validator.isAscii(name), {
-        message: 'Keine Sonderzeichen im Namen erlaubt',
+      .refine((name) => isUtf8(Buffer.from(name, 'utf-8')), {
+        message: 'Keine speziellen Sonderzeichen im Namen erlaubt',
       }),
     minAge: coerce
       .number({ message: 'Bitte gib ein Mindestalter ein' })
