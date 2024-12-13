@@ -64,8 +64,8 @@ export const eventSchema = object({
       .trim()
       .min(3, { message: 'Eventname zu kurz' })
       .max(40, { message: 'Eventname zu lang' })
-      .refine((name) => validator.isAlphanumeric(name), {
-        message: 'Keine Sonderzeichen im Namen erlaubt',
+      .refine((name) => isUtf8(Buffer.from(name, 'utf-8')), {
+        message: 'Keine speziellen Sonderzeichen im Namen erlaubt',
       }),
     startsAt: coerce.date().min(dayjs().add(6, 'hour').toDate(), {
       message: 'Das Event muss mindestens 6 Stunden vor Beginn angelegt werden',
