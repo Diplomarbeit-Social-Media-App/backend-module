@@ -65,5 +65,13 @@ export const signUpSchema = object({
       .trim()
       .min(2, { message: 'Nachname zu kurz' })
       .max(50, { message: 'Nachname zu lang' }),
+    picture: string({ message: 'Das Profilbild fehlt' })
+      .refine((s) => s.startsWith('image'), {
+        message: 'Der Pfad muss mit "image" beginnen',
+      })
+      .refine((s) => s.endsWith('.webp'), {
+        message: 'Der Pfad muss mit dem Format .webp aufhören',
+      })
+      .optional(),
   }),
 });

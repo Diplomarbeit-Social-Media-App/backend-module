@@ -125,10 +125,23 @@ export const handleLogout = async (aId: number) => {
 export const createAccount = async (
   account: signUpSchema,
 ): Promise<Account> => {
-  const { dateOfBirth, email, firstName, lastName, userName, password } = pick(
-    account,
-    ['dateOfBirth', 'email', 'firstName', 'lastName', 'userName', 'password'],
-  );
+  const {
+    dateOfBirth,
+    email,
+    firstName,
+    lastName,
+    userName,
+    password,
+    picture,
+  } = pick(account, [
+    'dateOfBirth',
+    'email',
+    'firstName',
+    'lastName',
+    'userName',
+    'password',
+    'picture',
+  ]);
 
   const date: Date = dayjs(dateOfBirth).toDate();
   try {
@@ -141,6 +154,7 @@ export const createAccount = async (
         lastName,
         userName,
         password,
+        picture,
       },
     });
   } catch (error) {

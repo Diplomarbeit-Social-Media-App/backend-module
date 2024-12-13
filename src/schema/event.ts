@@ -1,5 +1,4 @@
 import { array, coerce, nativeEnum, number, object, string } from 'zod';
-import validator from 'validator';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
 import { isUtf8 } from 'buffer';
