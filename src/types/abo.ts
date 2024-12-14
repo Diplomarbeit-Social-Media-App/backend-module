@@ -1,0 +1,6 @@
+export enum FA_REQUEST_STATE {
+  PENDING = 0,
+  ACCEPTED = 1,
+  DECLINED = 2,
+  DELETED = 3,
+}
