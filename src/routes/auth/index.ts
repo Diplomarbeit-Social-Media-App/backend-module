@@ -30,5 +30,6 @@ router.post(
 );
 router.post('/logout', [auth], controllers.auth.postLogout);
 router.get('/profile', [auth], controllers.auth.getProfileDetails);
+router.put('/picture', [auth], controllers.auth.putProfilePicture);
 
 export default router;

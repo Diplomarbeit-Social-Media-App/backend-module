@@ -1,6 +1,18 @@
 import validator from 'validator';
 import { object, string, coerce } from 'zod';
 
+export const putPictureSchema = object({
+  body: object({
+    picture: string({ message: 'Das Profilbild fehlt' })
+      .refine((s) => s.startsWith('image'), {
+        message: 'Der Pfad muss mit "image" beginnen',
+      })
+      .refine((s) => s.endsWith('.webp'), {
+        message: 'Der Pfad muss mit dem Format .webp aufhören',
+      }),
+  }),
+});
+
 export const renewTokenSchema = object({
   body: object({
     refresh: string({ message: 'Ein refresh Token muss beigelegt werden!' }),

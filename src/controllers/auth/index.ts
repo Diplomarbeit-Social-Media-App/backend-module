@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import {
   loginSchema,
   passwordResetSchema,
+  putPictureType,
   renewTokenSchema,
   signUpSchema,
 } from '../../types/auth';
@@ -10,7 +11,22 @@ import service from '../../services/index';
 import config from '../../config/config';
 import { assert } from 'console';
 import lodash from 'lodash';
-import { User } from '@prisma/client';
+import { Account, User } from '@prisma/client';
+import { INTERNAL_SERVER_ERROR, OK } from 'http-status';
+
+export const putProfilePicture = catchAsync(
+  async (
+    req: Request<object, object, putPictureType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { picture } = req.body;
+    const { aId } = req.user as Account;
+    const updated = await service.account.updateProfilePicture(aId, picture);
+    const status = updated ? OK : INTERNAL_SERVER_ERROR;
+    return res.status(status).json({});
+  },
+);
 
 export const postLogout = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {

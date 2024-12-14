@@ -4,6 +4,22 @@ import db from '../../utils/db';
 import { Account } from '@prisma/client';
 import { catchPrisma } from '../../utils/catchPrisma';
 
+export const updateProfilePicture = async (
+  aId: number,
+  picture: string,
+): Promise<boolean> => {
+  const updated = await catchPrisma(
+    async () =>
+      await db.account.update({
+        where: { aId: Number(aId) },
+        data: {
+          picture,
+        },
+      }),
+  );
+  return updated != null;
+};
+
 export const findAccountByPk = async (aId: number) => {
   const found = await catchPrisma(async () =>
     db.account.findFirst({
