@@ -32,7 +32,7 @@ export const getFilterValues = (option: ABO_FILTER_SCHEMA): number[] => {
   if (option < 0 || option > 2) {
     throw new Error('Option out of range');
   }
-  return ABO_FILTER_VALUES[ABO_FILTER_SCHEMA.ALL];
+  return ABO_FILTER_VALUES[option];
 };
 
 type getAboBody = typeof getAboSchema.shape.body;
