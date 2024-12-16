@@ -4,6 +4,7 @@ import * as account from './account';
 import * as auth from './auth';
 import * as events from './events';
 import * as mail from './mail';
+import * as abo from './abo';
 
 const service = {
   user,
@@ -12,6 +13,7 @@ const service = {
   auth,
   events,
   mail,
+  abo,
 };
 
 export default service;
