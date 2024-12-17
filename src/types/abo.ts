@@ -1,3 +1,4 @@
+import { TypeOf } from 'zod';
 import { getAboSchema } from '../schema/abo';
 
 export enum ABO_REQUEST_STATE {
@@ -35,5 +36,7 @@ export const getFilterValues = (option: ABO_FILTER_SCHEMA): number[] => {
   return ABO_FILTER_VALUES[option];
 };
 
-type getAboBody = typeof getAboSchema.shape.body;
+export type getAboParam = TypeOf<typeof getAboSchema>;
+
+type getAboBody = typeof getAboSchema.shape.params;
 export type getAboType = Zod.infer<getAboBody>;
