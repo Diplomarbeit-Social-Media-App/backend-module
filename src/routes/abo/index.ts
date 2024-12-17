@@ -6,4 +6,4 @@ import { getAboRequests } from '../../controllers/abo';
 const router = Router();
 export default router;
 
-router.get('/', [validate(getAboSchema)], getAboRequests);
+router.get('/:filter', [validate(getAboSchema)], getAboRequests);
