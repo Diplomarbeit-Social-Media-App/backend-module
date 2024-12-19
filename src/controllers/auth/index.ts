@@ -38,7 +38,7 @@ export const postLogout = catchAsync(
 
 export const getProfileDetails = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const user = req.user;
+    const user = req.user as Account;
     const pickedData = lodash.pick(user, [
       'aId',
       'firstName',
@@ -48,7 +48,10 @@ export const getProfileDetails = catchAsync(
       'dateOfBirth',
       'disabled',
     ]);
-    return res.status(200).json({ ...pickedData });
+    const { received, sent } = await service.abo.loadAllReqWithUser(user.aId);
+    return res
+      .status(200)
+      .json({ ...pickedData, aboRequests: { received, sent } });
   },
 );
 

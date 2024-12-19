@@ -16,6 +16,25 @@ import {
 import logger from '../../logger/logger';
 
 /**
+ * the goal is to return all abo requests in which the user appears
+ * @param aId valid account-id
+ */
+export const loadAllReqWithUser = async (aId: number) => {
+  const user = await db.user.findFirst({
+    where: {
+      account: {
+        aId,
+      },
+    },
+    include: {
+      receivedAboRequests: true,
+      sentAboRequests: true,
+    },
+  });
+  return { received: user?.receivedAboRequests, sent: user?.sentAboRequests };
+};
+
+/**
  * @param fromUser User-Account model, whoose owner wants to send the request
  * @param toUser the userName of user -> wants the be friended with
  */
