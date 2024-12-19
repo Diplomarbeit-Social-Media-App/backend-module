@@ -112,13 +112,16 @@ export const postSignUp = catchAsync(
       config.SALT,
     );
     data.password = hashedPwd;
-    const account = await service.auth.createAccount(data);
+    const { aId } = await service.auth.createAccount(data);
 
-    if (data.isUserAccount) await service.user.createUserByAccount(account.aId);
+    if (data.isUserAccount) await service.user.createUserByAccount(aId);
+    else
+      await service.host.createHostByAccount(
+        aId,
+        data.companyDetails.companyName,
+      );
 
-    const { refresh, access } = await service.auth.generateAndSaveTokens(
-      account.aId,
-    );
+    const { refresh, access } = await service.auth.generateAndSaveTokens(aId);
 
     return res.status(201).json({ access, refresh });
   },

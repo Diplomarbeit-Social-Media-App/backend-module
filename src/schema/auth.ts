@@ -88,5 +88,13 @@ export const signUpSchema = object({
     isUserAccount: coerce
       .boolean({ message: 'Der isUserAccount ist ungültig' })
       .default(true),
+    companyDetails: object({
+      companyName: string({ message: 'Firmenname darf nicht leer sein' })
+        .min(3, { message: 'Firmenname zu kurz' })
+        .max(30, { message: 'Firmenname zu lang' }),
+    }),
+  }).refine((data) => !data.isUserAccount && data.companyDetails != null, {
+    message:
+      'Bei einem Host-Account müssen die "companyDetails}" angegeben werden',
   }),
 });
