@@ -1,4 +1,4 @@
-import zod, { nativeEnum, object } from 'zod';
+import zod, { nativeEnum, object, string } from 'zod';
 import { ABO_FILTER_SCHEMA } from '../types/abo';
 import { ApiError } from '../utils/apiError';
 import { BAD_REQUEST } from 'http-status';
@@ -20,5 +20,13 @@ export const getAboSchema = object({
         message: 'Gib einen gültigen Filter an',
       }),
     ),
+  }),
+});
+
+export const postAboSchema = object({
+  body: object({
+    userName: string({ message: 'Username fehlt' })
+      .min(3, { message: 'Username zu kurz' })
+      .max(15, { message: 'Username zu lang' }),
   }),
 });

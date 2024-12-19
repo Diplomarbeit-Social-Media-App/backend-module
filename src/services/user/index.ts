@@ -3,6 +3,7 @@ import db from '../../utils/db';
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import service from '../../services/index';
 import { Account } from '@prisma/client';
+import assert from 'node:assert';
 
 export const findUserByUserName = async (userName: string) => {
   const found = await db.account.findFirst({ where: { userName } });
@@ -30,6 +31,20 @@ export const findUser = async (
   if (found.disabled)
     throw new ApiError(UNAUTHORIZED, 'Dein Account wurde gesperrt');
   return found;
+};
+
+export const findUserByAId = async (aId: number) => {
+  assert(aId != null, new ApiError(NOT_FOUND, 'Account-ID ist null'));
+  const user = await db.user.findUnique({
+    where: {
+      aId,
+    },
+  });
+  assert(
+    user != null,
+    new ApiError(NOT_FOUND, 'Kein User-Profil für die ID gefunden'),
+  );
+  return user;
 };
 
 export const createUserByAccount = async (accountId: number) => {

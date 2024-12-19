@@ -1,5 +1,5 @@
 import { TypeOf } from 'zod';
-import { getAboSchema } from '../schema/abo';
+import { getAboSchema, postAboSchema } from '../schema/abo';
 
 export enum ABO_REQUEST_STATE {
   PENDING = 0,
@@ -40,3 +40,6 @@ export type getAboParam = TypeOf<typeof getAboSchema>;
 
 type getAboBody = typeof getAboSchema.shape.params;
 export type getAboType = Zod.infer<getAboBody>;
+
+type postAboBody = typeof postAboSchema.shape.body;
+export type postAboType = Zod.infer<postAboBody>;
