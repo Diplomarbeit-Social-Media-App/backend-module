@@ -28,25 +28,29 @@ export const loadAboRequests = async (
         },
       ],
     },
-    include: {
+    select: {
+      frId: true,
+      createdAt: true,
       fromUser: {
-        include: {
+        select: {
           account: {
             select: {
               aId: true,
               userName: true,
             },
           },
+          uId: true,
         },
       },
       toUser: {
-        include: {
+        select: {
           account: {
             select: {
               aId: true,
               userName: true,
             },
           },
+          uId: true,
         },
       },
     },
