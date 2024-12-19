@@ -37,24 +37,22 @@ export const createUserByAccount = async (accountId: number) => {
     where: {
       aId: accountId,
     },
+    include: {
+      user: true,
+    },
   });
   if (!account)
     throw new ApiError(
-      httpStatus.INTERNAL_SERVER_ERROR,
+      httpStatus.NOT_FOUND,
       'Kein Account wurde mit dieser ID gefundens',
     );
-  const found = await db.user.findFirst({
-    where: {
-      aId: accountId,
-    },
-  });
-  if (found)
+  if (account.user)
     throw new ApiError(
-      httpStatus.INTERNAL_SERVER_ERROR,
+      httpStatus.CONFLICT,
       'User already found with given accound-id',
       true,
     );
-  const user = db.user.create({
+  const user = await db.user.create({
     data: {
       account: {
         connect: account,

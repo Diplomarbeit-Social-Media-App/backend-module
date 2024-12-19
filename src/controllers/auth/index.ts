@@ -111,7 +111,7 @@ export const postSignUp = catchAsync(
     data.password = hashedPwd;
     const account = await service.auth.createAccount(data);
 
-    await service.user.createUserByAccount(account.aId);
+    if (data.isUserAccount) await service.user.createUserByAccount(account.aId);
 
     const { refresh, access } = await service.auth.generateAndSaveTokens(
       account.aId,

@@ -85,5 +85,8 @@ export const signUpSchema = object({
         message: 'Der Pfad muss mit dem Format .webp aufhören',
       })
       .optional(),
+    isUserAccount: coerce
+      .boolean({ message: 'Der isUserAccount ist ungültig' })
+      .default(true),
   }),
 });
