@@ -4,6 +4,7 @@ import { hasHostPermission } from '../../middlewares/permission';
 import {
   eventSchema,
   nameSearchSchema,
+  participationSchema,
   updateSchema,
 } from '../../schema/event';
 import { validate } from '../../middlewares/validation';
@@ -23,6 +24,11 @@ router.get(
   '/name-search/:query',
   [auth, validate(nameSearchSchema)],
   controllers.events.getSearchByQuery,
+);
+router.post(
+  '/participate',
+  [validate(participationSchema)],
+  controllers.events.postParticipateEvent,
 );
 
 export default router;

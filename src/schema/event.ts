@@ -1,7 +1,22 @@
-import { array, coerce, nativeEnum, number, object, string } from 'zod';
+import {
+  array,
+  boolean,
+  coerce,
+  nativeEnum,
+  number,
+  object,
+  string,
+} from 'zod';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
 import { isUtf8 } from 'buffer';
+
+export const participationSchema = object({
+  body: object({
+    eId: number({ message: 'Event-Id fehlt' }),
+    attendance: boolean({ message: 'Teilnehmestatus fehlt' }),
+  }),
+});
 
 export const positionSchema = object({
   longitutude: coerce

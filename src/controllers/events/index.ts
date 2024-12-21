@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services';
-import { eventSearch, eventType } from '../../types/event';
+import { eventSearch, eventType, participationType } from '../../types/event';
 import assert from 'assert';
 import { ApiError } from '../../utils/apiError';
 import {
@@ -9,8 +9,22 @@ import {
   CREATED,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
+  OK,
 } from 'http-status';
-import { User } from '@prisma/client';
+import { Account, User } from '@prisma/client';
+
+export const postParticipateEvent = catchAsync(
+  async (req: Request<object, object, participationType>, res, _next) => {
+    const { eId, attendance } = req.body;
+    const { aId } = req.user as Account;
+    const updatedEvent = await service.events.participateEvent(
+      aId,
+      eId,
+      attendance,
+    );
+    return res.status(OK).json(updatedEvent);
+  },
+);
 
 export const getSearchByQuery = catchAsync(
   async (req, res: Response, _next: NextFunction) => {

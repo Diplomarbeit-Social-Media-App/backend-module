@@ -2,6 +2,7 @@ import {
   eventSchema,
   eventSearch,
   nameSearchSchema,
+  participationSchema,
   updateSchema,
 } from '../schema/event';
 
@@ -16,3 +17,6 @@ export type updateEventSchema = Zod.infer<updateEventBody>;
 
 type nameSearchParams = typeof nameSearchSchema.shape.params;
 export type nameSearchType = Zod.infer<nameSearchParams>;
+
+type participationBody = typeof participationSchema.shape.body;
+export type participationType = Zod.infer<participationBody>;
