@@ -1,7 +1,12 @@
 import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services';
-import { eventSearch, eventType, participationType } from '../../types/event';
+import {
+  attendanceType,
+  eventSearch,
+  eventType,
+  participationType,
+} from '../../types/event';
 import assert from 'assert';
 import { ApiError } from '../../utils/apiError';
 import {
@@ -12,6 +17,15 @@ import {
   OK,
 } from 'http-status';
 import { Account, User } from '@prisma/client';
+
+export const getAttendanceState = catchAsync(
+  async (req: Request<attendanceType>, res, _next) => {
+    const { eId } = req.params;
+    const { aId } = req.user as Account;
+    const hasAttendance = await service.events.hasAttendance(aId, eId);
+    return res.status(OK).json({ attendance: hasAttendance });
+  },
+);
 
 export const postParticipateEvent = catchAsync(
   async (req: Request<object, object, participationType>, res, _next) => {

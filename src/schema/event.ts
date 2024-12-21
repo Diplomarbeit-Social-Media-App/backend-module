@@ -18,6 +18,12 @@ export const participationSchema = object({
   }),
 });
 
+export const attendanceSchema = object({
+  params: object({
+    eId: coerce.number({ message: 'Event-Id fehlt' }),
+  }),
+});
+
 export const positionSchema = object({
   longitutude: coerce
     .number({ message: 'Longtitude muss eine Zahl sein' })

@@ -1,4 +1,5 @@
 import {
+  attendanceSchema,
   eventSchema,
   eventSearch,
   nameSearchSchema,
@@ -20,3 +21,6 @@ export type nameSearchType = Zod.infer<nameSearchParams>;
 
 type participationBody = typeof participationSchema.shape.body;
 export type participationType = Zod.infer<participationBody>;
+
+type attendanceParams = typeof attendanceSchema.shape.params;
+export type attendanceType = Zod.infer<attendanceParams>;

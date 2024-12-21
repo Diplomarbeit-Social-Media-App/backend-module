@@ -13,6 +13,35 @@ import dayjs from 'dayjs';
 import { User } from '@prisma/client';
 import assert from 'assert';
 
+export const hasAttendance = async (
+  aId: number,
+  eId: number,
+): Promise<boolean> => {
+  const account = await db.account.findFirst({
+    where: {
+      aId,
+    },
+    include: {
+      user: {
+        select: {
+          events: true,
+        },
+      },
+    },
+  });
+  assert(
+    account != null,
+    new ApiError(NOT_FOUND, 'Kein passender Account gefunden'),
+  );
+  assert(
+    account.user != null,
+    new ApiError(CONFLICT, 'Du hast kein User-Profil'),
+  );
+  const events = account.user.events;
+  if (!events || events.length == 0) return false;
+  return events.some((e) => Number(e.eId) === Number(eId));
+};
+
 /**
  * @param aId Account (id) who wants to join
  * @param eId The id of the event which should be joined

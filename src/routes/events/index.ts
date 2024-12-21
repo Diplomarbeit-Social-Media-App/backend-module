@@ -2,6 +2,7 @@ import { Router } from 'express';
 import controllers from '../../controllers';
 import { hasHostPermission } from '../../middlewares/permission';
 import {
+  attendanceSchema,
   eventSchema,
   nameSearchSchema,
   participationSchema,
@@ -29,6 +30,11 @@ router.post(
   '/participate',
   [validate(participationSchema)],
   controllers.events.postParticipateEvent,
+);
+router.get(
+  '/attendance/:eId',
+  [validate(attendanceSchema)],
+  controllers.events.getAttendanceState,
 );
 
 export default router;
