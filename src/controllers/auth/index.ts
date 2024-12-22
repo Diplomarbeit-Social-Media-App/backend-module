@@ -12,7 +12,8 @@ import config from '../../config/config';
 import { assert } from 'console';
 import lodash from 'lodash';
 import { Account, User } from '@prisma/client';
-import { INTERNAL_SERVER_ERROR, OK } from 'http-status';
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from 'http-status';
+import { ApiError } from '../../utils/apiError';
 
 export const putProfilePicture = catchAsync(
   async (
@@ -115,11 +116,19 @@ export const postSignUp = catchAsync(
     const { aId } = await service.auth.createAccount(data);
 
     if (data.isUserAccount) await service.user.createUserByAccount(aId);
-    else
+    else {
+      assert(
+        data.companyDetails != null,
+        new ApiError(
+          BAD_REQUEST,
+          'Company-Details dürfen bei einem Host-Account nicht fehlen',
+        ),
+      );
       await service.host.createHostByAccount(
         aId,
-        data.companyDetails.companyName,
+        data.companyDetails!.companyName,
       );
+    }
 
     const { refresh, access } = await service.auth.generateAndSaveTokens(aId);
 
