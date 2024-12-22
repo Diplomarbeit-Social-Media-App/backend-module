@@ -4,7 +4,7 @@ import {
   ABO_REQUEST_STATE,
   getFilterValues,
 } from '../../types/abo';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiError } from '../../utils/apiError';
 import {
@@ -14,6 +14,65 @@ import {
   NOT_FOUND,
 } from 'http-status';
 import logger from '../../logger/logger';
+
+export const searchByUserName = async (userName: string, take: number = 50) => {
+  const condition = {
+    userName: {
+      contains: userName,
+      mode: 'insensitive',
+    },
+  } as Prisma.AccountWhereInput;
+  const selectedFields = {
+    firstName: true,
+    userName: true,
+    picture: true,
+  };
+
+  const users = await db.account.findMany({
+    where: {
+      AND: [
+        condition,
+        {
+          user: {
+            isNot: null,
+          },
+        },
+      ],
+    },
+    select: {
+      user: {
+        select: {
+          uId: true,
+        },
+      },
+      ...selectedFields,
+    },
+    take,
+  });
+  const hosts = await db.account.findMany({
+    where: {
+      AND: [
+        condition,
+        {
+          host: {
+            isNot: null,
+          },
+        },
+      ],
+    },
+    select: {
+      host: {
+        select: {
+          hId: true,
+          verified: true,
+        },
+      },
+      ...selectedFields,
+    },
+    take,
+  });
+  return { user: users, host: hosts };
+};
 
 /**
  * the goal is to return all abo requests in which the user appears

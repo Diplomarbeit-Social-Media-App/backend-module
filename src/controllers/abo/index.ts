@@ -1,9 +1,17 @@
 import { Request } from 'express';
-import { ABO_FILTER_SCHEMA, postAboType } from '../../types/abo';
+import { ABO_FILTER_SCHEMA, postAboType, searchType } from '../../types/abo';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services';
 import { Account } from '@prisma/client';
-import { CREATED } from 'http-status';
+import { CREATED, OK } from 'http-status';
+
+export const getSearchByUserName = catchAsync(
+  async (req: Request<searchType>, res, _next) => {
+    const { userName } = req.params;
+    const found = await service.abo.searchByUserName(userName);
+    return res.status(OK).json(found);
+  },
+);
 
 export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
   const { filter } = req.params;

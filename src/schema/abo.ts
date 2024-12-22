@@ -3,6 +3,12 @@ import { ABO_FILTER_SCHEMA } from '../types/abo';
 import { ApiError } from '../utils/apiError';
 import { BAD_REQUEST } from 'http-status';
 
+export const searchSchema = object({
+  params: object({
+    userName: string({ message: 'Der Username fehlt' }),
+  }),
+});
+
 export const getAboSchema = object({
   params: object({
     filter: zod.preprocess(
