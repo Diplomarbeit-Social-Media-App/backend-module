@@ -92,9 +92,15 @@ export const signUpSchema = object({
       companyName: string({ message: 'Firmenname darf nicht leer sein' })
         .min(3, { message: 'Firmenname zu kurz' })
         .max(30, { message: 'Firmenname zu lang' }),
-    }),
-  }).refine((data) => !data.isUserAccount && data.companyDetails != null, {
-    message:
-      'Bei einem Host-Account müssen die "companyDetails}" angegeben werden',
-  }),
+    }).optional(),
+  }).refine(
+    (data) => {
+      if (data.isUserAccount) return true;
+      return data.companyDetails != null;
+    },
+    {
+      message:
+        'Bei einem Host-Account müssen die "companyDetails" angegeben werden',
+    },
+  ),
 });
