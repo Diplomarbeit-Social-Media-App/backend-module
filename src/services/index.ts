@@ -6,6 +6,7 @@ import * as events from './events';
 import * as mail from './mail';
 import * as abo from './abo';
 import * as host from './host';
+import * as activity from './activity';
 
 const service = {
   user,
@@ -16,6 +17,7 @@ const service = {
   mail,
   abo,
   host,
+  activity,
 };
 
 export default service;
