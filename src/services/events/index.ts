@@ -84,6 +84,11 @@ export const participateEvent = async (
     event != null,
     new ApiError(NOT_FOUND, 'Kein passendes Event gefunden'),
   );
+  const eventPassed = dayjs().isAfter(event.startsAt);
+  assert(
+    !eventPassed,
+    new ApiError(CONFLICT, 'Nach dem Eventstart nicht mehr möglich'),
+  );
   const hasAttendance = event?.users.some((u) => u.aId == aId);
 
   if (hasAttendance == attendance)
