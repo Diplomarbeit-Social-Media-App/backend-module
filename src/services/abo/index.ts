@@ -14,6 +14,7 @@ import {
   NOT_FOUND,
 } from 'http-status';
 import logger from '../../logger/logger';
+import { assign, omit } from 'lodash';
 
 export const searchByUserName = async (userName: string, take: number = 50) => {
   const condition = {
@@ -28,50 +29,47 @@ export const searchByUserName = async (userName: string, take: number = 50) => {
     picture: true,
   };
 
-  const users = await db.account.findMany({
+  const found = await db.account.findMany({
     where: {
       AND: [
         condition,
         {
-          user: {
-            isNot: null,
-          },
+          OR: [
+            {
+              host: {
+                isNot: null,
+              },
+            },
+            {
+              user: {
+                isNot: null,
+              },
+            },
+          ],
         },
       ],
     },
     select: {
+      ...selectedFields,
+      host: {
+        select: {
+          hId: true,
+        },
+      },
       user: {
         select: {
           uId: true,
         },
       },
-      ...selectedFields,
     },
     take,
   });
-  const hosts = await db.account.findMany({
-    where: {
-      AND: [
-        condition,
-        {
-          host: {
-            isNot: null,
-          },
-        },
-      ],
-    },
-    select: {
-      host: {
-        select: {
-          hId: true,
-          verified: true,
-        },
-      },
-      ...selectedFields,
-    },
-    take,
+
+  return found?.map((acc) => {
+    const isUserAccount = acc.user != null;
+    const omitted = omit(acc, ['host', 'user']);
+    return assign(omitted, { isUserAccount });
   });
-  return { user: users, host: hosts };
 };
 
 /**
