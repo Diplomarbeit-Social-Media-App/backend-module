@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import {
+  activateTokenType,
   loginSchema,
   passwordResetSchema,
   putPictureType,
@@ -29,7 +30,20 @@ export const getVerifyAccount = catchAsync(
 );
 
 export const postVerifyAccount = catchAsync(
-  async (_req: Request, _res: Response, _next: NextFunction) => {},
+  async (
+    req: Request<object, object, activateTokenType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId, activated } = req.user as Account;
+    const { otp } = req.body;
+    assert(
+      !activated,
+      new ApiError(CONFLICT, 'Dein Account ist bereits aktiviert'),
+    );
+    await service.auth.activateAccount(aId, otp);
+    return res.status(OK).json({ message: 'Account wurde verifiziert' });
+  },
 );
 
 export const putProfilePicture = catchAsync(

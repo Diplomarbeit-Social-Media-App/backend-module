@@ -13,6 +13,12 @@ export const putPictureSchema = object({
   }),
 });
 
+export const activateTokenSchema = object({
+  body: object({
+    otp: string({ message: 'Das OTP fehlt' }),
+  }),
+});
+
 export const renewTokenSchema = object({
   body: object({
     refresh: string({ message: 'Ein refresh Token muss beigelegt werden!' }),

@@ -12,6 +12,39 @@ import { ApiError } from '../../utils/apiError';
 import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { catchWithTransaction } from '../../utils/catchPrisma';
+
+export const activateAccount = async (aId: number, otp: string) => {
+  const foundToken = await db.token.findFirst({
+    where: {
+      aId,
+      type: TOKEN_TYPES.ACTIVATION.toString(),
+      backlisted: false,
+      token: otp,
+    },
+  });
+  assert(
+    foundToken != null,
+    new ApiError(NOT_FOUND, 'OTP stimmt nicht überein'),
+  );
+  const isExpired = dayjs().isAfter(foundToken.exp);
+  assert(!isExpired, new ApiError(UNAUTHORIZED, 'OTP ist bereits abgelaufen'));
+  await catchWithTransaction(async () => {
+    await db.token.delete({
+      where: {
+        tId: foundToken.tId,
+      },
+    });
+    await db.account.update({
+      where: {
+        aId,
+      },
+      data: {
+        activated: true,
+      },
+    });
+  });
+};
 
 export const handleRequestPwdResetToken = async (userName: string) => {
   const acc = await db.account.findFirst({ where: { userName } });
