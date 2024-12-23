@@ -79,6 +79,7 @@ export const getProfileDetails = catchAsync(
       'picture',
       'dateOfBirth',
       'disabled',
+      'activated',
     ]);
     const { received, sent } = await service.abo.loadAllReqWithUser(user.aId);
     return res
