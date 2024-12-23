@@ -27,19 +27,19 @@ model Location {
 }
 
 model User {
-  uId                 Int                @id @default(autoincrement())
-  aId                 Int                @unique
-  friendedBy          Friendship[]       @relation("UserFriendedBy")
-  friends             Friendship[]       @relation("UserFriends")
+  uId                 Int            @id @default(autoincrement())
+  aId                 Int            @unique
+  friendedBy          Friendship[]   @relation("UserFriendedBy")
+  friends             Friendship[]   @relation("UserFriends")
   owner               Group[]
   joinedGroups        GroupMember[]
   Message             Message[]
   notifications       Notification[]
-  account             Account            @relation(fields: [aId], references: [aId])
-  followedHosts       Host[]             @relation("HostFollowers")
-  events              Event[]            @relation("Participates")
-  sentAboRequests     AboRequest[] @relation("FromUserFA")
-  receivedAboRequests AboRequest[] @relation("ToUserFA")
+  account             Account        @relation(fields: [aId], references: [aId])
+  followedHosts       Host[]         @relation("HostFollowers")
+  events              Event[]        @relation("Participates")
+  sentAboRequests     AboRequest[]   @relation("FromUserFA")
+  receivedAboRequests AboRequest[]   @relation("ToUserFA")
 }
 
 model Host {
@@ -67,6 +67,7 @@ model Account {
   host               Host?
   token              Token[]             @relation("UserTokens")
   user               User?
+  activated          Boolean             @default(false)
   passwordResetToken PasswordResetToken?
 }
 

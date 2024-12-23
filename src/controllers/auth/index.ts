@@ -9,11 +9,28 @@ import {
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services/index';
 import config from '../../config/config';
-import { assert } from 'console';
 import lodash from 'lodash';
 import { Account, User } from '@prisma/client';
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR, OK } from 'http-status';
+import { BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, OK } from 'http-status';
 import { ApiError } from '../../utils/apiError';
+import assert from 'assert';
+
+export const getVerifyAccount = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId, email, activated } = req.user as Account;
+    assert(
+      !activated,
+      new ApiError(CONFLICT, 'Dein Account ist bereits aktiviert'),
+    );
+    const { otp } = await service.token.upsertActivationToken(aId);
+    await service.mail.sendVerifyEmail(otp.toString(), email);
+    return res.status(OK).json({ message: 'E-Mail versendet' });
+  },
+);
+
+export const postVerifyAccount = catchAsync(
+  async (_req: Request, _res: Response, _next: NextFunction) => {},
+);
 
 export const putProfilePicture = catchAsync(
   async (
