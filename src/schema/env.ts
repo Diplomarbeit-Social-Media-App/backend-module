@@ -26,4 +26,5 @@ export const env = object({
   }),
   EMAIL_FROM_NAME: string({ message: 'Mail sender name must be specified' }),
   EMAIL_HOST: string({ message: 'Please provide email service host' }),
+  MAPS_TOKEN: string({ message: 'Maps API-Token msut be defined' }),
 });
