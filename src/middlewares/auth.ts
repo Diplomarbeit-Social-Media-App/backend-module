@@ -32,11 +32,15 @@ const verifyAccessToken = async (payload: tokenSchema, done: DoneCallback) => {
 };
 
 const verifyAuth =
-  (req: Request, resolve: (value: unknown) => void, _reject: () => void) =>
+  (
+    req: Request,
+    resolve: (value: unknown) => void,
+    reject: (value: unknown) => void,
+  ) =>
   (err: Error, user: unknown, info: unknown) => {
     if (err || !user || info)
-      throw new ApiError(UNAUTHORIZED, 'Bitte logge dich erneut ein!', true);
-    req.user = user;
+      reject(new ApiError(UNAUTHORIZED, 'Bitte logge dich erneut ein!'));
+    req.user = user!;
     resolve(user);
   };
 
@@ -50,7 +54,9 @@ export const auth = async (req: Request, res: Response, next: NextFunction) =>
   })
     .then(() => next())
     .catch((err) =>
-      next(new ApiError(UNAUTHORIZED, `Fehler beim Anmelden: ${err.message}`)),
+      next(
+        new ApiError(UNAUTHORIZED, `Anmeldung fehlgeschlagen! ${err.message}`),
+      ),
     );
 
 const JwtStrategy = new Strategy(jwtOptions, verifyAccessToken);
