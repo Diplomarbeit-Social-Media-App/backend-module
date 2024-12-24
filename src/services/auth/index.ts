@@ -252,7 +252,7 @@ export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
 export const generateAndSaveTokens = async (
   accountId: number,
 ): Promise<{ refresh: string; access: string }> => {
-  await service.token.deleteAccountTokens(accountId);
+  await service.token.deleteAuthTokens(accountId);
 
   const refresh = await generateToken(accountId, TOKEN_TYPES.REFRESH);
   const access = await generateToken(accountId, TOKEN_TYPES.ACCESS);

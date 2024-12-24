@@ -39,10 +39,18 @@ export const upsertActivationToken = async (aId: number) => {
   return { otp, token };
 };
 
-export const deleteAccountTokens = async (accountId: number) => {
+export const deleteAuthTokens = async (accountId: number) => {
   await db.token.deleteMany({
     where: {
       aId: accountId,
+      OR: [
+        {
+          type: TOKEN_TYPES.ACCESS.toString(),
+        },
+        {
+          type: TOKEN_TYPES.REFRESH.toString(),
+        },
+      ],
     },
   });
 };
