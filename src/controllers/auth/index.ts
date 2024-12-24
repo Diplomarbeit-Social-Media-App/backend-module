@@ -164,6 +164,9 @@ export const postSignUp = catchAsync(
 
     const { refresh, access } = await service.auth.generateAndSaveTokens(aId);
 
+    const { otp } = await service.token.upsertActivationToken(aId);
+    await service.mail.sendVerifyEmail(otp.toString(), data.email);
+
     return res.status(201).json({ access, refresh });
   },
 );
