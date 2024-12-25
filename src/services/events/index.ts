@@ -99,7 +99,7 @@ export const participateEvent = async (
 
   const action = attendance ? { connect: { aId } } : { disconnect: { aId } };
 
-  return await db.event.update({
+  await db.event.update({
     where: {
       eId,
     },
@@ -125,6 +125,7 @@ export const participateEvent = async (
       },
     },
   });
+  return attendance;
 };
 
 export const updateEvent = async (update: updateEventSchema, user: User) => {

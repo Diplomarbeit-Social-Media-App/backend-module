@@ -31,12 +31,12 @@ export const postParticipateEvent = catchAsync(
   async (req: Request<object, object, participationType>, res, _next) => {
     const { eId, attendance } = req.body;
     const { aId } = req.user as Account;
-    const updatedEvent = await service.events.participateEvent(
+    const updatedAttendance = await service.events.participateEvent(
       aId,
       eId,
       attendance,
     );
-    return res.status(OK).json(updatedEvent);
+    return res.status(OK).json({ attendance: updatedAttendance });
   },
 );
 
