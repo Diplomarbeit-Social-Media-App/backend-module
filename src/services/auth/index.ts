@@ -14,6 +14,14 @@ import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { catchWithTransaction } from '../../utils/catchPrisma';
 
+export const deleteAccount = async (aId: number) => {
+  await db.account.delete({
+    where: {
+      aId,
+    },
+  });
+};
+
 export const activateAccount = async (aId: number, otp: string) => {
   const foundToken = await db.token.findFirst({
     where: {

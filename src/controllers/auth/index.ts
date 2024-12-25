@@ -16,6 +16,14 @@ import { BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, OK } from 'http-status';
 import { ApiError } from '../../utils/apiError';
 import assert from 'assert';
 
+export const deleteAccount = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    await service.auth.deleteAccount(aId);
+    return res.status(OK).json({});
+  },
+);
+
 export const getVerifyAccount = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId, email, activated } = req.user as Account;

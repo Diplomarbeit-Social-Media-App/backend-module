@@ -33,5 +33,6 @@ router.get('/profile', [auth], controllers.auth.getProfileDetails);
 router.put('/picture', [auth], controllers.auth.putProfilePicture);
 router.post('/activate', [auth], controllers.auth.postVerifyAccount);
 router.get('/activate', [auth], controllers.auth.getVerifyAccount);
+router.delete('/', [auth], controllers.auth.deleteAccount);
 
 export default router;
