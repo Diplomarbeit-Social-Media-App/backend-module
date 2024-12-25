@@ -3,6 +3,45 @@ import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
 
+export const rateHost = async (
+  hostId: number,
+  points: number,
+  description: string | undefined,
+  fromId: number,
+) => {
+  const hasRatedYet = await db.hostRating.findMany({
+    where: {
+      userId: fromId,
+      hostId,
+    },
+  });
+
+  assert(
+    !hasRatedYet || hasRatedYet.length == 0,
+    new ApiError(CONFLICT, 'Du hast für diesen Host bereits abgestimmt'),
+  );
+  assert(
+    points >= 1 && points <= 5,
+    new ApiError(BAD_REQUEST, 'Punkteanzahl nicht zwischen 1 und 5'),
+  );
+  const host = await db.host.findFirst({
+    where: {
+      hId: hostId,
+    },
+  });
+
+  assert(host != null, new ApiError(NOT_FOUND, 'Host-Id ist ungültig'));
+
+  return await db.hostRating.create({
+    data: {
+      points,
+      description,
+      userId: fromId,
+      hostId,
+    },
+  });
+};
+
 export const loadHostDetails = async (hostName: string) => {
   assert(
     hostName != null && hostName.length > 0,

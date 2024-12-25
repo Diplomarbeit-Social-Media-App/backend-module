@@ -1,13 +1,29 @@
 import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
-import { hostDetailsType } from '../../types/host';
+import { hostDetailsType, hostRatingType } from '../../types/host';
 import service from '../../services';
 import { OK } from 'http-status';
+import { Account } from '@prisma/client';
 
 export const getHostDetails = catchAsync(
   async (req: Request<hostDetailsType>, res: Response, _next: NextFunction) => {
     const { userName } = req.params;
     const hostDetails = await service.host.loadHostDetails(userName);
     return res.status(OK).json(hostDetails);
+  },
+);
+
+export const postHostRating = catchAsync(
+  async (
+    req: Request<object, object, hostRatingType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId } = req.user as Account;
+    const { hId, points, description } = req.body;
+    // find uId -> check if user account available
+    const user = await service.user.findUserByAId(aId);
+    await service.host.rateHost(hId, points, description, user.uId);
+    return res.status(OK).json({});
   },
 );
