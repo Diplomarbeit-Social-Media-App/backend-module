@@ -11,7 +11,7 @@ model PasswordResetToken {
   prtId   Int      @id @default(autoincrement())
   token   String
   exp     DateTime
-  account Account  @relation(fields: [aId], references: [aId])
+  account Account  @relation(fields: [aId], references: [aId], onDelete: Cascade)
   aId     Int      @unique
 }
 
@@ -35,7 +35,7 @@ model User {
   joinedGroups        GroupMember[]
   Message             Message[]
   notifications       Notification[]
-  account             Account        @relation(fields: [aId], references: [aId])
+  account             Account        @relation(fields: [aId], references: [aId], onDelete: Cascade)
   followedHosts       Host[]         @relation("HostFollowers")
   events              Event[]        @relation("Participates")
   sentAboRequests     AboRequest[]   @relation("FromUserFA")
@@ -50,7 +50,7 @@ model Host {
   companyName String
   Activity    Activity[]
   Event       Event[]
-  account     Account      @relation(fields: [aId], references: [aId])
+  account     Account      @relation(fields: [aId], references: [aId], onDelete: Cascade)
   followedBy  User[]       @relation("HostFollowers")
   HostRating  HostRating[]
 }
@@ -80,7 +80,7 @@ model Message {
   groupGId  Int
   sentBy    Int
   group     Group    @relation(fields: [groupGId], references: [gId])
-  user      User     @relation(fields: [sentBy], references: [uId])
+  user      User     @relation(fields: [sentBy], references: [uId], onDelete: Cascade)
 }
 
 model Activity {
@@ -90,7 +90,7 @@ model Activity {
   minAge       Int
   locationId   Int        @unique
   creatorId    Int
-  host         Host       @relation(fields: [creatorId], references: [hId])
+  host         Host       @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
   location     Location   @relation(fields: [locationId], references: [lId])
   groups       Group[]    @relation("AttachedActivites")
   category     Category[] @relation("BelongsToCategory")
@@ -118,7 +118,7 @@ model Event {
   creatorId     Int
   coverImage    String?
   galleryImages String[]
-  host          Host      @relation(fields: [creatorId], references: [hId])
+  host          Host      @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
   location      Location  @relation(fields: [locationId], references: [lId])
   groups        Group[]   @relation("AttachedEvents")
   users         User[]    @relation("Participates")
@@ -128,8 +128,8 @@ model Friendship {
   userId    Int
   friendId  Int
   createdAt DateTime @default(now())
-  friend    User     @relation("UserFriendedBy", fields: [friendId], references: [uId])
-  user      User     @relation("UserFriends", fields: [userId], references: [uId])
+  friend    User     @relation("UserFriendedBy", fields: [friendId], references: [uId], onDelete: Cascade)
+  user      User     @relation("UserFriends", fields: [userId], references: [uId], onDelete: Cascade)
 
   @@id([userId, friendId])
 }
@@ -142,7 +142,7 @@ model Token {
   backlisted Boolean
   aId        Int
   token      String   @unique
-  account    Account  @relation("UserTokens", fields: [aId], references: [aId])
+  account    Account  @relation("UserTokens", fields: [aId], references: [aId], onDelete: Cascade)
 }
 
 model Group {
@@ -178,8 +178,8 @@ model Notification {
 
 model AboRequest {
   frId       Int      @id @default(autoincrement())
-  fromUser   User     @relation("FromUserFA", fields: [fromUserId], references: [uId])
-  toUser     User     @relation("ToUserFA", fields: [toUserId], references: [uId])
+  fromUser   User     @relation("FromUserFA", fields: [fromUserId], references: [uId], onDelete: Cascade)
+  toUser     User     @relation("ToUserFA", fields: [toUserId], references: [uId], onDelete: Cascade)
   state      Int      @default(0)
   createdAt  DateTime @default(now()) @updatedAt
   fromUserId Int
@@ -188,8 +188,8 @@ model AboRequest {
 
 model HostRating {
   hrId        Int      @id @default(autoincrement())
-  host        Host     @relation(fields: [hostId], references: [hId])
-  user        User     @relation(fields: [userId], references: [uId])
+  host        Host     @relation(fields: [hostId], references: [hId], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [uId], onDelete: Cascade)
   hostId      Int
   userId      Int
   points      Int
