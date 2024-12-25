@@ -83,13 +83,14 @@ export const signUpSchema = object({
       .trim()
       .min(2, { message: 'Nachname zu kurz' })
       .max(50, { message: 'Nachname zu lang' }),
-    picture: string({ message: 'Das Profilbild fehlt' })
-      .refine((s) => s.startsWith('image'), {
-        message: 'Der Pfad muss mit "image" beginnen',
-      })
-      .refine((s) => s.endsWith('.webp'), {
-        message: 'Der Pfad muss mit dem Format .webp aufhören',
-      })
+    picture: coerce
+      .string({ message: 'Das Profilbild fehlt' })
+      // .refine((s) => s.startsWith('image'), {
+      //   message: 'Der Pfad muss mit "image" beginnen',
+      // })
+      // .refine((s) => s.endsWith('.webp'), {
+      //   message: 'Der Pfad muss mit dem Format .webp aufhören',
+      // })
       .optional(),
     isUserAccount: coerce
       .boolean({ message: 'Der isUserAccount ist ungültig' })
@@ -99,14 +100,27 @@ export const signUpSchema = object({
         .min(3, { message: 'Firmenname zu kurz' })
         .max(30, { message: 'Firmenname zu lang' }),
     }).optional(),
-  }).refine(
-    (data) => {
-      if (data.isUserAccount) return true;
-      return data.companyDetails != null;
-    },
-    {
-      message:
-        'Bei einem Host-Account müssen die "companyDetails" angegeben werden',
-    },
-  ),
+  })
+    .refine(
+      (data) => {
+        if (data.isUserAccount) return true;
+        return data.companyDetails != null;
+      },
+      {
+        message:
+          'Bei einem Host-Account müssen die "companyDetails" angegeben werden',
+      },
+    )
+    .refine(
+      (data) => {
+        if (data.picture == String(null) || !data.picture) return true;
+        return (
+          data.picture.startsWith('image') && data.picture.endsWith('.webp')
+        );
+      },
+      {
+        message:
+          'Das Bild muss entweder null oder ein String mit image[xxx].webp sein ',
+      },
+    ),
 });
