@@ -3,7 +3,35 @@ import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
 
-export const rateHost = async (
+export const deleteHostRating = async (hostId: number, fromId: number) => {
+  const host = await db.host.findFirst({
+    where: {
+      hId: hostId,
+    },
+  });
+
+  assert(host != null, new ApiError(NOT_FOUND, 'Host-Id ist ungültig'));
+
+  const hostRating = await db.hostRating.findFirst({
+    where: {
+      userId: fromId,
+      hostId: hostId,
+    },
+  });
+
+  assert(
+    hostRating != null,
+    new ApiError(NOT_FOUND, 'Du hast für diesen Host keine Bewertung'),
+  );
+
+  await db.hostRating.delete({
+    where: {
+      hrId: hostRating.hrId,
+    },
+  });
+};
+
+export const createHostRating = async (
   hostId: number,
   points: number,
   description: string | undefined,
