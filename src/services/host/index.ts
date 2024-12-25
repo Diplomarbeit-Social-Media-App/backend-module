@@ -86,6 +86,22 @@ export const loadHostDetails = async (hostName: string) => {
           verified: true,
           companyName: true,
           Event: true,
+          HostRating: {
+            select: {
+              description: true,
+              points: true,
+              createdAt: true,
+              user: {
+                select: {
+                  account: {
+                    select: {
+                      userName: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           followedBy: {
             select: {
               _count: true,
@@ -109,8 +125,17 @@ export const loadHostDetails = async (hostName: string) => {
     account.host != null,
     new ApiError(NOT_FOUND, 'Account besitzt kein Host-Profil'),
   );
+  const hostRatingAgg = await db.hostRating.aggregate({
+    where: {
+      hostId: account.host.hId,
+    },
+    _avg: {
+      points: true,
+    },
+  });
   return {
     host: account.host,
+    rating: hostRatingAgg._avg.points,
     userName: account.userName,
     picture: account.picture,
     description: account.description,
