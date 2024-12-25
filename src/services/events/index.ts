@@ -193,6 +193,12 @@ export const getEventDetails = async (eId: number) => {
         select: {
           companyName: true,
           verified: true,
+          account: {
+            select: {
+              userName: true,
+              picture: true,
+            },
+          },
         },
       },
     },
