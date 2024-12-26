@@ -125,6 +125,9 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
     account.host != null,
     new ApiError(NOT_FOUND, 'Account besitzt kein Host-Profil'),
   );
+  account.host.HostRating = account.host.HostRating.map((rating) => {
+    return { ...rating, isFromUser: rating.user.account.userName == fromName };
+  });
   const hostRatingAgg = await db.hostRating.aggregate({
     where: {
       hostId: account.host.hId,
