@@ -70,7 +70,7 @@ export const createHostRating = async (
   });
 };
 
-export const loadHostDetails = async (hostName: string) => {
+export const loadHostDetails = async (hostName: string, fromName: string) => {
   assert(
     hostName != null && hostName.length > 0,
     new ApiError(BAD_REQUEST, 'Hostname darf nicht leer sein'),
@@ -133,12 +133,16 @@ export const loadHostDetails = async (hostName: string) => {
       points: true,
     },
   });
+  const isFollowing = account.host.followedBy.some(
+    (f) => f.account.userName == fromName,
+  );
   return {
     host: account.host,
     rating: hostRatingAgg._avg.points,
     userName: account.userName,
     picture: account.picture,
     description: account.description,
+    isFollowing,
   };
 };
 

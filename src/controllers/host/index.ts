@@ -27,7 +27,8 @@ export const deleteHostRating = catchAsync(
 export const getHostDetails = catchAsync(
   async (req: Request<hostDetailsType>, res: Response, _next: NextFunction) => {
     const { userName } = req.params;
-    const hostDetails = await service.host.loadHostDetails(userName);
+    const { userName: fromName } = req.user as Account;
+    const hostDetails = await service.host.loadHostDetails(userName, fromName);
     return res.status(OK).json(hostDetails);
   },
 );
