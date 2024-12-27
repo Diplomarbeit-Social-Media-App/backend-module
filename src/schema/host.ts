@@ -18,7 +18,7 @@ export const hostRatingSchema = object({
 });
 
 export const hostRatingDeletionSchema = object({
-  body: object({
+  params: object({
     hId: coerce.number({ message: 'Host-Id fehlt' }),
   }),
 });

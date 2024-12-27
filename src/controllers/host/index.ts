@@ -11,11 +11,11 @@ import { Account } from '@prisma/client';
 
 export const deleteHostRating = catchAsync(
   async (
-    req: Request<object, object, hostRatingDeletionType>,
+    req: Request<hostRatingDeletionType>,
     res: Response,
     _next: NextFunction,
   ) => {
-    const { hId } = req.body;
+    const { hId } = req.params;
     const { aId } = req.user as Account;
     // find uId -> check if user account available
     const user = await service.user.findUserByAId(aId);

@@ -19,7 +19,7 @@ router.post(
   controllers.host.postHostRating,
 );
 router.delete(
-  '/rate',
+  '/rate/:hId',
   [validate(hostRatingDeletionSchema)],
   controllers.host.deleteHostRating,
 );
