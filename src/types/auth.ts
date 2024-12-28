@@ -5,6 +5,7 @@ import {
   putPictureSchema,
   renewTokenSchema,
   signUpSchema,
+  updateAccountSchema,
 } from '../schema/auth';
 
 export type accountSchema = {
@@ -42,3 +43,6 @@ export type passwordResetSchema = Zod.infer<passwordResetBody>;
 
 type putPictureBody = typeof putPictureSchema.shape.body;
 export type putPictureType = Zod.infer<putPictureBody>;
+
+type putAccountBody = typeof updateAccountSchema.shape.body;
+export type updateAccountType = Zod.infer<putAccountBody>;

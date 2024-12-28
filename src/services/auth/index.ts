@@ -12,7 +12,40 @@ import { ApiError } from '../../utils/apiError';
 import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { catchWithTransaction } from '../../utils/catchPrisma';
+import { catchPrisma, catchWithTransaction } from '../../utils/catchPrisma';
+
+export const updateAccountData = async (
+  aId: number,
+  firstName?: string,
+  lastName?: string,
+  userName?: string,
+  description?: string,
+) => {
+  const origin = { firstName, lastName, userName, description };
+  const updatedValues = Object.fromEntries(
+    Object.entries(origin).filter(([_, value]) => value !== undefined),
+  );
+
+  console.log(updatedValues);
+  return await catchPrisma(
+    async () =>
+      await db.account.update({
+        where: {
+          aId,
+        },
+        data: {
+          ...updatedValues,
+        },
+        select: {
+          firstName: true,
+          lastName: true,
+          userName: true,
+          description: true,
+          aId: true,
+        },
+      }),
+  );
+};
 
 export const deleteAccount = async (aId: number) => {
   await db.account.delete({

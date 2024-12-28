@@ -6,6 +6,7 @@ import {
   putPictureType,
   renewTokenSchema,
   signUpSchema,
+  updateAccountType,
 } from '../../types/auth';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services/index';
@@ -15,6 +16,25 @@ import { Account, User } from '@prisma/client';
 import { BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, OK } from 'http-status';
 import { ApiError } from '../../utils/apiError';
 import assert from 'assert';
+
+export const updateAccountData = catchAsync(
+  async (
+    req: Request<object, object, updateAccountType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { description, firstName, lastName, userName } = req.body;
+    const { aId } = req.user as Account;
+    const updatedAccount = await service.auth.updateAccountData(
+      aId,
+      firstName,
+      lastName,
+      userName,
+      description,
+    );
+    return res.status(OK).json(updatedAccount);
+  },
+);
 
 export const deleteAccount = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {

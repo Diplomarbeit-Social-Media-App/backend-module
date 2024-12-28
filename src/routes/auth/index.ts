@@ -6,6 +6,7 @@ import {
   renewTokenSchema,
   requestPasswordResetSchema,
   signUpSchema,
+  updateAccountSchema,
 } from '../../schema/auth';
 import controllers from '../../controllers/index';
 import { auth } from '../../middlewares/auth';
@@ -46,5 +47,11 @@ router.get(
   controllers.auth.getVerifyAccount,
 );
 router.delete('/', [auth], controllers.auth.deleteAccount);
+router.put(
+  '/account',
+  hasValidAccunt,
+  [validate(updateAccountSchema)],
+  controllers.auth.updateAccountData,
+);
 
 export default router;

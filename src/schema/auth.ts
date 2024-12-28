@@ -53,6 +53,34 @@ export const passwordResetSchema = object({
   }),
 });
 
+export const updateAccountSchema = object({
+  body: object({
+    firstName: string()
+      .trim()
+      .min(2, { message: 'Vorname zu kurz' })
+      .max(30, { message: 'Vorname zu lang' })
+      .optional(),
+    lastName: string()
+      .trim()
+      .min(2, { message: 'Nachname zu kurz' })
+      .max(50, { message: 'Nachname zu lang' })
+      .optional(),
+    userName: string({ message: 'Username muss enthalten sein' })
+      .trim()
+      .min(3, { message: 'Username zu kurz' })
+      .max(15, { message: 'Username zu lang' })
+      .refine((userName) => validator.isAlphanumeric(userName), {
+        message: 'Username enthält Sonderzeichen!',
+      })
+      .transform((userName) => userName.toLowerCase())
+      .optional(),
+    description: string({ message: 'Beschreibung fehlt' })
+      .trim()
+      .max(255, { message: 'Beschreibung zu lang' })
+      .optional(),
+  }),
+});
+
 export const signUpSchema = object({
   body: object({
     userName: string({ message: 'Username muss enthalten sein' })
@@ -61,7 +89,8 @@ export const signUpSchema = object({
       .max(15, { message: 'Username zu lang' })
       .refine((userName) => validator.isAlphanumeric(userName), {
         message: 'Username enthält Sonderzeichen!',
-      }),
+      })
+      .transform((userName) => userName.toLowerCase()),
     password: string({ message: 'Passwort muss enthalten sein' })
       .trim()
       .max(256)
