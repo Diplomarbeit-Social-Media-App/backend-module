@@ -1,4 +1,5 @@
-import { coerce, object, string } from 'zod';
+import { coerce, nativeEnum, object, string } from 'zod';
+import { socials } from '../types/socials';
 
 export const hostDetailsSchema = object({
   params: object({
@@ -20,5 +21,16 @@ export const hostRatingSchema = object({
 export const hostRatingDeletionSchema = object({
   params: object({
     hId: coerce.number({ message: 'Host-Id fehlt' }),
+  }),
+});
+
+export const hostAddSocialSchema = object({
+  body: object({
+    type: nativeEnum(socials, {
+      message: `Link muss von Typ [${Object.values(socials)}] sein`,
+    }),
+    link: string({ message: 'Link fehlt' }).max(512, {
+      message: 'Link zu lang',
+    }),
   }),
 });

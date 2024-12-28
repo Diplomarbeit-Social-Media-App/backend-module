@@ -1,4 +1,5 @@
 import {
+  hostAddSocialSchema,
   hostDetailsSchema,
   hostRatingDeletionSchema,
   hostRatingSchema,
@@ -12,3 +13,6 @@ export type hostRatingType = Zod.infer<hostRateBody>;
 
 type hostRatingDeletionBody = typeof hostRatingDeletionSchema.shape.params;
 export type hostRatingDeletionType = Zod.infer<hostRatingDeletionBody>;
+
+type hostSocialAddBody = typeof hostAddSocialSchema.shape.body;
+export type hostSocialAddType = Zod.infer<hostSocialAddBody>;

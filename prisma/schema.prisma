@@ -44,15 +44,16 @@ model User {
 }
 
 model Host {
-  hId         Int          @id @default(autoincrement())
-  aId         Int          @unique
-  verified    Boolean      @default(false)
+  hId         Int           @id @default(autoincrement())
+  aId         Int           @unique
+  verified    Boolean       @default(false)
   companyName String
   Activity    Activity[]
   Event       Event[]
-  account     Account      @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  followedBy  User[]       @relation("HostFollowers")
+  account     Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  followedBy  User[]        @relation("HostFollowers")
   HostRating  HostRating[]
+  SocialLinks SocialLinks[]
 }
 
 model Account {
@@ -195,4 +196,12 @@ model HostRating {
   points      Int
   description String?
   createdAt   DateTime @default(now())
+}
+
+model SocialLinks {
+  slId    Int    @id @default(autoincrement())
+  type    String
+  link    String
+  hId     Int
+  host    Host   @relation(fields: [hId], references: [hId])
 }

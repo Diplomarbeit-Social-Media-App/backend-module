@@ -3,6 +3,57 @@ import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
 
+export const createSocialLink = async (
+  hId: number,
+  type: string,
+  link: string,
+) => {
+  return await db.socialLinks.create({
+    select: {
+      link: true,
+      type: true,
+    },
+    data: {
+      link,
+      type,
+      hId,
+    },
+  });
+};
+
+export const findHostByAId = async (aId: number) => {
+  const account = await db.account.findFirst({
+    where: {
+      aId,
+    },
+    select: {
+      host: {
+        select: {
+          verified: true,
+          Activity: true,
+          companyName: true,
+          Event: true,
+          followedBy: true,
+          aId: true,
+          HostRating: true,
+          SocialLinks: true,
+          account: true,
+          hId: true,
+        },
+      },
+    },
+  });
+  assert(
+    account != null,
+    new ApiError(NOT_FOUND, 'Account mit dieser ID nicht gefunden'),
+  );
+  assert(
+    account.host != null,
+    new ApiError(NOT_FOUND, 'Benutzer hat kein Host-Profil'),
+  );
+  return account.host;
+};
+
 export const deleteHostRating = async (hostId: number, fromId: number) => {
   const host = await db.host.findFirst({
     where: {
@@ -113,6 +164,12 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
             },
           },
           hId: true,
+          SocialLinks: {
+            select: {
+              type: true,
+              link: true,
+            },
+          },
         },
       },
     },

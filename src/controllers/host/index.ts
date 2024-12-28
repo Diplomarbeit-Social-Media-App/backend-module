@@ -4,10 +4,13 @@ import {
   hostDetailsType,
   hostRatingDeletionType,
   hostRatingType,
+  hostSocialAddType,
 } from '../../types/host';
 import service from '../../services';
-import { CREATED, OK } from 'http-status';
+import { CONFLICT, CREATED, OK } from 'http-status';
 import { Account } from '@prisma/client';
+import { ApiError } from '../../utils/apiError';
+import assert from 'assert';
 
 export const deleteHostRating = catchAsync(
   async (
@@ -45,5 +48,36 @@ export const postHostRating = catchAsync(
     const user = await service.user.findUserByAId(aId);
     await service.host.createHostRating(hId, points, description, user.uId);
     return res.status(CREATED).json({});
+  },
+);
+
+export const postAddSocial = catchAsync(
+  async (
+    req: Request<object, object, hostSocialAddType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { type, link } = req.body;
+    const { aId } = req.user as Account;
+    const host = await service.host.findHostByAId(aId);
+    const hasSocialTypeAlready = host.SocialLinks.some(
+      (social) => social.type == type,
+    );
+    assert(
+      !hasSocialTypeAlready,
+      new ApiError(CONFLICT, 'Bitte lösche zuerst den bestehenden Link'),
+    );
+    const createdLink = await service.host.createSocialLink(
+      host.hId,
+      type,
+      link,
+    );
+    const links = [
+      ...host.SocialLinks.map((social) => {
+        return { type: social.type, link: social.link };
+      }),
+      createdLink,
+    ];
+    return res.status(CREATED).json({ links });
   },
 );
