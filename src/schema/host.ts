@@ -34,3 +34,9 @@ export const hostAddSocialSchema = object({
     }),
   }),
 });
+
+export const hostDelSocialSchema = object({
+  params: object({
+    type: string({ message: 'Typ fehlt' }),
+  }),
+});

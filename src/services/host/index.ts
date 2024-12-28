@@ -3,6 +3,15 @@ import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
 
+export const deleteSocialLink = async (hId: number, type: string) => {
+  return await db.socialLinks.deleteMany({
+    where: {
+      hId,
+      type,
+    },
+  });
+};
+
 export const createSocialLink = async (
   hId: number,
   type: string,

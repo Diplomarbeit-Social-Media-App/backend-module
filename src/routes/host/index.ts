@@ -3,6 +3,7 @@ import controllers from '../../controllers';
 import { validate } from '../../middlewares/validation';
 import {
   hostAddSocialSchema,
+  hostDelSocialSchema,
   hostDetailsSchema,
   hostRatingDeletionSchema,
   hostRatingSchema,
@@ -28,6 +29,11 @@ router.post(
   '/social',
   [validate(hostAddSocialSchema)],
   controllers.host.postAddSocial,
+);
+router.delete(
+  '/social/:type',
+  [validate(hostDelSocialSchema)],
+  controllers.host.deleteHostSocial,
 );
 
 export default router;

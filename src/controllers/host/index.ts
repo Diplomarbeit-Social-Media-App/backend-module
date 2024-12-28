@@ -5,9 +5,10 @@ import {
   hostRatingDeletionType,
   hostRatingType,
   hostSocialAddType,
+  hostSocialDelType,
 } from '../../types/host';
 import service from '../../services';
-import { CONFLICT, CREATED, OK } from 'http-status';
+import { CONFLICT, CREATED, NOT_FOUND, OK } from 'http-status';
 import { Account } from '@prisma/client';
 import { ApiError } from '../../utils/apiError';
 import assert from 'assert';
@@ -79,5 +80,33 @@ export const postAddSocial = catchAsync(
       createdLink,
     ];
     return res.status(CREATED).json({ links });
+  },
+);
+
+export const deleteHostSocial = catchAsync(
+  async (
+    req: Request<hostSocialDelType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { type } = req.params;
+    const { aId } = req.user as Account;
+    const host = await service.host.findHostByAId(aId);
+    const hasSocialType = host.SocialLinks.some(
+      (social) => social.type == type,
+    );
+    assert(
+      hasSocialType,
+      new ApiError(NOT_FOUND, 'Dieser Link existiert nicht'),
+    );
+    await service.host.deleteSocialLink(host.hId, type);
+    const links = [
+      ...host.SocialLinks.filter((social) => social.type != type).map(
+        (social) => {
+          return { type: social.type, link: social.link };
+        },
+      ),
+    ];
+    return res.status(OK).json({ links });
   },
 );
