@@ -220,6 +220,8 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
     requestedUser.user.uId != fromUser.uId,
     new ApiError(CONFLICT, 'Du kannst dir selber keine Anfragen schicken'),
   );
+  const isFriended = await isFriendedWith(fromUser.uId, requestedUser.user.uId);
+  assert(!isFriended, new ApiError(CONFLICT, 'Ihr seid bereits befreundet'));
   // has sent abo req to user
   const aboRequests = await db.aboRequest.findMany({
     where: {
