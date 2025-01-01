@@ -40,3 +40,12 @@ export const hostDelSocialSchema = object({
     type: string({ message: 'Typ fehlt' }),
   }),
 });
+
+export const hostSubscriptionSchema = object({
+  params: object({
+    hId: coerce
+      .number({ message: 'Host-Id fehlt' })
+      .min(0)
+      .max(Number.MAX_VALUE),
+  }),
+});

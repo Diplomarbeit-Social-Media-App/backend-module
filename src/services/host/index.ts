@@ -2,6 +2,65 @@ import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
 import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
+import { User } from '@prisma/client';
+
+export const unsubscribeHost = async (user: User, hId: number) => {
+  const host = await db.host.findFirst({
+    where: {
+      hId,
+    },
+    include: {
+      followedBy: true,
+    },
+  });
+  assert(host != null, new ApiError(NOT_FOUND, 'Kein Veranstalter gefunden'));
+  const isFollowing = host.followedBy.some((f) => f.uId == user.uId);
+  assert(
+    isFollowing,
+    new ApiError(CONFLICT, 'Du folgst dem Veranstalter nicht'),
+  );
+  await db.host.update({
+    where: {
+      hId,
+    },
+    data: {
+      followedBy: {
+        disconnect: {
+          uId: user.uId,
+        },
+      },
+    },
+  });
+};
+
+export const subscribeHost = async (user: User, hId: number) => {
+  const host = await db.host.findFirst({
+    where: {
+      hId,
+    },
+    include: {
+      followedBy: true,
+    },
+  });
+  assert(host != null, new ApiError(NOT_FOUND, 'Kein Veranstalter gefunden'));
+  const isFollowing = host.followedBy.some((f) => f.uId == user.uId);
+  assert(
+    !isFollowing,
+    new ApiError(CONFLICT, 'Du folgst dem Veranstalter bereits'),
+  );
+  await db.host.update({
+    where: {
+      hId,
+    },
+    data: {
+      followedBy: {
+        connect: {
+          uId: user.uId,
+        },
+      },
+    },
+  });
+};
 
 export const deleteSocialLink = async (hId: number, type: string) => {
   return await db.socialLinks.deleteMany({

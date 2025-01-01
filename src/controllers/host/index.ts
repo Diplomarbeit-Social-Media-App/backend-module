@@ -6,6 +6,7 @@ import {
   hostRatingType,
   hostSocialAddType,
   hostSocialDelType,
+  hostSubscriptionType,
 } from '../../types/host';
 import service from '../../services';
 import { CONFLICT, CREATED, NOT_FOUND, OK } from 'http-status';
@@ -108,5 +109,33 @@ export const deleteHostSocial = catchAsync(
       ),
     ];
     return res.status(OK).json({ links });
+  },
+);
+
+export const postSubscribeHost = catchAsync(
+  async (
+    req: Request<hostSubscriptionType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { hId } = req.params;
+    const { aId } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+    await service.host.subscribeHost(user, hId);
+    return res.status(OK).json({});
+  },
+);
+
+export const deleteSubscribeHost = catchAsync(
+  async (
+    req: Request<hostSubscriptionType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { hId } = req.params;
+    const { aId } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+    await service.host.unsubscribeHost(user, hId);
+    return res.status(OK).json({});
   },
 );

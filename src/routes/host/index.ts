@@ -7,6 +7,7 @@ import {
   hostDetailsSchema,
   hostRatingDeletionSchema,
   hostRatingSchema,
+  hostSubscriptionSchema,
 } from '../../schema/host';
 const router = Router();
 
@@ -34,6 +35,16 @@ router.delete(
   '/social/:type',
   [validate(hostDelSocialSchema)],
   controllers.host.deleteHostSocial,
+);
+router.post(
+  '/subscribe/:hId',
+  [validate(hostSubscriptionSchema)],
+  controllers.host.postSubscribeHost,
+);
+router.delete(
+  '/subscribe/:hId',
+  [validate(hostSubscriptionSchema)],
+  controllers.host.deleteSubscribeHost,
 );
 
 export default router;
