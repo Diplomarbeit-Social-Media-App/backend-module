@@ -216,6 +216,10 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
     requestedUser && requestedUser.user,
     new ApiError(NOT_FOUND, 'Account oder User nicht gefunden'),
   );
+  assert(
+    requestedUser.user.uId != fromUser.uId,
+    new ApiError(CONFLICT, 'Du kannst dir selber keine Anfragen schicken'),
+  );
   // has sent abo req to user
   const aboRequests = await db.aboRequest.findMany({
     where: {
