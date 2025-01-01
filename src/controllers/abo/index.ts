@@ -1,9 +1,43 @@
-import { Request } from 'express';
-import { ABO_FILTER_SCHEMA, postAboType, searchType } from '../../types/abo';
+import { NextFunction, Request, Response } from 'express';
+import {
+  ABO_FILTER_SCHEMA,
+  postAboType,
+  requestStateType,
+  searchType,
+} from '../../types/abo';
 import catchAsync from '../../utils/catchAsync';
 import service from '../../services';
 import { Account } from '@prisma/client';
-import { CREATED, OK } from 'http-status';
+import { CONFLICT, CREATED, OK, UNAUTHORIZED } from 'http-status';
+import assert from 'assert';
+import { ApiError } from '../../utils/apiError';
+
+export const putRequestState = catchAsync(
+  async (
+    req: Request<object, object, requestStateType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { frId, state } = req.body;
+    const { aId } = req.user as Account;
+    const aboRequest = await service.abo.loadRequestById(frId);
+    const { fromUser, toUser } = aboRequest;
+    assert(
+      toUser.aId == aId,
+      new ApiError(UNAUTHORIZED, 'Nicht deine Anfrage'),
+    );
+    const isFriendedAlready = await service.abo.isFriendedWith(
+      fromUser.uId,
+      toUser.uId,
+    );
+    assert(
+      !isFriendedAlready,
+      new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
+    );
+    await service.abo.modifyRequest(aboRequest, state);
+    return res.status(OK).json({});
+  },
+);
 
 export const getSearchByUserName = catchAsync(
   async (req: Request<searchType>, res, _next) => {

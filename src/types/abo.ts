@@ -1,5 +1,11 @@
 import { TypeOf } from 'zod';
-import { getAboSchema, postAboSchema, searchSchema } from '../schema/abo';
+import {
+  getAboSchema,
+  postAboSchema,
+  requestStateSchema,
+  searchSchema,
+} from '../schema/abo';
+import { AboRequest } from '@prisma/client';
 
 export enum ABO_REQUEST_STATE {
   PENDING = 0,
@@ -29,6 +35,12 @@ export enum ABO_FILTER_SCHEMA {
   CLOSED = 2,
 }
 
+export enum ABO_REQUEST_MODIFY {
+  ACCEPT = 0,
+  DECLINE = 1,
+  DELETE = 2,
+}
+
 export const getFilterValues = (option: ABO_FILTER_SCHEMA): number[] => {
   if (option < 0 || option > 2) {
     throw new Error('Option out of range');
@@ -46,3 +58,17 @@ export type postAboType = Zod.infer<postAboBody>;
 
 type searchParams = typeof searchSchema.shape.params;
 export type searchType = Zod.infer<searchParams>;
+
+type requestStateBody = typeof requestStateSchema.shape.body;
+export type requestStateType = Zod.infer<requestStateBody>;
+
+export type extendedAboRequest = {
+  fromUser: {
+    uId: number;
+    aId: number;
+  };
+  toUser: {
+    uId: number;
+    aId: number;
+  };
+} & AboRequest;

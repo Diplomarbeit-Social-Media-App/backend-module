@@ -1,7 +1,9 @@
 import db from '../../utils/db';
 import {
   ABO_FILTER_SCHEMA,
+  ABO_REQUEST_MODIFY,
   ABO_REQUEST_STATE,
+  extendedAboRequest,
   getFilterValues,
 } from '../../types/abo';
 import { Prisma, User } from '@prisma/client';
@@ -15,6 +17,105 @@ import {
 } from 'http-status';
 import logger from '../../logger/logger';
 import { assign, omit } from 'lodash';
+
+export const modifyRequest = async (
+  aboRequest: extendedAboRequest,
+  state: ABO_REQUEST_MODIFY,
+) => {
+  assert(
+    aboRequest.state == ABO_REQUEST_STATE.PENDING,
+    new ApiError(CONFLICT, 'Anfrage wurde schon bearbeitet'),
+  );
+  const whereCondition = {
+    where: {
+      frId: aboRequest.frId,
+    },
+  };
+  switch (state) {
+    case ABO_REQUEST_MODIFY.ACCEPT:
+      await db.$transaction([
+        db.aboRequest.update({
+          ...whereCondition,
+          data: {
+            state: ABO_REQUEST_STATE.ACCEPTED,
+          },
+        }),
+        db.friendship.create({
+          data: {
+            userId: aboRequest.fromUserId,
+            friendId: aboRequest.toUserId,
+          },
+        }),
+      ]);
+      break;
+    case ABO_REQUEST_MODIFY.DECLINE:
+      await db.aboRequest.update({
+        ...whereCondition,
+        data: {
+          state: ABO_REQUEST_STATE.DECLINED,
+        },
+      });
+      break;
+    case ABO_REQUEST_MODIFY.DELETE:
+      await db.aboRequest.update({
+        ...whereCondition,
+        data: {
+          state: ABO_REQUEST_STATE.DELETED,
+        },
+      });
+      break;
+  }
+};
+
+export const loadRequestById = async (frId: number) => {
+  const aboReq = await db.aboRequest.findFirst({
+    where: {
+      frId,
+    },
+    include: {
+      fromUser: true,
+      toUser: true,
+    },
+  });
+  assert(aboReq != null, new ApiError(NOT_FOUND, 'Anfrage nicht gefunden'));
+  return aboReq;
+};
+
+/**
+ * Checks if user is friended with another user
+ * Won't check if any of those ids are valid and linked to a real account
+ * @param uId1 number
+ * @param uId2 number
+ */
+export const isFriendedWith = async (uId1: number, uId2: number) => {
+  const isFriended = await db.friendship.findFirst({
+    where: {
+      OR: [
+        {
+          AND: [
+            {
+              userId: uId1,
+            },
+            {
+              friendId: uId2,
+            },
+          ],
+        },
+        {
+          AND: [
+            {
+              userId: uId2,
+            },
+            {
+              friendId: uId1,
+            },
+          ],
+        },
+      ],
+    },
+  });
+  return isFriended != null;
+};
 
 export const searchByUserName = async (userName: string, take: number = 50) => {
   const condition = {

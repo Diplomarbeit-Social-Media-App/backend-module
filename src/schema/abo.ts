@@ -1,7 +1,16 @@
-import zod, { nativeEnum, object, string } from 'zod';
-import { ABO_FILTER_SCHEMA } from '../types/abo';
+import zod, { nativeEnum, number, object, string } from 'zod';
+import { ABO_FILTER_SCHEMA, ABO_REQUEST_MODIFY } from '../types/abo';
 import { ApiError } from '../utils/apiError';
 import { BAD_REQUEST } from 'http-status';
+
+export const requestStateSchema = object({
+  body: object({
+    frId: number({ message: 'Abo-Request-Id fehlt' }),
+    state: nativeEnum(ABO_REQUEST_MODIFY, {
+      message: 'State-Wert ist von 0 bis 2',
+    }),
+  }),
+});
 
 export const searchSchema = object({
   params: object({
