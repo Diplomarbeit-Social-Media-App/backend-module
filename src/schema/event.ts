@@ -1,7 +1,28 @@
-import { array, coerce, nativeEnum, number, object, string } from 'zod';
-import validator from 'validator';
+import {
+  array,
+  boolean,
+  coerce,
+  nativeEnum,
+  number,
+  object,
+  string,
+} from 'zod';
 import dayjs from 'dayjs';
 import category from '../types/categorys';
+import { isUtf8 } from 'buffer';
+
+export const participationSchema = object({
+  body: object({
+    eId: number({ message: 'Event-Id fehlt' }),
+    attendance: boolean({ message: 'Teilnehmestatus fehlt' }),
+  }),
+});
+
+export const attendanceSchema = object({
+  params: object({
+    eId: coerce.number({ message: 'Event-Id fehlt' }),
+  }),
+});
 
 export const positionSchema = object({
   longitutude: coerce
@@ -29,8 +50,8 @@ export const updateSchema = object({
       .trim()
       .min(3, { message: 'Eventname zu kurz' })
       .max(40, { message: 'Eventname zu lang' })
-      .refine((name) => validator.isAscii(name), {
-        message: 'Keine Sonderzeichen im Namen erlaubt',
+      .refine((name) => isUtf8(Buffer.from(name, 'utf-8')), {
+        message: 'Keine speziellen Sonderzeichen im Namen erlaubt',
       }),
     minAge: coerce
       .number({ message: 'Bitte gib ein Mindestalter ein' })
@@ -63,8 +84,8 @@ export const eventSchema = object({
       .trim()
       .min(3, { message: 'Eventname zu kurz' })
       .max(40, { message: 'Eventname zu lang' })
-      .refine((name) => validator.isAlphanumeric(name), {
-        message: 'Keine Sonderzeichen im Namen erlaubt',
+      .refine((name) => isUtf8(Buffer.from(name, 'utf-8')), {
+        message: 'Keine speziellen Sonderzeichen im Namen erlaubt',
       }),
     startsAt: coerce.date().min(dayjs().add(6, 'hour').toDate(), {
       message: 'Das Event muss mindestens 6 Stunden vor Beginn angelegt werden',

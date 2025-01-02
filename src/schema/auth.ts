@@ -1,6 +1,24 @@
 import validator from 'validator';
 import { object, string, coerce } from 'zod';
 
+export const putPictureSchema = object({
+  body: object({
+    picture: string({ message: 'Das Profilbild fehlt' })
+      .refine((s) => s.startsWith('image'), {
+        message: 'Der Pfad muss mit "image" beginnen',
+      })
+      .refine((s) => s.endsWith('.webp'), {
+        message: 'Der Pfad muss mit dem Format .webp aufhören',
+      }),
+  }),
+});
+
+export const activateTokenSchema = object({
+  body: object({
+    otp: string({ message: 'Das OTP fehlt' }),
+  }),
+});
+
 export const renewTokenSchema = object({
   body: object({
     refresh: string({ message: 'Ein refresh Token muss beigelegt werden!' }),
@@ -35,6 +53,34 @@ export const passwordResetSchema = object({
   }),
 });
 
+export const updateAccountSchema = object({
+  body: object({
+    firstName: string()
+      .trim()
+      .min(2, { message: 'Vorname zu kurz' })
+      .max(30, { message: 'Vorname zu lang' })
+      .optional(),
+    lastName: string()
+      .trim()
+      .min(2, { message: 'Nachname zu kurz' })
+      .max(50, { message: 'Nachname zu lang' })
+      .optional(),
+    userName: string({ message: 'Username muss enthalten sein' })
+      .trim()
+      .min(3, { message: 'Username zu kurz' })
+      .max(15, { message: 'Username zu lang' })
+      .refine((userName) => validator.isAlphanumeric(userName), {
+        message: 'Username enthält Sonderzeichen!',
+      })
+      .transform((userName) => userName.toLowerCase())
+      .optional(),
+    description: string({ message: 'Beschreibung fehlt' })
+      .trim()
+      .max(255, { message: 'Beschreibung zu lang' })
+      .optional(),
+  }),
+});
+
 export const signUpSchema = object({
   body: object({
     userName: string({ message: 'Username muss enthalten sein' })
@@ -43,7 +89,8 @@ export const signUpSchema = object({
       .max(15, { message: 'Username zu lang' })
       .refine((userName) => validator.isAlphanumeric(userName), {
         message: 'Username enthält Sonderzeichen!',
-      }),
+      })
+      .transform((userName) => userName.toLowerCase()),
     password: string({ message: 'Passwort muss enthalten sein' })
       .trim()
       .max(256)
@@ -65,5 +112,44 @@ export const signUpSchema = object({
       .trim()
       .min(2, { message: 'Nachname zu kurz' })
       .max(50, { message: 'Nachname zu lang' }),
-  }),
+    picture: coerce
+      .string({ message: 'Das Profilbild fehlt' })
+      // .refine((s) => s.startsWith('image'), {
+      //   message: 'Der Pfad muss mit "image" beginnen',
+      // })
+      // .refine((s) => s.endsWith('.webp'), {
+      //   message: 'Der Pfad muss mit dem Format .webp aufhören',
+      // })
+      .optional(),
+    isUserAccount: coerce
+      .boolean({ message: 'Der isUserAccount ist ungültig' })
+      .default(true),
+    companyDetails: object({
+      companyName: string({ message: 'Firmenname darf nicht leer sein' })
+        .min(3, { message: 'Firmenname zu kurz' })
+        .max(30, { message: 'Firmenname zu lang' }),
+    }).optional(),
+  })
+    .refine(
+      (data) => {
+        if (data.isUserAccount) return true;
+        return data.companyDetails != null;
+      },
+      {
+        message:
+          'Bei einem Host-Account müssen die "companyDetails" angegeben werden',
+      },
+    )
+    .refine(
+      (data) => {
+        if (data.picture == String(null) || !data.picture) return true;
+        return (
+          data.picture.startsWith('image') && data.picture.endsWith('.webp')
+        );
+      },
+      {
+        message:
+          'Das Bild muss entweder null oder ein String mit image[xxx].webp sein ',
+      },
+    ),
 });

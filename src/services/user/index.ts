@@ -3,6 +3,7 @@ import db from '../../utils/db';
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import service from '../../services/index';
 import { Account } from '@prisma/client';
+import assert from 'node:assert';
 
 export const findUserByUserName = async (userName: string) => {
   const found = await db.account.findFirst({ where: { userName } });
@@ -32,29 +33,41 @@ export const findUser = async (
   return found;
 };
 
+export const findUserByAId = async (aId: number) => {
+  assert(aId != null, new ApiError(NOT_FOUND, 'Account-ID ist null'));
+  const user = await db.user.findUnique({
+    where: {
+      aId,
+    },
+  });
+  assert(
+    user != null,
+    new ApiError(NOT_FOUND, 'Kein User-Profil für die ID gefunden'),
+  );
+  return user;
+};
+
 export const createUserByAccount = async (accountId: number) => {
   const account = await db.account.findFirst({
     where: {
       aId: accountId,
     },
+    include: {
+      user: true,
+    },
   });
   if (!account)
     throw new ApiError(
-      httpStatus.INTERNAL_SERVER_ERROR,
+      httpStatus.NOT_FOUND,
       'Kein Account wurde mit dieser ID gefundens',
     );
-  const found = await db.user.findFirst({
-    where: {
-      aId: accountId,
-    },
-  });
-  if (found)
+  if (account.user)
     throw new ApiError(
-      httpStatus.INTERNAL_SERVER_ERROR,
+      httpStatus.CONFLICT,
       'User already found with given accound-id',
       true,
     );
-  const user = db.user.create({
+  const user = await db.user.create({
     data: {
       account: {
         connect: account,

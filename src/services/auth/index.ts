@@ -12,6 +12,80 @@ import { ApiError } from '../../utils/apiError';
 import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { catchPrisma, catchWithTransaction } from '../../utils/catchPrisma';
+
+export const updateAccountData = async (
+  aId: number,
+  firstName?: string,
+  lastName?: string,
+  userName?: string,
+  description?: string,
+) => {
+  const origin = { firstName, lastName, userName, description };
+  const updatedValues = Object.fromEntries(
+    Object.entries(origin).filter(([_, value]) => value !== undefined),
+  );
+
+  console.log(updatedValues);
+  return await catchPrisma(
+    async () =>
+      await db.account.update({
+        where: {
+          aId,
+        },
+        data: {
+          ...updatedValues,
+        },
+        select: {
+          firstName: true,
+          lastName: true,
+          userName: true,
+          description: true,
+          aId: true,
+        },
+      }),
+  );
+};
+
+export const deleteAccount = async (aId: number) => {
+  await db.account.delete({
+    where: {
+      aId,
+    },
+  });
+};
+
+export const activateAccount = async (aId: number, otp: string) => {
+  const foundToken = await db.token.findFirst({
+    where: {
+      aId,
+      type: TOKEN_TYPES.ACTIVATION.toString(),
+      backlisted: false,
+      token: otp,
+    },
+  });
+  assert(
+    foundToken != null,
+    new ApiError(NOT_FOUND, 'OTP stimmt nicht überein'),
+  );
+  const isExpired = dayjs().isAfter(foundToken.exp);
+  assert(!isExpired, new ApiError(UNAUTHORIZED, 'OTP ist bereits abgelaufen'));
+  await catchWithTransaction(async () => {
+    await db.token.delete({
+      where: {
+        tId: foundToken.tId,
+      },
+    });
+    await db.account.update({
+      where: {
+        aId,
+      },
+      data: {
+        activated: true,
+      },
+    });
+  });
+};
 
 export const handleRequestPwdResetToken = async (userName: string) => {
   const acc = await db.account.findFirst({ where: { userName } });
@@ -125,10 +199,23 @@ export const handleLogout = async (aId: number) => {
 export const createAccount = async (
   account: signUpSchema,
 ): Promise<Account> => {
-  const { dateOfBirth, email, firstName, lastName, userName, password } = pick(
-    account,
-    ['dateOfBirth', 'email', 'firstName', 'lastName', 'userName', 'password'],
-  );
+  const {
+    dateOfBirth,
+    email,
+    firstName,
+    lastName,
+    userName,
+    password,
+    picture,
+  } = pick(account, [
+    'dateOfBirth',
+    'email',
+    'firstName',
+    'lastName',
+    'userName',
+    'password',
+    'picture',
+  ]);
 
   const date: Date = dayjs(dateOfBirth).toDate();
   try {
@@ -141,6 +228,7 @@ export const createAccount = async (
         lastName,
         userName,
         password,
+        picture,
       },
     });
   } catch (error) {
@@ -205,7 +293,7 @@ export const generateToken = async (accountId: number, type: TOKEN_TYPES) => {
 export const generateAndSaveTokens = async (
   accountId: number,
 ): Promise<{ refresh: string; access: string }> => {
-  await service.token.deleteAccountTokens(accountId);
+  await service.token.deleteAuthTokens(accountId);
 
   const refresh = await generateToken(accountId, TOKEN_TYPES.REFRESH);
   const access = await generateToken(accountId, TOKEN_TYPES.ACCESS);

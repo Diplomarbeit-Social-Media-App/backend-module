@@ -1,12 +1,132 @@
-import { assert } from 'console';
 import { eventSearch, eventType, updateEventSchema } from '../../types/event';
 import { catchPrisma } from '../../utils/catchPrisma';
 import db from '../../utils/db';
 import lodash from 'lodash';
 import { ApiError } from '../../utils/apiError';
-import { INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED } from 'http-status';
+import {
+  CONFLICT,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+  UNAUTHORIZED,
+} from 'http-status';
 import dayjs from 'dayjs';
 import { User } from '@prisma/client';
+import assert from 'assert';
+
+export const hasAttendance = async (
+  aId: number,
+  eId: number,
+): Promise<boolean> => {
+  const account = await db.account.findFirst({
+    where: {
+      aId,
+    },
+    include: {
+      user: {
+        select: {
+          events: true,
+        },
+      },
+    },
+  });
+  assert(
+    account != null,
+    new ApiError(NOT_FOUND, 'Kein passender Account gefunden'),
+  );
+  assert(
+    account.user != null,
+    new ApiError(CONFLICT, 'Du hast kein User-Profil'),
+  );
+  const events = account.user.events;
+  if (!events || events.length == 0) return false;
+  return events.some((e) => Number(e.eId) === Number(eId));
+};
+
+/**
+ * @param aId Account (id) who wants to join
+ * @param eId The id of the event which should be joined
+ */
+export const participateEvent = async (
+  aId: number,
+  eId: number,
+  attendance: boolean,
+) => {
+  const account = await db.account.findFirst({
+    where: {
+      aId,
+    },
+    include: {
+      user: {
+        select: {
+          events: true,
+          uId: true,
+        },
+      },
+    },
+  });
+  assert(
+    account != null,
+    new ApiError(NOT_FOUND, 'Kein passender Account gefunden'),
+  );
+  assert(
+    account.user != null,
+    new ApiError(CONFLICT, 'Du hast kein User-Profil'),
+  );
+  const event = await db.event.findFirst({
+    where: {
+      eId,
+    },
+    include: {
+      users: true,
+    },
+  });
+  assert(
+    event != null,
+    new ApiError(NOT_FOUND, 'Kein passendes Event gefunden'),
+  );
+  const eventPassed = dayjs().isAfter(event.startsAt);
+  assert(
+    !eventPassed,
+    new ApiError(CONFLICT, 'Nach dem Eventstart nicht mehr möglich'),
+  );
+  const hasAttendance = event?.users.some((u) => u.aId == aId);
+
+  if (hasAttendance == attendance)
+    throw new ApiError(
+      CONFLICT,
+      hasAttendance ? 'Du nimmst bereits teil' : 'Du nimmst gerade nicht teil',
+    );
+
+  const action = attendance ? { connect: { aId } } : { disconnect: { aId } };
+
+  await db.event.update({
+    where: {
+      eId,
+    },
+    data: {
+      users: action,
+    },
+    select: {
+      users: {
+        select: {
+          account: {
+            select: {
+              aId: true,
+              userName: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          users: true,
+          groups: true,
+        },
+      },
+    },
+  });
+  return attendance;
+};
 
 export const updateEvent = async (update: updateEventSchema, user: User) => {
   const { eId } = update;
@@ -53,6 +173,32 @@ export const searchByName = async (query: string) => {
   );
 };
 
+export const loadEventsFromHost = async (hId: number) => {
+  const events = await db.event.findMany({
+    select: {
+      coverImage: true,
+      name: true,
+      startsAt: true,
+      eId: true,
+      location: {
+        select: {
+          city: true,
+          postCode: true,
+        },
+      },
+      _count: {
+        select: {
+          users: true,
+        },
+      },
+    },
+  });
+  return events.map((event) => {
+    const participantCount: number = event._count.users;
+    return { ...lodash.omit(event, '_count'), participantCount };
+  });
+};
+
 export const getEventDetails = async (eId: number) => {
   return await db.event.findFirst({
     where: {
@@ -73,6 +219,12 @@ export const getEventDetails = async (eId: number) => {
         select: {
           companyName: true,
           verified: true,
+          account: {
+            select: {
+              userName: true,
+              picture: true,
+            },
+          },
         },
       },
     },

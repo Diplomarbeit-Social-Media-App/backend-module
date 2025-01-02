@@ -2,8 +2,10 @@ import { Router } from 'express';
 import controllers from '../../controllers';
 import { hasHostPermission } from '../../middlewares/permission';
 import {
+  attendanceSchema,
   eventSchema,
   nameSearchSchema,
+  participationSchema,
   updateSchema,
 } from '../../schema/event';
 import { validate } from '../../middlewares/validation';
@@ -23,6 +25,16 @@ router.get(
   '/name-search/:query',
   [auth, validate(nameSearchSchema)],
   controllers.events.getSearchByQuery,
+);
+router.post(
+  '/participate',
+  [validate(participationSchema)],
+  controllers.events.postParticipateEvent,
+);
+router.get(
+  '/attendance/:eId',
+  [validate(attendanceSchema)],
+  controllers.events.getAttendanceState,
 );
 
 export default router;

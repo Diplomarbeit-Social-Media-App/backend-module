@@ -19,6 +19,6 @@ export const validate =
         new ApiError(httpStatus.BAD_REQUEST, `${validationError}`, true),
       );
     }
-    Object.assign(req.body, parsed.data);
+    Object.assign(req, parsed.data);
     return next();
   };

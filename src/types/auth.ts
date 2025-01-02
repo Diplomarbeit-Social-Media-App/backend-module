@@ -1,8 +1,11 @@
 import {
+  activateTokenSchema,
   loginSchema,
   passwordResetSchema,
+  putPictureSchema,
   renewTokenSchema,
   signUpSchema,
+  updateAccountSchema,
 } from '../schema/auth';
 
 export type accountSchema = {
@@ -32,5 +35,14 @@ export type signUpSchema = Zod.infer<signUpSchemaBody> & {
 type renewTokenSchemaBody = typeof renewTokenSchema.shape.body;
 export type renewTokenSchema = Zod.infer<renewTokenSchemaBody>;
 
+type activateTokenSchemaBody = typeof activateTokenSchema.shape.body;
+export type activateTokenType = Zod.infer<activateTokenSchemaBody>;
+
 type passwordResetBody = typeof passwordResetSchema.shape.body;
 export type passwordResetSchema = Zod.infer<passwordResetBody>;
+
+type putPictureBody = typeof putPictureSchema.shape.body;
+export type putPictureType = Zod.infer<putPictureBody>;
+
+type putAccountBody = typeof updateAccountSchema.shape.body;
+export type updateAccountType = Zod.infer<putAccountBody>;
