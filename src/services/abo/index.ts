@@ -16,7 +16,6 @@ import {
   NOT_FOUND,
 } from 'http-status';
 import logger from '../../logger/logger';
-import { assign, omit } from 'lodash';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -120,7 +119,7 @@ export const findUserSuggestions = async (user: User) => {
     },
   });
   if (friends.length == 0)
-    (await findRandomUsers()).filter((f) => f.uId != user.uId);
+    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
 
   const mapedFriends = friends
     .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
@@ -158,7 +157,8 @@ export const findUserSuggestions = async (user: User) => {
     },
     take: USER_COUNT,
   });
-  if (foundFriends.length == 0) return await findRandomUsers();
+  if (foundFriends.length == 0)
+    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
   if (foundFriends.length < USER_COUNT) {
     const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
     return [
