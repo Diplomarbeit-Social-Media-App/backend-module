@@ -223,7 +223,6 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
           },
           followedBy: {
             select: {
-              _count: true,
               account: {
                 select: {
                   userName: true,
