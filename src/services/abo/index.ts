@@ -119,7 +119,8 @@ export const findUserSuggestions = async (user: User) => {
       },
     },
   });
-  if (friends.length == 0) return await findRandomUsers();
+  if (friends.length == 0)
+    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
 
   const mapedFriends = friends
     .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
@@ -160,7 +161,10 @@ export const findUserSuggestions = async (user: User) => {
   if (foundFriends.length == 0) return await findRandomUsers();
   if (foundFriends.length < USER_COUNT) {
     const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
-    return [...foundFriends, ...addRandoms];
+    return [
+      ...foundFriends.filter((f) => f.uId != user.uId),
+      ...addRandoms.filter((f) => f.uId != user.uId),
+    ];
   }
   return foundFriends;
 };
