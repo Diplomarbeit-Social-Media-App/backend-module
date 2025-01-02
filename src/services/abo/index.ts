@@ -120,7 +120,7 @@ export const findUserSuggestions = async (user: User) => {
     },
   });
   if (friends.length == 0)
-    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
+    (await findRandomUsers()).filter((f) => f.uId != user.uId);
 
   const mapedFriends = friends
     .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
@@ -276,9 +276,9 @@ export const searchByUserName = async (userName: string, take: number = 50) => {
     },
   } as Prisma.AccountWhereInput;
   const selectedFields = {
-    firstName: true,
     userName: true,
     picture: true,
+    aId: true,
   };
 
   const found = await db.account.findMany({
@@ -319,8 +319,16 @@ export const searchByUserName = async (userName: string, take: number = 50) => {
 
   return found?.map((acc) => {
     const isUserAccount = acc.user != null;
-    const omitted = omit(acc, ['host', 'user']);
-    return assign(omitted, { isUserAccount });
+    return {
+      uId: acc.user?.uId ?? null,
+      hId: acc.host?.hId ?? null,
+      account: {
+        picture: acc.picture,
+        userName: acc.userName,
+        aId: acc.aId,
+      },
+      isUserAccount,
+    };
   });
 };
 
