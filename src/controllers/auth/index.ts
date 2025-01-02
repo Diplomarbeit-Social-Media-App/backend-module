@@ -118,10 +118,14 @@ export const getProfileDetails = catchAsync(
       account.aId,
     );
     const friendships = await service.abo.loadFriendships(user.uId);
+    const eventParticipationCount = await service.events.findEventCountByUser(
+      user.uId,
+    );
     return res.status(200).json({
       ...pickedData,
       aboRequests: { received, sent },
       friends: friendships,
+      events: eventParticipationCount,
     });
   },
 );

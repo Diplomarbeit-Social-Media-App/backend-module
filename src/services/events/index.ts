@@ -173,6 +173,24 @@ export const searchByName = async (query: string) => {
   );
 };
 
+/**
+ * @param uId User-Id
+ * @returns Promise of events (amount: number) which the user participates
+ */
+export const findEventCountByUser = async (uId: number) => {
+  const count = await db.event.aggregate({
+    where: {
+      users: {
+        some: {
+          uId,
+        },
+      },
+    },
+    _count: true,
+  });
+  return count._count;
+};
+
 export const loadEventsFromHost = async (hId: number) => {
   const events = await db.event.findMany({
     select: {
