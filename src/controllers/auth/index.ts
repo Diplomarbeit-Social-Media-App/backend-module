@@ -111,6 +111,7 @@ export const getProfileDetails = catchAsync(
       'activated',
       'description',
       'loginOs',
+      'userName',
     ]);
     const { received, sent } = await service.abo.loadAllReqWithUser(
       account.aId,
