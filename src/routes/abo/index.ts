@@ -11,11 +11,13 @@ import {
   getSearchByUserName,
   postAboRequests,
   putRequestState,
+  getSuggestions,
 } from '../../controllers/abo';
 
 const router = Router();
 export default router;
 
+router.get('/suggestions', getSuggestions);
 router.get('/:filter', [validate(getAboSchema)], getAboRequests);
 router.post('/', [validate(postAboSchema)], postAboRequests);
 router.get('/search/:userName', [validate(searchSchema)], getSearchByUserName);

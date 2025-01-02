@@ -18,6 +18,113 @@ import {
 import logger from '../../logger/logger';
 import { assign, omit } from 'lodash';
 
+function shuffleArray(array: number[]): number[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+export const findRandomUsers = async (USER_COUNT: number = 20) => {
+  const allUserIds = await db.user.findMany({
+    select: { uId: true },
+    take: 20_000,
+  });
+  const idArray = allUserIds.map((user) => user.uId);
+  if (idArray.length === 0) {
+    throw new ApiError(NOT_FOUND, 'Keine User gefunden');
+  }
+  const randomIds = shuffleArray(idArray).slice(0, USER_COUNT);
+
+  const users = await db.user.findMany({
+    where: { uId: { in: randomIds } },
+    select: {
+      uId: true,
+      account: {
+        select: {
+          picture: true,
+          userName: true,
+          aId: true,
+        },
+      },
+    },
+  });
+  return users;
+};
+
+export const findUserSuggestions = async (user: User) => {
+  const USER_COUNT = 20;
+  const friends = await db.friendship.findMany({
+    where: {
+      OR: [
+        {
+          friendId: user.uId,
+        },
+        {
+          userId: user.uId,
+        },
+      ],
+    },
+    include: {
+      friend: {
+        include: {
+          friendedBy: true,
+        },
+      },
+      user: {
+        include: {
+          friendedBy: true,
+        },
+      },
+    },
+  });
+  if (friends.length == 0) return await findRandomUsers();
+
+  const mapedFriends = friends
+    .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
+    .map((f) => f.friendedBy)
+    .flatMap((f) => f.map((k) => k.userId))
+    .filter((id) => id != user.uId);
+
+  const foundFriends = await db.user.findMany({
+    where: {
+      uId: {
+        in: mapedFriends,
+      },
+      friendedBy: {
+        none: {
+          OR: [
+            {
+              friendId: user.uId,
+            },
+            {
+              userId: user.uId,
+            },
+          ],
+        },
+      },
+    },
+    select: {
+      uId: true,
+      account: {
+        select: {
+          picture: true,
+          userName: true,
+          aId: true,
+        },
+      },
+    },
+    take: USER_COUNT,
+  });
+  if (foundFriends.length == 0) return await findRandomUsers();
+  if (foundFriends.length < USER_COUNT) {
+    const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
+    return [...foundFriends, ...addRandoms];
+  }
+  return foundFriends;
+};
+
 export const modifyRequest = async (
   aboRequest: extendedAboRequest,
   state: ABO_REQUEST_MODIFY,
