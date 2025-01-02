@@ -2,7 +2,9 @@ import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
 import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
-import { User } from '@prisma/client';
+import { Activity, User } from '@prisma/client';
+import { omit } from 'lodash';
+import service from '..';
 
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({
@@ -201,10 +203,8 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
     include: {
       host: {
         select: {
-          Activity: true,
           verified: true,
           companyName: true,
-          Event: true,
           HostRating: {
             select: {
               description: true,
@@ -264,8 +264,13 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
   const isFollowing = account.host.followedBy.some(
     (f) => f.account.userName == fromName,
   );
+  const events = await service.events.loadEventsFromHost(account.host.hId);
+  // TODO: as soon as possible, fix load real activities
+  const activitys: Activity[] = [];
   return {
     host: account.host,
+    events,
+    activitys,
     rating: hostRatingAgg._avg.points,
     userName: account.userName,
     picture: account.picture,

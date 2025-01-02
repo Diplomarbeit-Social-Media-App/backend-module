@@ -173,6 +173,32 @@ export const searchByName = async (query: string) => {
   );
 };
 
+export const loadEventsFromHost = async (hId: number) => {
+  const events = await db.event.findMany({
+    select: {
+      coverImage: true,
+      name: true,
+      startsAt: true,
+      eId: true,
+      location: {
+        select: {
+          city: true,
+          postCode: true,
+        },
+      },
+      _count: {
+        select: {
+          users: true,
+        },
+      },
+    },
+  });
+  return events.map((event) => {
+    const participantCount: number = event._count.users;
+    return { ...lodash.omit(event, '_count'), participantCount };
+  });
+};
+
 export const getEventDetails = async (eId: number) => {
   return await db.event.findFirst({
     where: {
