@@ -26,6 +26,46 @@ function shuffleArray(array: number[]): number[] {
   return array;
 }
 
+export const loadFriendships = async (uId: number) => {
+  const selection = {
+    account: {
+      select: {
+        userName: true,
+        picture: true,
+        aId: true,
+      },
+    },
+  };
+  const friends = await db.friendship.findMany({
+    where: {
+      OR: [
+        {
+          friendId: uId,
+        },
+        {
+          userId: uId,
+        },
+      ],
+    },
+    select: {
+      userId: true,
+      friendId: true,
+      friend: {
+        select: selection,
+      },
+      user: {
+        select: selection,
+      },
+    },
+  });
+  const mapped = friends?.map((f) =>
+    f.friendId == uId
+      ? { uId: f.userId, ...f.user }
+      : { uId: f.friendId, ...f.friend },
+  );
+  return mapped;
+};
+
 export const findRandomUsers = async (USER_COUNT: number = 20) => {
   const allUserIds = await db.user.findMany({
     select: { uId: true },

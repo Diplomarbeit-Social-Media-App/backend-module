@@ -98,8 +98,9 @@ export const postLogout = catchAsync(
 
 export const getProfileDetails = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
-    const user = req.user as Account;
-    const pickedData = lodash.pick(user, [
+    const account = req.user as Account;
+    const user = await service.user.findUserByAId(account.aId);
+    const pickedData = lodash.pick(account, [
       'aId',
       'firstName',
       'lastName',
@@ -109,10 +110,15 @@ export const getProfileDetails = catchAsync(
       'disabled',
       'activated',
     ]);
-    const { received, sent } = await service.abo.loadAllReqWithUser(user.aId);
-    return res
-      .status(200)
-      .json({ ...pickedData, aboRequests: { received, sent } });
+    const { received, sent } = await service.abo.loadAllReqWithUser(
+      account.aId,
+    );
+    const friendships = await service.abo.loadFriendships(user.uId);
+    return res.status(200).json({
+      ...pickedData,
+      aboRequests: { received, sent },
+      friends: friendships,
+    });
   },
 );
 
