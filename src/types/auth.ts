@@ -8,6 +8,12 @@ import {
   updateAccountSchema,
 } from '../schema/auth';
 
+export enum LOGIN_OS {
+  WEB = 'web',
+  IOS = 'iOS',
+  ANDROID = 'android',
+}
+
 export type accountSchema = {
   userName: string;
   firstName: string;

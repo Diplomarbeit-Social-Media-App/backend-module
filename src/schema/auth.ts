@@ -1,5 +1,6 @@
 import validator from 'validator';
-import { object, string, coerce } from 'zod';
+import { object, string, coerce, nativeEnum } from 'zod';
+import { LOGIN_OS } from '../types/auth';
 
 export const putPictureSchema = object({
   body: object({
@@ -29,6 +30,9 @@ export const loginSchema = object({
   body: object({
     userName: string({ message: 'Username fehlt' }).trim(),
     password: string({ message: 'Passwort fehlt' }).trim(),
+    loginOs: nativeEnum(LOGIN_OS, {
+      message: 'Bitte gib ein gültiges Login-OS an',
+    }).default(LOGIN_OS.WEB),
   }),
 });
 

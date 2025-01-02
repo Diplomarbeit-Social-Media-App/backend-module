@@ -110,6 +110,7 @@ export const getProfileDetails = catchAsync(
       'disabled',
       'activated',
       'description',
+      'loginOs',
     ]);
     const { received, sent } = await service.abo.loadAllReqWithUser(
       account.aId,
@@ -163,10 +164,10 @@ export const postLogin = catchAsync(
   async (req: Request<object, object, loginSchema>, res: Response) => {
     const data = req.body;
     const foundUser = await service.user.findUser(data.userName, data.password);
-
     const { access, refresh } = await service.auth.generateAndSaveTokens(
       foundUser.aId,
     );
+    await service.auth.updateLoginOs(foundUser.aId, data.loginOs);
 
     return res.status(200).json({ access, refresh });
   },

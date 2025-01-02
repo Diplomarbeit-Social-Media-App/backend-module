@@ -68,6 +68,7 @@ model Account {
   dateOfBirth        DateTime
   disabled           Boolean             @default(false)
   activated          Boolean             @default(false)
+  loginOs            String              @default("web")
   host               Host?
   passwordResetToken PasswordResetToken?
   token              Token[]             @relation("UserTokens")

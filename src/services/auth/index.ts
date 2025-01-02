@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { signUpSchema } from '../../types/auth';
+import { LOGIN_OS, signUpSchema } from '../../types/auth';
 import db from '../../utils/db';
 import { TOKEN_TYPES, tokenSchema } from '../../types/token';
 import jwt from 'jsonwebtoken';
@@ -13,6 +13,17 @@ import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { catchPrisma, catchWithTransaction } from '../../utils/catchPrisma';
+
+export const updateLoginOs = async (aId: number, os: LOGIN_OS) => {
+  await db.account.update({
+    where: {
+      aId,
+    },
+    data: {
+      loginOs: os.toString(),
+    },
+  });
+};
 
 export const updateAccountData = async (
   aId: number,
