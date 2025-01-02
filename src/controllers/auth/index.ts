@@ -109,6 +109,7 @@ export const getProfileDetails = catchAsync(
       'dateOfBirth',
       'disabled',
       'activated',
+      'description',
     ]);
     const { received, sent } = await service.abo.loadAllReqWithUser(
       account.aId,
