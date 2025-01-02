@@ -6,6 +6,78 @@ export const sendMail = async (mailOptions: Mail.Options) => {
   return await transport.sendMail(mailOptions);
 };
 
+export const sendAccountDeletionEmail = async (toMail: string) => {
+  return await transport.sendMail({
+    to: toMail,
+    from: config.EMAIL_FROM_ADDRESS,
+    subject: 'Ihr Account wurde gelöscht',
+    html: `
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f9f9f9;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }
+            .email-container {
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                text-align: center;
+            }
+            .header {
+                background-color: #dc3545;
+                color: #fff;
+                padding: 20px;
+            }
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .content p {
+                margin: 15px 0;
+                line-height: 1.6;
+            }
+            .footer {
+                font-size: 12px;
+                color: #666;
+                margin: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <h1>Account gelöscht</h1>
+            </div>
+            <div class="content">
+                <p>Hallo,</p>
+                <p>wir haben Ihren Account gelöscht, da er innerhalb der erforderlichen Zeitspanne nicht aktiviert wurde.</p>
+                <p>Falls Sie weiterhin Interesse an unseren Diensten haben, können Sie sich jederzeit erneut registrieren.</p>
+                <p>Vielen Dank für Ihr Verständnis.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2024 Bonfire. Alle Rechte vorbehalten. Diplomarbeit @ HTBLA-WELS</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `,
+  });
+};
+
 export const sendVerifyEmail = async (token: string, toMail: string) => {
   return await transport.sendMail({
     to: toMail,

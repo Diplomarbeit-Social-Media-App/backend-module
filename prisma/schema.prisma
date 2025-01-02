@@ -73,6 +73,7 @@ model Account {
   passwordResetToken PasswordResetToken?
   token              Token[]             @relation("UserTokens")
   user               User?
+  createdAt          DateTime            @default(now())
 }
 
 model Message {

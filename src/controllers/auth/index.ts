@@ -16,6 +16,7 @@ import { Account, User } from '@prisma/client';
 import { BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, OK } from 'http-status';
 import { ApiError } from '../../utils/apiError';
 import assert from 'assert';
+import dayjs from 'dayjs';
 
 export const updateAccountData = catchAsync(
   async (
@@ -177,6 +178,21 @@ export const postLogin = catchAsync(
 export const postSignUp = catchAsync(
   async (req: Request<object, object, signUpSchema>, res: Response) => {
     const data = req.body;
+    const foundAccount = await service.auth.findAccountByEmail(data.email);
+    if (
+      foundAccount &&
+      !foundAccount.activated &&
+      !foundAccount.disabled &&
+      dayjs().isAfter(
+        dayjs(foundAccount?.createdAt).add(
+          config.ACTIVATION_EXP_MINUTES,
+          'minute',
+        ),
+      )
+    ) {
+      await service.mail.sendAccountDeletionEmail(data.email);
+      await service.auth.deleteAccount(foundAccount.aId);
+    }
     const hashedPwd = await service.auth.hashPassword(
       data.password,
       config.SALT,

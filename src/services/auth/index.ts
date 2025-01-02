@@ -14,6 +14,15 @@ import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { catchPrisma, catchWithTransaction } from '../../utils/catchPrisma';
 
+export const findAccountByEmail = async (email: string) => {
+  const account = await db.account.findUnique({
+    where: {
+      email,
+    },
+  });
+  return account;
+};
+
 export const updateLoginOs = async (aId: number, os: LOGIN_OS) => {
   await db.account.update({
     where: {
