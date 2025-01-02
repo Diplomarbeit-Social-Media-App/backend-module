@@ -18,6 +18,15 @@ import {
 } from 'http-status';
 import { Account, User } from '@prisma/client';
 
+export const getParticipatingEvents = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+    const participating = await service.events.findEventsPartUser(user.uId);
+    return res.status(OK).json({ events: participating });
+  },
+);
+
 export const getAttendanceState = catchAsync(
   async (req: Request<attendanceType>, res, _next) => {
     const { eId } = req.params;

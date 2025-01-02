@@ -174,6 +174,44 @@ export const searchByName = async (query: string) => {
 };
 
 /**
+ * Searches for events in which the user participates
+ * @param uId User-ID
+ * @returns a promised base array of events in the form of the event overview (less information than detail)
+ */
+export const findEventsPartUser = async (uId: number) => {
+  const events = await db.event.findMany({
+    where: {
+      users: {
+        some: {
+          uId,
+        },
+      },
+    },
+    select: {
+      coverImage: true,
+      name: true,
+      startsAt: true,
+      eId: true,
+      location: {
+        select: {
+          city: true,
+          postCode: true,
+        },
+      },
+      _count: {
+        select: {
+          users: true,
+        },
+      },
+    },
+  });
+  return events.map((event) => {
+    const participantCount: number = event._count.users;
+    return { ...lodash.omit(event, '_count'), participantCount };
+  });
+};
+
+/**
  * @param uId User-Id
  * @returns Promise of events (amount: number) which the user participates
  */
