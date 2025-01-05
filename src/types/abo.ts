@@ -72,3 +72,14 @@ export type extendedAboRequest = {
     aId: number;
   };
 } & AboRequest;
+
+export type BasicAccountRepresentation = {
+  uId: number | null;
+  hId: number | null;
+  account: {
+    picture: string | null;
+    userName: string;
+    aId: number;
+  };
+  isUserAccount: boolean;
+};

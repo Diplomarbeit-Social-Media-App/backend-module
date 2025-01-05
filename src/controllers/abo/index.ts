@@ -16,8 +16,11 @@ export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
-    const suggestions = await service.abo.findUserSuggestions(user);
-    return res.status(OK).json(suggestions);
+    const userSuggestions = await service.abo.findUserSuggestions(user);
+    const hostSuggestions = await service.abo.findHostSuggestions(user);
+    return res
+      .status(OK)
+      .json({ suggestions: [...userSuggestions, ...hostSuggestions] });
   },
 );
 

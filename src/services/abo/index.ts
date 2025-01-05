@@ -3,6 +3,7 @@ import {
   ABO_FILTER_SCHEMA,
   ABO_REQUEST_MODIFY,
   ABO_REQUEST_STATE,
+  BasicAccountRepresentation,
   extendedAboRequest,
   getFilterValues,
 } from '../../types/abo';
@@ -65,7 +66,9 @@ export const loadFriendships = async (uId: number) => {
   return mapped;
 };
 
-export const findRandomUsers = async (USER_COUNT: number = 20) => {
+export const findRandomUsers = async (
+  USER_COUNT: number = 20,
+): Promise<BasicAccountRepresentation[]> => {
   const allUserIds = await db.user.findMany({
     select: { uId: true },
     take: 20_000,
@@ -89,11 +92,52 @@ export const findRandomUsers = async (USER_COUNT: number = 20) => {
       },
     },
   });
-  return users;
+  return users.map((user) => {
+    return { ...user, hId: null, isUserAccount: true };
+  });
 };
 
-export const findUserSuggestions = async (user: User) => {
+export const findHostSuggestions = async (
+  user: User,
+): Promise<BasicAccountRepresentation[]> => {
+  const HOST_COUNT = 20;
+  const hosts = await db.host.findMany({
+    where: {
+      followedBy: {
+        none: {
+          aId: user.aId,
+        },
+      },
+    },
+    take: HOST_COUNT,
+    select: {
+      account: {
+        select: {
+          aId: true,
+          picture: true,
+          userName: true,
+        },
+      },
+      hId: true,
+    },
+  });
+  return hosts.map((host) => {
+    return { ...host, isUserAccount: false, uId: null };
+  });
+};
+
+export const findUserSuggestions = async (
+  user: User,
+): Promise<BasicAccountRepresentation[]> => {
   const USER_COUNT = 20;
+
+  const mapOutput = (user: {
+    uId: number;
+    account: { aId: number; picture: string | null; userName: string };
+  }): BasicAccountRepresentation => {
+    return { ...user, hId: null, isUserAccount: true };
+  };
+
   const friends = await db.friendship.findMany({
     where: {
       OR: [
@@ -162,11 +206,11 @@ export const findUserSuggestions = async (user: User) => {
   if (foundFriends.length < USER_COUNT) {
     const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
     return [
-      ...foundFriends.filter((f) => f.uId != user.uId),
+      ...foundFriends.filter((f) => f.uId != user.uId).map((v) => mapOutput(v)),
       ...addRandoms.filter((f) => f.uId != user.uId),
     ];
   }
-  return foundFriends;
+  return foundFriends.map((v) => mapOutput(v));
 };
 
 export const modifyRequest = async (
