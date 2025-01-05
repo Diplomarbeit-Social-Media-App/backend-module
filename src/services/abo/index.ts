@@ -26,7 +26,9 @@ function shuffleArray(array: number[]): number[] {
   return array;
 }
 
-export const loadFriendships = async (uId: number) => {
+export const loadFriendships = async (
+  uId: number,
+): Promise<BasicAccountRepresentation[]> => {
   const selection = {
     account: {
       select: {
@@ -63,7 +65,9 @@ export const loadFriendships = async (uId: number) => {
       ? { uId: f.userId, ...f.user }
       : { uId: f.friendId, ...f.friend },
   );
-  return mapped;
+  return mapped.map((acc) => {
+    return { ...acc, isUserAccount: true, hId: null };
+  });
 };
 
 export const findRandomUsers = async (
