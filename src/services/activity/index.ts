@@ -1,4 +1,29 @@
+import { NOT_FOUND } from 'http-status';
+import { createActivityType } from '../../types/activity';
+import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
+import assert from 'assert';
+
+export const createActivity = async (data: createActivityType, hId: number) => {
+  const location = await db.location.findFirst({
+    where: {
+      lId: data.locationId,
+    },
+  });
+  assert(
+    location != null,
+    new ApiError(
+      NOT_FOUND,
+      'Location konnte mit dieser ID nicht gefunden werden',
+    ),
+  );
+  return await db.activity.create({
+    data: {
+      ...data,
+      creatorId: hId,
+    },
+  });
+};
 
 export const getAllActivities = async () => {
   const activities = await db.activity.findMany({

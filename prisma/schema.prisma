@@ -88,6 +88,7 @@ model Message {
 
 model Activity {
   aId          Int        @id @default(autoincrement())
+  name         String
   openingTimes String
   description  String
   minAge       Int
