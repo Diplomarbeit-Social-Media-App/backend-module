@@ -4,6 +4,29 @@ import { ApiError } from '../../utils/apiError';
 import db from '../../utils/db';
 import assert from 'assert';
 
+export const deleteActivityByAId = async (aId: number) => {
+  await db.activity.delete({
+    where: {
+      aId,
+    },
+  });
+};
+
+export const findActivityByAId = async (aId: number) => {
+  const activity = await db.activity.findFirst({
+    where: {
+      aId,
+    },
+    include: {
+      category: true,
+      groups: true,
+      host: true,
+      location: true,
+    },
+  });
+  return activity;
+};
+
 export const createActivity = async (data: createActivityType, hId: number) => {
   const location = await db.location.findFirst({
     where: {

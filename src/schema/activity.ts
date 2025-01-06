@@ -11,3 +11,9 @@ export const createActivitySchema = object({
     locationId: coerce.number({ message: 'Location-ID fehlt' }),
   }),
 });
+
+export const deleteActivitySchema = object({
+  params: object({
+    aId: coerce.number({ message: 'ID fehlt' }),
+  }),
+});
