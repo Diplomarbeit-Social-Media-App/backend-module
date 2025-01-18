@@ -12,7 +12,7 @@ import {
   postAboRequests,
   putRequestState,
   getSuggestions,
-} from '../../controllers/abo';
+} from '../../controllers/abo.control';
 
 const router = Router();
 export default router;

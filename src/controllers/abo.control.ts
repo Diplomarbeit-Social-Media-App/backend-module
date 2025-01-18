@@ -4,13 +4,13 @@ import {
   postAboType,
   requestStateType,
   searchType,
-} from '../../types/abo';
-import catchAsync from '../../utils/catchAsync';
-import service from '../../services';
+} from '../types/abo';
+import catchAsync from '../utils/catchAsync';
+import service from '../services';
 import { Account } from '@prisma/client';
 import { CONFLICT, CREATED, OK, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 
 export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {

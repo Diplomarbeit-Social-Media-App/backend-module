@@ -7,14 +7,14 @@ import {
   renewTokenSchema,
   signUpSchema,
   updateAccountType,
-} from '../../types/auth';
-import catchAsync from '../../utils/catchAsync';
-import service from '../../services/index';
-import config from '../../config/config';
+} from '../types/auth';
+import catchAsync from '../utils/catchAsync';
+import service from '../services/index';
+import config from '../config/config';
 import lodash from 'lodash';
 import { Account, User } from '@prisma/client';
 import { BAD_REQUEST, CONFLICT, INTERNAL_SERVER_ERROR, OK } from 'http-status';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import dayjs from 'dayjs';
 

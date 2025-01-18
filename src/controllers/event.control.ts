@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
-import catchAsync from '../../utils/catchAsync';
-import service from '../../services';
+import catchAsync from '../utils/catchAsync';
+import service from '../services';
 import {
   attendanceType,
   eventSearch,
   eventType,
   participationType,
-} from '../../types/event';
+} from '../types/event';
 import assert from 'assert';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import {
   BAD_REQUEST,
   CREATED,

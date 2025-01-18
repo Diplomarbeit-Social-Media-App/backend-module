@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import catchAsync from '../../utils/catchAsync';
+import catchAsync from '../utils/catchAsync';
 import {
   hostDetailsType,
   hostRatingDeletionType,
@@ -7,11 +7,11 @@ import {
   hostSocialAddType,
   hostSocialDelType,
   hostSubscriptionType,
-} from '../../types/host';
-import service from '../../services';
+} from '../types/host';
+import service from '../services';
 import { CONFLICT, CREATED, NOT_FOUND, OK } from 'http-status';
 import { Account } from '@prisma/client';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 
 export const deleteHostRating = catchAsync(

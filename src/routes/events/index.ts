@@ -15,27 +15,27 @@ const router = Router();
 router.post(
   '/',
   [hasHostPermission, validate(eventSchema)],
-  controllers.events.postEvent,
+  controllers.event.postEvent,
 );
-router.get('/', controllers.events.getEvents);
-router.get('/filter', controllers.events.getEventsFilterCategory);
-router.get('/participating', controllers.events.getParticipatingEvents);
-router.get('/:eventId', controllers.events.getEventDetails);
-router.put('/', [validate(updateSchema)], controllers.events.updateEvent);
+router.get('/', controllers.event.getEvents);
+router.get('/filter', controllers.event.getEventsFilterCategory);
+router.get('/participating', controllers.event.getParticipatingEvents);
+router.get('/:eventId', controllers.event.getEventDetails);
+router.put('/', [validate(updateSchema)], controllers.event.updateEvent);
 router.get(
   '/name-search/:query',
   [auth, validate(nameSearchSchema)],
-  controllers.events.getSearchByQuery,
+  controllers.event.getSearchByQuery,
 );
 router.post(
   '/participate',
   [validate(participationSchema)],
-  controllers.events.postParticipateEvent,
+  controllers.event.postParticipateEvent,
 );
 router.get(
   '/attendance/:eId',
   [validate(attendanceSchema)],
-  controllers.events.getAttendanceState,
+  controllers.event.getAttendanceState,
 );
 
 export default router;

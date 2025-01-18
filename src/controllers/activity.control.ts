@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import catchAsync from '../../utils/catchAsync';
-import service from '../../services';
+import catchAsync from '../utils/catchAsync';
+import service from '../services';
 import { CREATED, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
-import { createActivityType, deleteActivityType } from '../../types/activity';
+import { createActivityType, deleteActivityType } from '../types/activity';
 import { Account } from '@prisma/client';
 import assert from 'assert';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 
 export const getAllActivities = catchAsync(
   async (_req: Request, res: Response, _next: NextFunction) => {
