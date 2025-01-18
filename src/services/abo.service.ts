@@ -531,3 +531,11 @@ export const loadAboRequests = async (
     },
   });
 };
+
+export const deleteAboRequest = async (frId: number) => {
+  await db.aboRequest.delete({
+    where: {
+      frId,
+    },
+  });
+};

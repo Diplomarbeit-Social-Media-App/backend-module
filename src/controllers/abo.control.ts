@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import {
   ABO_FILTER_SCHEMA,
+  ABO_REQUEST_STATE,
+  deleteRequestType,
   postAboType,
   requestStateType,
   searchType,
@@ -85,5 +87,38 @@ export const postAboRequests = catchAsync(
     const user = await service.user.findUserByAId(aId);
     await service.abo.sendAboRequest(user, userName);
     return res.status(CREATED).json({});
+  },
+);
+
+export const deleteRequest = catchAsync(
+  async (
+    req: Request<deleteRequestType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId } = req.user as Account;
+    const { frId } = req.params;
+
+    const user = await service.user.findUserByAId(aId);
+    const request = await service.abo.loadRequestById(frId);
+
+    assert(
+      request.fromUserId == user.uId,
+      new ApiError(UNAUTHORIZED, 'Die Anfrage wurde nicht von dir gestellt'),
+    );
+
+    assert(
+      request.state == ABO_REQUEST_STATE.PENDING,
+      new ApiError(CONFLICT, 'Nur das löschen von offenen Anfragen erlaubt'),
+    );
+
+    assert(
+      !(await service.abo.isFriendedWith(user.uId, request.toUserId)),
+      new ApiError(CONFLICT, 'Bitte entferne stattdessen deinen Freund'),
+    );
+
+    await service.abo.deleteAboRequest(frId);
+
+    return res.status(OK).json({});
   },
 );

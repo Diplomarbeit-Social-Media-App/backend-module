@@ -1,4 +1,4 @@
-import zod, { nativeEnum, number, object, string } from 'zod';
+import zod, { coerce, nativeEnum, number, object, string } from 'zod';
 import { ABO_FILTER_SCHEMA, ABO_REQUEST_MODIFY } from '../types/abo';
 import { ApiError } from '../utils/apiError';
 import { BAD_REQUEST } from 'http-status';
@@ -43,5 +43,14 @@ export const postAboSchema = object({
     userName: string({ message: 'Username fehlt' })
       .min(3, { message: 'Username zu kurz' })
       .max(15, { message: 'Username zu lang' }),
+  }),
+});
+
+export const deleteRequestSchema = object({
+  params: object({
+    frId: coerce.number({
+      invalid_type_error: 'Frid ist keine Nummer',
+      required_error: 'Frid fehlt',
+    }),
   }),
 });
