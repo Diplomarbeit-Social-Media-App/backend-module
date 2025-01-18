@@ -1,18 +1,18 @@
 import bcrypt from 'bcrypt';
-import { LOGIN_OS, signUpSchema } from '../../types/auth';
-import db from '../../utils/db';
-import { TOKEN_TYPES, tokenSchema } from '../../types/token';
+import { LOGIN_OS, signUpSchema } from '../types/auth';
+import db from '../utils/db';
+import { TOKEN_TYPES, tokenSchema } from '../types/token';
 import jwt from 'jsonwebtoken';
 import dayjs, { ManipulateType } from 'dayjs';
-import config from '../../config/config';
+import config from '../config/config';
 import pick from 'lodash/pick';
-import service from '../index';
+import service from './index';
 import { Account } from '@prisma/client';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import { GONE, NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { catchPrisma, catchWithTransaction } from '../../utils/catchPrisma';
+import { catchPrisma, catchWithTransaction } from '../utils/catchPrisma';
 
 export const findAccountByEmail = async (email: string) => {
   const account = await db.account.findUnique({

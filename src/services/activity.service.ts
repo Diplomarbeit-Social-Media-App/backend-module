@@ -1,7 +1,7 @@
 import { NOT_FOUND } from 'http-status';
-import { createActivityType } from '../../types/activity';
-import { ApiError } from '../../utils/apiError';
-import db from '../../utils/db';
+import { createActivityType } from '../types/activity';
+import { ApiError } from '../utils/apiError';
+import db from '../utils/db';
 import assert from 'assert';
 
 export const deleteActivityByAId = async (aId: number) => {

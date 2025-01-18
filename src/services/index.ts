@@ -1,23 +1,23 @@
-import * as user from './user';
-import * as token from './token';
-import * as account from './account';
-import * as auth from './auth';
-import * as events from './events';
-import * as mail from './mail';
-import * as abo from './abo';
-import * as host from './host';
-import * as activity from './activity';
+import * as userService from './user.service';
+import * as tokenService from './token.service';
+import * as accountService from './account.service';
+import * as authService from './auth.service';
+import * as eventService from './event.service';
+import * as mailService from './mail.service';
+import * as aboService from './abo.service';
+import * as hostService from './host.service';
+import * as activityService from './activity.service';
 
 const service = {
-  user,
-  token,
-  account,
-  auth,
-  events,
-  mail,
-  abo,
-  host,
-  activity,
+  user: userService,
+  token: tokenService,
+  account: accountService,
+  auth: authService,
+  event: eventService,
+  mail: mailService,
+  abo: aboService,
+  host: hostService,
+  activity: activityService,
 };
 
 export default service;

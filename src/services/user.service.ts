@@ -1,7 +1,7 @@
-import { ApiError } from '../../utils/apiError';
-import db from '../../utils/db';
+import { ApiError } from '../utils/apiError';
+import db from '../utils/db';
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from 'http-status';
-import service from '../../services/index';
+import service from './index';
 import { Account } from '@prisma/client';
 import assert from 'node:assert';
 

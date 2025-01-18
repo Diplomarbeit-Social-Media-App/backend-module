@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
-import { ApiError } from '../../utils/apiError';
-import db from '../../utils/db';
+import { ApiError } from '../utils/apiError';
+import db from '../utils/db';
 import { Account } from '@prisma/client';
-import { catchPrisma } from '../../utils/catchPrisma';
+import { catchPrisma } from '../utils/catchPrisma';
 
 export const updateProfilePicture = async (
   aId: number,

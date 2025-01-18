@@ -1,8 +1,8 @@
-import { eventSearch, eventType, updateEventSchema } from '../../types/event';
-import { catchPrisma } from '../../utils/catchPrisma';
-import db from '../../utils/db';
+import { eventSearch, eventType, updateEventSchema } from '../types/event';
+import { catchPrisma } from '../utils/catchPrisma';
+import db from '../utils/db';
 import lodash from 'lodash';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import {
   CONFLICT,
   INTERNAL_SERVER_ERROR,

@@ -1,4 +1,4 @@
-import db from '../../utils/db';
+import db from '../utils/db';
 import {
   ABO_FILTER_SCHEMA,
   ABO_REQUEST_MODIFY,
@@ -6,17 +6,17 @@ import {
   BasicAccountRepresentation,
   extendedAboRequest,
   getFilterValues,
-} from '../../types/abo';
+} from '../types/abo';
 import { Prisma, User } from '@prisma/client';
 import assert from 'assert';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import {
   ACCEPTED,
   CONFLICT,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
 } from 'http-status';
-import logger from '../../logger';
+import logger from '../logger';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {

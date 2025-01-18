@@ -1,10 +1,10 @@
 import { Token } from '@prisma/client';
-import db from '../../utils/db';
-import { TOKEN_TYPES } from '../../types/token';
+import db from '../utils/db';
+import { TOKEN_TYPES } from '../types/token';
 import dayjs from 'dayjs';
-import { ApiError } from '../../utils/apiError';
+import { ApiError } from '../utils/apiError';
 import { TOO_EARLY } from 'http-status';
-import config from '../../config/config';
+import config from '../config/config';
 
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
 

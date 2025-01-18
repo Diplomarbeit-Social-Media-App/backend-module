@@ -1,9 +1,9 @@
 import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
-import { ApiError } from '../../utils/apiError';
-import db from '../../utils/db';
+import { ApiError } from '../utils/apiError';
+import db from '../utils/db';
 import assert from 'assert';
 import { Activity, User } from '@prisma/client';
-import service from '..';
+import service from '.';
 
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({

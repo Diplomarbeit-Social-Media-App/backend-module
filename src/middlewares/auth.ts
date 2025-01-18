@@ -7,7 +7,7 @@ import passport, { DoneCallback } from 'passport';
 import { TOKEN_TYPES, tokenSchema } from '../types/token';
 import { ApiError } from '../utils/apiError';
 import httpStatus, { UNAUTHORIZED } from 'http-status';
-import * as accountService from '../services/account';
+import * as accountService from '../services/account.service';
 import { NextFunction, Request, Response } from 'express';
 import config from '../config/config';
 
