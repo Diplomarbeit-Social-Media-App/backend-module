@@ -262,7 +262,7 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
   const isFollowing = account.host.followedBy.some(
     (f) => f.account.userName == fromName,
   );
-  const events = await service.events.loadEventsFromHost(account.host.hId);
+  const events = await service.event.loadEventsFromHost(account.host.hId);
   // TODO: as soon as possible, fix load real activities
   const activitys: Activity[] = [];
   return {

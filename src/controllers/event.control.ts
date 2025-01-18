@@ -22,7 +22,7 @@ export const getParticipatingEvents = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
-    const participating = await service.events.findEventsPartUser(user.uId);
+    const participating = await service.event.findEventsPartUser(user.uId);
     return res.status(OK).json({ events: participating });
   },
 );
@@ -31,7 +31,7 @@ export const getAttendanceState = catchAsync(
   async (req: Request<attendanceType>, res, _next) => {
     const { eId } = req.params;
     const { aId } = req.user as Account;
-    const hasAttendance = await service.events.hasAttendance(aId, eId);
+    const hasAttendance = await service.event.hasAttendance(aId, eId);
     return res.status(OK).json({ attendance: hasAttendance });
   },
 );
@@ -40,7 +40,7 @@ export const postParticipateEvent = catchAsync(
   async (req: Request<object, object, participationType>, res, _next) => {
     const { eId, attendance } = req.body;
     const { aId } = req.user as Account;
-    const updatedAttendance = await service.events.participateEvent(
+    const updatedAttendance = await service.event.participateEvent(
       aId,
       eId,
       attendance,
@@ -52,7 +52,7 @@ export const postParticipateEvent = catchAsync(
 export const getSearchByQuery = catchAsync(
   async (req, res: Response, _next: NextFunction) => {
     const { query } = req.params;
-    const events = await service.events.searchByName(query);
+    const events = await service.event.searchByName(query);
     return res.status(200).json({ events });
   },
 );
@@ -68,10 +68,7 @@ export const postEvent = catchAsync(
       user != null,
       new ApiError(INTERNAL_SERVER_ERROR, 'Ein Fehler ist aufgetreten'),
     );
-    const event = await service.events.createEvent(
-      req.body,
-      (user as User).aId,
-    );
+    const event = await service.event.createEvent(req.body, (user as User).aId);
     return res.status(CREATED).json({ event });
   },
 );
@@ -79,14 +76,14 @@ export const postEvent = catchAsync(
 export const updateEvent = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const user = req.user as User;
-    const event = await service.events.updateEvent(req.body, user);
+    const event = await service.event.updateEvent(req.body, user);
     return res.status(200).json({ event });
   },
 );
 
 export const getEvents = catchAsync(
   async (_req: Request, res: Response, _next: NextFunction) => {
-    const events = await service.events.getAllEvents();
+    const events = await service.event.getAllEvents();
     return res.status(200).json({ events });
   },
 );
@@ -105,7 +102,7 @@ export const getEventsFilterCategory = catchAsync(
       ...(!!startDate && { startDate }),
     };
     if (!filter)
-      return res.status(200).json({ ...(await service.events.getAllEvents()) });
+      return res.status(200).json({ ...(await service.event.getAllEvents()) });
   },
 );
 export const getEventDetails = catchAsync(async (req, res, _next) => {
@@ -114,7 +111,7 @@ export const getEventDetails = catchAsync(async (req, res, _next) => {
     eventId != null,
     new ApiError(BAD_REQUEST, 'Es muss eine eventId mitgegeben werden'),
   );
-  const event = await service.events.getEventDetails(Number(eventId));
+  const event = await service.event.getEventDetails(Number(eventId));
   assert(event != null, new ApiError(NOT_FOUND, 'Event wurde nicht gefunden'));
   return res.status(200).json({ event });
 });
