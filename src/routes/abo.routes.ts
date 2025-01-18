@@ -1,18 +1,18 @@
 import { Router } from 'express';
-import { validate } from '../../middlewares/validation';
+import { validate } from '../middlewares/validation';
 import {
   getAboSchema,
   postAboSchema,
   requestStateSchema,
   searchSchema,
-} from '../../schema/abo';
+} from '../schema/abo';
 import {
   getAboRequests,
   getSearchByUserName,
   postAboRequests,
   putRequestState,
   getSuggestions,
-} from '../../controllers/abo.control';
+} from '../controllers/abo.control';
 
 const router = Router();
 export default router;

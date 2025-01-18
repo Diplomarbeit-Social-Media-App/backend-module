@@ -1,15 +1,15 @@
 import { Router } from 'express';
-import controllers from '../../controllers';
-import { hasHostPermission } from '../../middlewares/permission';
+import controllers from '../controllers';
+import { hasHostPermission } from '../middlewares/permission';
 import {
   attendanceSchema,
   eventSchema,
   nameSearchSchema,
   participationSchema,
   updateSchema,
-} from '../../schema/event';
-import { validate } from '../../middlewares/validation';
-import { auth } from '../../middlewares/auth';
+} from '../schema/event';
+import { validate } from '../middlewares/validation';
+import { auth } from '../middlewares/auth';
 const router = Router();
 
 router.post(

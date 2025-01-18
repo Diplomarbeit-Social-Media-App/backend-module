@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { validate } from '../../middlewares/validation';
+import { validate } from '../middlewares/validation';
 import {
   loginSchema,
   passwordResetSchema,
@@ -7,13 +7,13 @@ import {
   requestPasswordResetSchema,
   signUpSchema,
   updateAccountSchema,
-} from '../../schema/auth';
-import controllers from '../../controllers/index';
-import { auth } from '../../middlewares/auth';
+} from '../schema/auth';
+import controllers from '../controllers/index';
+import { auth } from '../middlewares/auth';
 import {
   hasBlockedAccount,
   hasValidAccunt,
-} from '../../middlewares/permission';
+} from '../middlewares/permission';
 const router = Router();
 
 router.post('/login', validate(loginSchema), controllers.auth.postLogin);

@@ -16,7 +16,7 @@ import {
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
 } from 'http-status';
-import logger from '../../logger/logger';
+import logger from '../../logger';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {

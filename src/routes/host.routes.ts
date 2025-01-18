@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import controllers from '../../controllers';
-import { validate } from '../../middlewares/validation';
+import controllers from '../controllers';
+import { validate } from '../middlewares/validation';
 import {
   hostAddSocialSchema,
   hostDelSocialSchema,
@@ -8,7 +8,7 @@ import {
   hostRatingDeletionSchema,
   hostRatingSchema,
   hostSubscriptionSchema,
-} from '../../schema/host';
+} from '../schema/host';
 const router = Router();
 
 router.get(

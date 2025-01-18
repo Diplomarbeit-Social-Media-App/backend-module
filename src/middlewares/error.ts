@@ -5,7 +5,7 @@ import config from '../config/config';
 import type errorResFormat from '../types/error';
 import { server } from '../index';
 import db from '../utils/db';
-import logger from '../logger/logger';
+import logger from '../logger';
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
