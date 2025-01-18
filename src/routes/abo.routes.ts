@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validate } from '../middlewares/validation';
 import {
+  deleteAboSchema,
   deleteRequestSchema,
   getAboSchema,
   postAboSchema,
@@ -29,3 +30,4 @@ router.delete(
   [validate(deleteRequestSchema)],
   controllers.abo.deleteRequest,
 );
+router.delete('/:uId', [validate(deleteAboSchema)], controllers.abo.deleteAbo);

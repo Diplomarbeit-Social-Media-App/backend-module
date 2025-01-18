@@ -54,3 +54,12 @@ export const deleteRequestSchema = object({
     }),
   }),
 });
+
+export const deleteAboSchema = object({
+  params: object({
+    uId: coerce.number({
+      invalid_type_error: 'Uid ist keine Nummer',
+      required_error: 'Uid fehlt',
+    }),
+  }),
+});

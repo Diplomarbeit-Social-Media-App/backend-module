@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import {
   ABO_FILTER_SCHEMA,
   ABO_REQUEST_STATE,
+  deleteAboType,
   deleteRequestType,
   postAboType,
   requestStateType,
@@ -118,6 +119,22 @@ export const deleteRequest = catchAsync(
     );
 
     await service.abo.deleteAboRequest(frId);
+
+    return res.status(OK).json({});
+  },
+);
+
+export const deleteAbo = catchAsync(
+  async (req: Request<deleteAboType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { uId } = req.params;
+
+    const user = await service.user.findUserByAId(aId);
+    const isFriendedWith = await service.abo.isFriendedWith(uId, user.uId);
+
+    assert(isFriendedWith, new ApiError(CONFLICT, 'Ihr seit nicht befreundet'));
+
+    await service.abo.deleteFriendship(user.uId, uId);
 
     return res.status(OK).json({});
   },

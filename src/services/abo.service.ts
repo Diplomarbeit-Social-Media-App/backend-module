@@ -26,6 +26,29 @@ function shuffleArray(array: number[]): number[] {
   return array;
 }
 
+export const deleteFriendship = async (fromUId: number, toUId: number) => {
+  const friendship = await db.friendship.findFirst({
+    where: {
+      OR: [
+        { AND: [{ friendId: fromUId, userId: toUId }] },
+        { AND: [{ friendId: toUId, userId: fromUId }] },
+      ],
+    },
+  });
+  assert(
+    friendship != null,
+    new ApiError(NOT_FOUND, 'Abo konnte nicht gefunden werden'),
+  );
+  await db.friendship.delete({
+    where: {
+      userId_friendId: {
+        friendId: friendship.friendId,
+        userId: friendship.userId,
+      },
+    },
+  });
+};
+
 export const loadFriendships = async (
   uId: number,
 ): Promise<BasicAccountRepresentation[]> => {

@@ -1,5 +1,6 @@
 import { TypeOf } from 'zod';
 import {
+  deleteAboSchema,
   deleteRequestSchema,
   getAboSchema,
   postAboSchema,
@@ -87,3 +88,6 @@ export type BasicAccountRepresentation = {
 
 type deleteRequestParams = typeof deleteRequestSchema.shape.params;
 export type deleteRequestType = Zod.infer<deleteRequestParams>;
+
+type deleteAboParams = typeof deleteAboSchema.shape.params;
+export type deleteAboType = Zod.infer<deleteAboParams>;
