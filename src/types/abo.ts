@@ -4,7 +4,7 @@ import {
   postAboSchema,
   requestStateSchema,
   searchSchema,
-} from '../schema/abo';
+} from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
 
 export enum ABO_REQUEST_STATE {

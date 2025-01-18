@@ -5,7 +5,7 @@ import {
   postAboSchema,
   requestStateSchema,
   searchSchema,
-} from '../schema/abo';
+} from '../schema/abo.schema';
 import {
   getAboRequests,
   getSearchByUserName,

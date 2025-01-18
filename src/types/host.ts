@@ -5,7 +5,7 @@ import {
   hostRatingDeletionSchema,
   hostRatingSchema,
   hostSubscriptionSchema,
-} from '../schema/host';
+} from '../schema/host.schema';
 
 type hostDetailsParams = typeof hostDetailsSchema.shape.params;
 export type hostDetailsType = Zod.infer<hostDetailsParams>;

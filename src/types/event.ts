@@ -5,7 +5,7 @@ import {
   nameSearchSchema,
   participationSchema,
   updateSchema,
-} from '../schema/event';
+} from '../schema/event.schema';
 
 type eventSchemaBody = typeof eventSchema.shape.body;
 export type eventType = Zod.infer<eventSchemaBody>;

@@ -6,7 +6,7 @@ import {
   renewTokenSchema,
   signUpSchema,
   updateAccountSchema,
-} from '../schema/auth';
+} from '../schema/auth.schema';
 
 export enum LOGIN_OS {
   WEB = 'web',

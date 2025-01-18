@@ -7,7 +7,7 @@ import {
   nameSearchSchema,
   participationSchema,
   updateSchema,
-} from '../schema/event';
+} from '../schema/event.schema';
 import { validate } from '../middlewares/validation';
 import { auth } from '../middlewares/auth';
 const router = Router();

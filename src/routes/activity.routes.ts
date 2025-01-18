@@ -4,7 +4,7 @@ import { hasHostPermission } from '../middlewares/permission';
 import {
   createActivitySchema,
   deleteActivitySchema,
-} from '../schema/activity';
+} from '../schema/activity.schema';
 import { validate } from '../middlewares/validation';
 const router = Router();
 

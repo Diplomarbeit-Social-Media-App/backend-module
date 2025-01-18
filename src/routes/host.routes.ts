@@ -8,7 +8,7 @@ import {
   hostRatingDeletionSchema,
   hostRatingSchema,
   hostSubscriptionSchema,
-} from '../schema/host';
+} from '../schema/host.schema';
 const router = Router();
 
 router.get(

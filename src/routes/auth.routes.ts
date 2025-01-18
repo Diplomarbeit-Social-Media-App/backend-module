@@ -7,7 +7,7 @@ import {
   requestPasswordResetSchema,
   signUpSchema,
   updateAccountSchema,
-} from '../schema/auth';
+} from '../schema/auth.schema';
 import controllers from '../controllers/index';
 import { auth } from '../middlewares/auth';
 import {
