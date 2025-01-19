@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { AnyZodObject } from 'zod';
 import { ApiError } from '../utils/apiError';
-import logger from '../logger/logger';
+import logger from '../logger';
 import httpStatus from 'http-status';
 
 export const validate =

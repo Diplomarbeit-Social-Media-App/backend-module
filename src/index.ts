@@ -2,7 +2,7 @@ import { cpus } from 'os';
 import { getHealthCheck } from './utils/db';
 import { ApiError } from './utils/apiError';
 import { handleSevereErrors } from './middlewares/error';
-import logger from './logger/logger';
+import logger from './logger';
 import config from './config/config';
 import app from './server';
 

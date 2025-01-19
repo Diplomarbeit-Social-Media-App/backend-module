@@ -1,0 +1,141 @@
+import { NextFunction, Request, Response } from 'express';
+import {
+  ABO_FILTER_SCHEMA,
+  ABO_REQUEST_STATE,
+  deleteAboType,
+  deleteRequestType,
+  postAboType,
+  requestStateType,
+  searchType,
+} from '../types/abo';
+import catchAsync from '../utils/catchAsync';
+import service from '../services';
+import { Account } from '@prisma/client';
+import { CONFLICT, CREATED, OK, UNAUTHORIZED } from 'http-status';
+import assert from 'assert';
+import { ApiError } from '../utils/apiError';
+
+export const getSuggestions = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+    const userSuggestions = await service.abo.findUserSuggestions(user);
+    const hostSuggestions = await service.abo.findHostSuggestions(user);
+    return res
+      .status(OK)
+      .json({ suggestions: [...userSuggestions, ...hostSuggestions] });
+  },
+);
+
+export const putRequestState = catchAsync(
+  async (
+    req: Request<object, object, requestStateType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { frId, state } = req.body;
+    const { aId } = req.user as Account;
+    const aboRequest = await service.abo.loadRequestById(frId);
+    const { fromUser, toUser } = aboRequest;
+    assert(
+      toUser.aId == aId,
+      new ApiError(UNAUTHORIZED, 'Nicht deine Anfrage'),
+    );
+    const isFriendedAlready = await service.abo.isFriendedWith(
+      fromUser.uId,
+      toUser.uId,
+    );
+    assert(
+      !isFriendedAlready,
+      new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
+    );
+    await service.abo.modifyRequest(aboRequest, state);
+    return res.status(OK).json({});
+  },
+);
+
+export const getSearchByUserName = catchAsync(
+  async (req: Request<searchType>, res, _next) => {
+    const { userName } = req.params;
+    const found = await service.abo.searchByUserName(userName);
+    return res.status(OK).json(found);
+  },
+);
+
+export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
+  const { filter } = req.params;
+  const { aId } = req.user as Account;
+  const aboRequests = await service.abo.loadAboRequests(
+    filter as unknown as ABO_FILTER_SCHEMA,
+    aId,
+  );
+  return res.status(200).json({ requests: aboRequests });
+});
+
+/**
+ * Should check if userName is
+ * - assigned
+ * - not the same user as the requests comes from
+ * - req. user has user account
+ * - not already friended with user
+ * - does not have a open/closed/declined request to this user
+ */
+export const postAboRequests = catchAsync(
+  async (req: Request<object, object, postAboType>, res, _next) => {
+    const { userName } = req.body;
+    const { aId } = req.user as Account;
+
+    const user = await service.user.findUserByAId(aId);
+    await service.abo.sendAboRequest(user, userName);
+    return res.status(CREATED).json({});
+  },
+);
+
+export const deleteRequest = catchAsync(
+  async (
+    req: Request<deleteRequestType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId } = req.user as Account;
+    const { frId } = req.params;
+
+    const user = await service.user.findUserByAId(aId);
+    const request = await service.abo.loadRequestById(frId);
+
+    assert(
+      request.fromUserId == user.uId,
+      new ApiError(UNAUTHORIZED, 'Die Anfrage wurde nicht von dir gestellt'),
+    );
+
+    assert(
+      request.state == ABO_REQUEST_STATE.PENDING,
+      new ApiError(CONFLICT, 'Nur das löschen von offenen Anfragen erlaubt'),
+    );
+
+    assert(
+      !(await service.abo.isFriendedWith(user.uId, request.toUserId)),
+      new ApiError(CONFLICT, 'Bitte entferne stattdessen deinen Freund'),
+    );
+
+    await service.abo.deleteAboRequest(frId);
+
+    return res.status(OK).json({});
+  },
+);
+
+export const deleteAbo = catchAsync(
+  async (req: Request<deleteAboType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { uId } = req.params;
+
+    const user = await service.user.findUserByAId(aId);
+    const isFriendedWith = await service.abo.isFriendedWith(uId, user.uId);
+
+    assert(isFriendedWith, new ApiError(CONFLICT, 'Ihr seit nicht befreundet'));
+
+    await service.abo.deleteFriendship(user.uId, uId);
+
+    return res.status(OK).json({});
+  },
+);

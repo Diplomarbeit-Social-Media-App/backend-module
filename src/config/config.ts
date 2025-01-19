@@ -1,4 +1,4 @@
-import { env as envSchema } from '../schema/env';
+import { env as envSchema } from '../schema/env.schema';
 import dotenv from 'dotenv';
 dotenv.config();
 

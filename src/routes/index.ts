@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import authRoutes from './auth';
-import eventRoutes from './events';
-import healthRoutes from './health';
-import aboRoutes from './abo';
-import hostRoutes from './host';
-import activityRoutes from './activities';
+import authRoutes from './auth.routes';
+import eventRoutes from './event.routes';
+import healthRoutes from './health.routes';
+import aboRoutes from './abo.routes';
+import hostRoutes from './host.routes';
+import activityRoutes from './activity.routes';
 import { hasValidAccunt } from '../middlewares/permission';
 
 const allRoutes = Router();

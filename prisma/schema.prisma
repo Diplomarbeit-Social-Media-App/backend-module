@@ -68,10 +68,12 @@ model Account {
   dateOfBirth        DateTime
   disabled           Boolean             @default(false)
   activated          Boolean             @default(false)
+  loginOs            String              @default("web")
   host               Host?
   passwordResetToken PasswordResetToken?
   token              Token[]             @relation("UserTokens")
   user               User?
+  createdAt          DateTime            @default(now())
 }
 
 model Message {
@@ -86,6 +88,7 @@ model Message {
 
 model Activity {
   aId          Int        @id @default(autoincrement())
+  name         String
   openingTimes String
   description  String
   minAge       Int

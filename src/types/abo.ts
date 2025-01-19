@@ -1,10 +1,12 @@
 import { TypeOf } from 'zod';
 import {
+  deleteAboSchema,
+  deleteRequestSchema,
   getAboSchema,
   postAboSchema,
   requestStateSchema,
   searchSchema,
-} from '../schema/abo';
+} from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
 
 export enum ABO_REQUEST_STATE {
@@ -72,3 +74,20 @@ export type extendedAboRequest = {
     aId: number;
   };
 } & AboRequest;
+
+export type BasicAccountRepresentation = {
+  uId: number | null;
+  hId: number | null;
+  account: {
+    picture: string | null;
+    userName: string;
+    aId: number;
+  };
+  isUserAccount: boolean;
+};
+
+type deleteRequestParams = typeof deleteRequestSchema.shape.params;
+export type deleteRequestType = Zod.infer<deleteRequestParams>;
+
+type deleteAboParams = typeof deleteAboSchema.shape.params;
+export type deleteAboType = Zod.infer<deleteAboParams>;
