@@ -4,6 +4,7 @@ import {
   ABO_REQUEST_STATE,
   deleteAboType,
   deleteRequestType,
+  getForeignProfileType,
   postAboType,
   requestStateType,
   searchType,
@@ -88,6 +89,18 @@ export const postAboRequests = catchAsync(
     const user = await service.user.findUserByAId(aId);
     await service.abo.sendAboRequest(user, userName);
     return res.status(CREATED).json({});
+  },
+);
+
+export const getForeignProfile = catchAsync(
+  async (
+    req: Request<getForeignProfileType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { uId } = req.params;
+
+    const user = await service.user.getUserForeignProfile(uId);
   },
 );
 

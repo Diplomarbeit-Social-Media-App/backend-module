@@ -47,6 +47,31 @@ export const findUserByAId = async (aId: number) => {
   return user;
 };
 
+export const getUserForeignProfile = async (uId: number) => {
+  const user = await db.user.findUnique({
+    where: {
+      uId,
+    },
+    select: {
+      account: {
+        select: {
+          picture: true,
+          userName: true,
+          firstName: true,
+          description: true,
+          loginOs: true,
+        },
+      },
+      _count: {
+        select: {
+          events: true,
+          followedHosts: true,
+        },
+      },
+    },
+  });
+};
+
 export const createUserByAccount = async (accountId: number) => {
   const account = await db.account.findFirst({
     where: {

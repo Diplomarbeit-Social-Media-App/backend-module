@@ -3,11 +3,13 @@ import {
   deleteAboSchema,
   deleteRequestSchema,
   getAboSchema,
+  getForeignProfileSchema,
   postAboSchema,
   requestStateSchema,
   searchSchema,
 } from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
+import { getForeignProfile } from '../controllers/abo.control';
 
 export enum ABO_REQUEST_STATE {
   PENDING = 0,
@@ -91,3 +93,6 @@ export type deleteRequestType = Zod.infer<deleteRequestParams>;
 
 type deleteAboParams = typeof deleteAboSchema.shape.params;
 export type deleteAboType = Zod.infer<deleteAboParams>;
+
+type getForeignProfileParams = typeof getForeignProfileSchema.shape.params;
+export type getForeignProfileType = Zod.infer<getForeignProfileParams>;

@@ -55,6 +55,15 @@ export const deleteRequestSchema = object({
   }),
 });
 
+export const getForeignProfileSchema = object({
+  params: object({
+    uId: coerce.number({
+      invalid_type_error: 'User-id muss eine Nummer sein',
+      required_error: 'User-id fehlt',
+    }),
+  }),
+});
+
 export const deleteAboSchema = object({
   params: object({
     uId: coerce.number({

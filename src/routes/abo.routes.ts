@@ -16,11 +16,17 @@ import {
   getSuggestions,
 } from '../controllers/abo.control';
 import controllers from '../controllers';
+import schema from '../schema';
 
 const router = Router();
 export default router;
 
 router.get('/suggestions', getSuggestions);
+router.get(
+  '/v/:uId',
+  [validate(schema.abo.getForeignProfileSchema)],
+  controllers.abo.getForeignProfile,
+);
 router.get('/:filter', [validate(getAboSchema)], getAboRequests);
 router.post('/', [validate(postAboSchema)], postAboRequests);
 router.get('/search/:userName', [validate(searchSchema)], getSearchByUserName);
