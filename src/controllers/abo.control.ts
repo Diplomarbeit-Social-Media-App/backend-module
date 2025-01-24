@@ -99,8 +99,38 @@ export const getForeignProfile = catchAsync(
     _next: NextFunction,
   ) => {
     const { uId } = req.params;
+    const { aId } = req.user as Account;
 
-    const user = await service.user.getUserForeignProfile(uId);
+    const foreignUser = await service.user.findUserByUId(uId);
+    const requestingUser = await service.user.findUserByAId(aId);
+    const [fuId, ruId] = [foreignUser.uId, requestingUser.uId];
+
+    const publicInformation = await service.user.getUserPublicInformation(uId);
+
+    const isFriendedWith = await service.abo.isFriendedWith(fuId, ruId);
+
+    const openAboReq =
+      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)).filter(
+        (abo) => abo.state == ABO_REQUEST_STATE.PENDING,
+      ).length > 0;
+
+    const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
+    const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
+
+    let allContacts: null | unknown[] = null;
+    if (isFriendedWith) {
+      const friends = await service.abo.findAllFriendsByUId(fuId);
+      const hosts = await service.host.findAllFollowedHostsByUid(fuId);
+      allContacts = [...friends, ...hosts];
+    }
+
+    return res.status(OK).json({
+      ...publicInformation,
+      isFriendedWith,
+      hasPendingAboReq: openAboReq,
+      mutualContacts: [...mutualFriends, ...mutualHosts],
+      allContacts,
+    });
   },
 );
 

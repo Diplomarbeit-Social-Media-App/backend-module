@@ -9,7 +9,6 @@ import {
   searchSchema,
 } from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
-import { getForeignProfile } from '../controllers/abo.control';
 
 export enum ABO_REQUEST_STATE {
   PENDING = 0,

@@ -17,6 +17,7 @@ import {
   NOT_FOUND,
 } from 'http-status';
 import logger from '../logger';
+import query from '../query';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -122,6 +123,63 @@ export const findRandomUsers = async (
   return users.map((user) => {
     return { ...user, hId: null, isUserAccount: true };
   });
+};
+
+export const findAllFriendsByUId = async (userId: number) => {
+  const friends = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: userId }, { userId: userId }],
+    },
+    select: query.abo.mutualFriendsSelection,
+  });
+  return friends.map((fr) => {
+    return { ...fr.user, isUserAccount: true, hId: null };
+  });
+};
+
+export const findMutualFriends = async (fromId: number, toId: number) => {
+  const fromFriends = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: fromId }, { userId: fromId }],
+    },
+    select: query.abo.mutualFriendsSelection,
+  });
+  const toFriends = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: toId }, { userId: toId }],
+    },
+    select: query.abo.mutualFriendsSelection,
+  });
+  const mapped: number[] = toFriends.map((fr) => {
+    return fr.friendId == toId ? fr.userId : fr.friendId;
+  });
+
+  return fromFriends
+    .filter((fr) => {
+      const valued = fr.friendId == fromId ? fr.userId : fr.friendId;
+      return mapped.includes(valued);
+    })
+    .map((fr) => {
+      return { ...fr.user, isUserAccount: true, hId: null };
+    });
+};
+
+export const hasSentRequestToUser = async (uId1: number, uId2: number) => {
+  const abos = await db.aboRequest.findMany({
+    where: {
+      OR: [
+        {
+          fromUserId: uId1,
+          toUserId: uId2,
+        },
+        {
+          fromUserId: uId2,
+          toUserId: uId1,
+        },
+      ],
+    },
+  });
+  return abos;
 };
 
 export const findHostSuggestions = async (
