@@ -59,7 +59,7 @@ export const getUserForeignProfile = async (uId: number) => {
           userName: true,
           firstName: true,
           description: true,
-          loginOs: true,
+          loginOs: true, 
         },
       },
       _count: {
