@@ -15,6 +15,17 @@ const mutualFriendsSelection = {
   },
 };
 
-const queries = { mutualFriendsSelection };
+const friendByUserTableSelection = {
+  account: {
+    select: {
+      userName: true,
+      picture: true,
+      aId: true,
+    },
+  },
+  uId: true,
+};
+
+const queries = { mutualFriendsSelection, friendByUserTableSelection };
 
 export default queries;

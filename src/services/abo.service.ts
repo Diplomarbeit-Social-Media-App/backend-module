@@ -126,14 +126,28 @@ export const findRandomUsers = async (
 };
 
 export const findAllFriendsByUId = async (userId: number) => {
-  const friends = await db.friendship.findMany({
+  const friendsId = await db.friendship.findMany({
     where: {
       OR: [{ friendId: userId }, { userId: userId }],
     },
-    select: query.abo.mutualFriendsSelection,
+    select: {
+      friendId: true,
+      userId: true,
+    },
+  });
+  const mappedForeignId = friendsId.map(({ friendId, userId: friendedId }) =>
+    friendId == userId ? friendedId : friendId,
+  );
+  const friends = await db.user.findMany({
+    where: {
+      uId: {
+        in: mappedForeignId,
+      },
+    },
+    select: query.abo.friendByUserTableSelection,
   });
   return friends.map((fr) => {
-    return { ...fr.user, isUserAccount: true, hId: null };
+    return { ...fr, isUserAccount: true, hId: null };
   });
 };
 
