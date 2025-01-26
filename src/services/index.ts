@@ -7,6 +7,7 @@ import * as mailService from './mail.service';
 import * as aboService from './abo.service';
 import * as hostService from './host.service';
 import * as activityService from './activity.service';
+import * as groupService from './group.service';
 
 const service = {
   user: userService,
@@ -18,6 +19,7 @@ const service = {
   abo: aboService,
   host: hostService,
   activity: activityService,
+  group: groupService,
 };
 
 export default service;

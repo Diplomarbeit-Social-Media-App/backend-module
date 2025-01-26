@@ -1,9 +1,5 @@
-import { array, object, string } from 'zod';
+import { object, string } from 'zod';
 import validator from 'validator';
-
-const member = object({
-  userName: string().trim(),
-});
 
 export const createGroupSchema = object({
   body: object({
@@ -16,6 +12,6 @@ export const createGroupSchema = object({
     description: string({ message: 'Beschreibung fehlt' })
       .nullable()
       .default("Let's go partying gurrl!"),
-    members: array(member).nullable().default([]),
+    picture: string({ required_error: 'Gruppenbild fehlt' }).nullable(),
   }),
 });
