@@ -7,13 +7,15 @@ const member = object({
 
 export const createGroupSchema = object({
   body: object({
-    name: string()
+    name: string({ message: 'Gruppenname fehlt' })
       .min(2, { message: 'Gruppenname zu kurz' })
       .max(32, { message: 'Gruppenname zu lang' })
       .refine((name) => validator.isAlphanumeric(name), {
         message: 'Keine Sonderzeichen im Namen erlaubt',
       }),
-    description: string().nullable().default("Let's go partying gurrl!"),
-    members: array(member).nullable(),
+    description: string({ message: 'Beschreibung fehlt' })
+      .nullable()
+      .default("Let's go partying gurrl!"),
+    members: array(member).nullable().default([]),
   }),
 });
