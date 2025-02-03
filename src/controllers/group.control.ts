@@ -3,6 +3,7 @@ import catchAsync from '../utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import {
   createGroupType,
+  generalEditGroupType,
   groupIdOnlyType,
   inviteAcceptType,
   inviteGroupType,
@@ -11,6 +12,7 @@ import { Account } from '@prisma/client';
 import service from '../services';
 import { ApiError } from '../utils/apiError';
 import assert from 'assert';
+import logger from '../logger';
 
 export const postCreateGroup = catchAsync(
   async (
@@ -111,5 +113,46 @@ export const deleteGroup = catchAsync(
     await service.group.deleteGroup(gId);
 
     return res.status(OK).json({ message: 'Gruppe gelöscht' });
+  },
+);
+
+export const putEditGroup = catchAsync(
+  async (
+    req: Request<object, object, generalEditGroupType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { gId, description, picture, setAdmin, name } = req.body;
+    const { aId, userName } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+
+    const administratorGroups =
+      await service.group.findGroupsAdministratedByUId(user.uId);
+    logger.debug(
+      `{GroupController | putEditGroup} - administration groups of user ${administratorGroups.toString()}`,
+    );
+    const isAdmin = administratorGroups.some((g) => g.gId === gId);
+    assert(
+      isAdmin,
+      new ApiError(UNAUTHORIZED, 'Keine Berechtigung in dieser Gruppe'),
+    );
+    assert(
+      userName !== setAdmin?.userName,
+      new ApiError(CONFLICT, 'Bei eigenem Account nicht möglich'),
+    );
+
+    const edit: { name?: string; description?: string; picture?: string } = {};
+
+    if (description) Object.assign(edit, { description });
+    if (picture) Object.assign(edit, { picture });
+    if (name) Object.assign(edit, { name });
+
+    logger.debug(
+      `{GroupController | putEditGroup} - Update obj ${JSON.stringify(edit)}`,
+    );
+
+    await service.group.editGroup(gId, edit, setAdmin);
+
+    return res.status(OK).json({});
   },
 );

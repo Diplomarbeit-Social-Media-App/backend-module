@@ -56,3 +56,32 @@ export const groupIdOnlySchema = object({
     }),
   }),
 });
+
+export const generalEditGroupSchema = object({
+  body: object({
+    gId: coerce.number({ message: 'Gruppen-Id fehlt' }),
+    name: string({ message: 'Bitte gib einen Namen an' })
+      .min(2, { message: 'Gruppenname zu kurz' })
+      .max(32, { message: 'Gruppenname zu lang' })
+      .refine((name) => validator.isAlphanumeric(name), {
+        message: 'Keine Sonderzeichen im Namen erlaubt',
+      })
+      .nullable(),
+    description: string({ message: 'Beschreibung fehlt' })
+      .default("Let's go partying gurrl!")
+      .nullable(),
+    picture: string({ message: 'Bild-Link fehlt' }).nullable(),
+    setAdmin: object({
+      userName: string({ message: 'Username fehlt' }).nullable(),
+      admin: coerce.boolean({ message: 'Admin-feld fehlt' }).default(false),
+    })
+      .optional()
+      .refine(
+        (data) => {
+          if (data) return data.userName != null && data.admin != null;
+          return true;
+        },
+        { message: 'Adminberechtigungen enthalten ungültige Felder' },
+      ),
+  }),
+});

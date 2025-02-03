@@ -3,6 +3,7 @@ import db from '../utils/db';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
+import { generalEditGroupType } from '../types/group';
 
 export const createGroup = async (
   name: string,
@@ -192,6 +193,46 @@ export const loadAllData = async (gId: number) => {
           messages: true,
         },
       },
+    },
+  });
+};
+
+export const editGroup = async (
+  gId: number,
+  data: { name?: string; description?: string; picture?: string },
+  adminSettings: generalEditGroupType['setAdmin'],
+) => {
+  if (adminSettings) {
+    const { admin, userName } = adminSettings;
+    const userExists = await db.groupMember.findFirst({
+      where: {
+        gId,
+        user: {
+          account: {
+            userName: userName!,
+          },
+        },
+      },
+    });
+    assert(userExists, new ApiError(NOT_FOUND, `User ${userName} not found`));
+    await updateAdminStatus(userExists.gmId, admin);
+  }
+
+  await db.group.update({
+    where: {
+      gId,
+    },
+    data,
+  });
+};
+
+const updateAdminStatus = async (gmId: number, admin: boolean) => {
+  await db.groupMember.update({
+    where: {
+      gmId: gmId,
+    },
+    data: {
+      isAdmin: admin,
     },
   });
 };

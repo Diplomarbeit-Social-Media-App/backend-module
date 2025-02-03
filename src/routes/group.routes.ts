@@ -29,5 +29,10 @@ router.delete(
   [validate(schema.group.groupIdOnlySchema)],
   controllers.group.deleteGroup,
 );
+router.put(
+  '/',
+  [validate(schema.group.generalEditGroupSchema)],
+  controllers.group.putEditGroup,
+);
 
 export default router;

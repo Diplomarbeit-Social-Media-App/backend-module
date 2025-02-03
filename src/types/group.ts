@@ -1,5 +1,6 @@
 import {
   createGroupSchema,
+  generalEditGroupSchema,
   groupIdOnlySchema,
   inviteAcceptGroupSchema,
   inviteGroupSchema,
@@ -16,3 +17,6 @@ export type inviteAcceptType = Zod.infer<inviteAcceptGroupBody>;
 
 type groupIdOnlyParams = typeof groupIdOnlySchema.shape.params;
 export type groupIdOnlyType = Zod.infer<groupIdOnlyParams>;
+
+type generalEditGroupBody = typeof generalEditGroupSchema.shape.body;
+export type generalEditGroupType = Zod.infer<generalEditGroupBody>;
