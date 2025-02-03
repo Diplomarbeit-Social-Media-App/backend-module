@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { validate } from '../middlewares/validation';
 import {
   deleteAboSchema,
-  getAboSchema,
   postAboSchema,
   requestStateSchema,
   searchSchema,
@@ -26,7 +25,7 @@ router.get(
   [validate(schema.abo.getForeignProfileSchema)],
   controllers.abo.getForeignProfile,
 );
-router.get('/:filter', [validate(getAboSchema)], getAboRequests);
+router.get('/', getAboRequests);
 router.post('/', [validate(postAboSchema)], postAboRequests);
 router.get('/search/:userName', [validate(searchSchema)], getSearchByUserName);
 router.put('/', [validate(requestStateSchema)], putRequestState);

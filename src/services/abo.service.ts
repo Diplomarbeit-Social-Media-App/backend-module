@@ -1,11 +1,9 @@
 import db from '../utils/db';
 import {
-  ABO_FILTER_SCHEMA,
   ABO_REQUEST_MODIFY,
   ABO_REQUEST_STATE,
   BasicAccountRepresentation,
   extendedAboRequest,
-  getFilterValues,
 } from '../types/abo';
 import { Prisma, User } from '@prisma/client';
 import assert from 'assert';
@@ -558,16 +556,9 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
     );
 };
 
-export const loadAboRequests = async (
-  filter: ABO_FILTER_SCHEMA,
-  aId: number,
-) => {
-  const filterValues = getFilterValues(filter);
+export const loadOpenAboRequests = async (aId: number) => {
   return await db.aboRequest.findMany({
     where: {
-      state: {
-        in: filterValues,
-      },
       AND: [
         {
           OR: [

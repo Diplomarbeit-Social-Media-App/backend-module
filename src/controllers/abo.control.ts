@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import {
-  ABO_FILTER_SCHEMA,
   ABO_REQUEST_STATE,
   deleteAboType,
   getForeignProfileType,
@@ -63,13 +62,9 @@ export const getSearchByUserName = catchAsync(
 );
 
 export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
-  const { filter } = req.params;
   const { aId } = req.user as Account;
-  const aboRequests = await service.abo.loadAboRequests(
-    filter as unknown as ABO_FILTER_SCHEMA,
-    aId,
-  );
-  return res.status(200).json({ requests: aboRequests });
+  const aboRequests = await service.abo.loadOpenAboRequests(aId);
+  return res.status(200).json(aboRequests);
 });
 
 /**

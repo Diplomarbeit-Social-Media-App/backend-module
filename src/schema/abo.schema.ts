@@ -1,7 +1,5 @@
-import zod, { coerce, nativeEnum, number, object, string } from 'zod';
-import { ABO_FILTER_SCHEMA, ABO_REQUEST_MODIFY } from '../types/abo';
-import { ApiError } from '../utils/apiError';
-import { BAD_REQUEST } from 'http-status';
+import { coerce, nativeEnum, number, object, string } from 'zod';
+import { ABO_REQUEST_MODIFY } from '../types/abo';
 
 export const requestStateSchema = object({
   body: object({
@@ -15,26 +13,6 @@ export const requestStateSchema = object({
 export const searchSchema = object({
   params: object({
     userName: string({ message: 'Der Username fehlt' }),
-  }),
-});
-
-export const getAboSchema = object({
-  params: object({
-    filter: zod.preprocess(
-      (val) => {
-        const num = Number(val);
-        if (isNaN(num)) {
-          throw new ApiError(
-            BAD_REQUEST,
-            'Filter muss als Zahl mitgegeben werden',
-          );
-        }
-        return num;
-      },
-      nativeEnum(ABO_FILTER_SCHEMA, {
-        message: 'Gib einen gültigen Filter an',
-      }),
-    ),
   }),
 });
 
