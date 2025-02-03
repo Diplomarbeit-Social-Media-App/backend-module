@@ -37,7 +37,7 @@ export const postInviteGroup = catchAsync(
     const { aId, userName: ownUserName } = req.user as Account;
 
     const user = await service.user.findUserByAId(aId);
-    const groups = await service.group.findGroupsOwnedByUId(user.uId);
+    const groups = await service.group.findGroupsAdministratedByUId(user.uId);
 
     assert(
       userName !== ownUserName,
@@ -81,7 +81,7 @@ export const getGroupData = catchAsync(
     const { gId } = req.params;
     const { aId } = req.user as Account;
     const { uId } = await service.user.findUserByAId(aId);
-    const isAssociatedWithGroup = await service.group.isAssociatedWithGroup(
+    const isAssociatedWithGroup = await service.group.isInvitedOrMember(
       gId,
       uId,
     );

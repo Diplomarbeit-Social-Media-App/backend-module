@@ -8,30 +8,58 @@ export const createGroup = async (
   name: string,
   description: string | null,
   picture: string | null,
-  owningUserId: number,
+  uId: number,
 ) => {
+  const account = await db.account.findFirst({
+    where: {
+      user: {
+        uId,
+      },
+    },
+  });
+  assert(account, new ApiError(NOT_FOUND, 'Account wurde nicht gefunden'));
   const group = await db.group.create({
     data: {
       creationDate: dayjs().toDate(),
       description,
-      owningUser: owningUserId,
       name,
       picture,
+      members: {
+        create: {
+          aId: account.aId,
+          uId,
+          isAdmin: true,
+        },
+      },
     },
   });
   assert(
     group,
-    new ApiError(INTERNAL_SERVER_ERROR, 'Error occurred creating group'),
+    new ApiError(INTERNAL_SERVER_ERROR, 'Fehler beim Erstellen der Gruppe'),
   );
   return group;
 };
 
-export const findGroupsOwnedByUId = async (uId: number) => {
-  return await db.group.findMany({
+/**
+ * Searches for groups where the User uId has admin permissions
+ * Won't check if uId is valid or not
+ * Only checks groups where the user accepted the invitation regardless the permission status
+ * @param uId User id
+ * @returns standard group format
+ */
+export const findGroupsAdministratedByUId = async (uId: number) => {
+  const groups = await db.group.findMany({
     where: {
-      owningUser: uId,
+      members: {
+        some: {
+          uId,
+          isAdmin: true,
+          acceptedInvitation: true,
+        },
+      },
     },
   });
+  return groups;
 };
 
 export const findGroupsByUId = async (uId: number) => {
@@ -64,24 +92,24 @@ export const isInvitedOrMember = async (gId: number, uId: number) => {
   };
 };
 
-export const isAssociatedWithGroup = async (gId: number, uId: number) => {
-  const group = await db.group.findFirst({
-    where: {
-      gId,
-    },
-    include: {
-      members: true,
-    },
-  });
-  assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
-  return group.owningUser === uId || group.members.some((m) => m.uId === uId);
-};
+// export const isAssociatedWithGroup = async (gId: number, uId: number) => {
+//   const group = await db.group.findFirst({
+//     where: {
+//       gId,
+//     },
+//     include: {
+//       members: true,
+//     },
+//   });
+//   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
+//   return group.owningUser === uId || group.members.some((m) => m.uId === uId);
+// };
 
 export const deleteInvitation = async (gId: number, uId: number) => {
   await db.groupMember.deleteMany({
     where: {
       acceptedInvitation: false,
-      groupId: gId,
+      gId,
       uId,
     },
   });
@@ -90,7 +118,7 @@ export const deleteInvitation = async (gId: number, uId: number) => {
 export const acceptInvitation = async (gId: number, uId: number) => {
   await db.groupMember.updateMany({
     where: {
-      groupId: gId,
+      gId,
       uId,
     },
     data: {
@@ -105,13 +133,13 @@ export const inviteByUserName = async (gId: number, userName: string) => {
       userName,
     },
     include: {
-      GroupMember: true,
+      groupMember: true,
       user: true,
     },
   });
   assert(acc, new ApiError(NOT_FOUND, `User ${userName} nicht gefunden`));
   assert(acc.user, new ApiError(NOT_FOUND, 'Account besitzt kein User-Profil'));
-  const invitedOrMember = acc.GroupMember.find((g) => g.groupId == gId);
+  const invitedOrMember = acc.groupMember.find((g) => g.gId == gId);
   if (invitedOrMember) {
     assert(
       !invitedOrMember.acceptedInvitation,
@@ -121,7 +149,7 @@ export const inviteByUserName = async (gId: number, userName: string) => {
   }
   await db.groupMember.create({
     data: {
-      groupId: gId,
+      gId,
       aId: acc.aId,
       uId: acc.user.uId,
     },
@@ -134,6 +162,7 @@ export const loadAllData = async (gId: number) => {
       gId,
     },
     select: {
+      gId: true,
       name: true,
       picture: true,
       description: true,

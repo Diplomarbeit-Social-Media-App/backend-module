@@ -33,8 +33,7 @@ model User {
   receivedAboRequests AboRequest[]   @relation("ToUserFA")
   friendedBy          Friendship[]   @relation("UserFriendedBy")
   friends             Friendship[]   @relation("UserFriends")
-  owner               Group[]
-  joinedGroups        GroupMember[]
+  groups              GroupMember[]
   HostRating          HostRating[]
   Message             Message[]
   notifications       Notification[]
@@ -74,7 +73,7 @@ model Account {
   token              Token[]             @relation("UserTokens")
   user               User?
   createdAt          DateTime            @default(now())
-  GroupMember        GroupMember[]
+  groupMember        GroupMember[]
 }
 
 model Message {
@@ -156,8 +155,6 @@ model Group {
   name         String        @default("Party gurrrls")
   creationDate DateTime
   description  String?
-  owningUser   Int
-  owner        User          @relation(fields: [owningUser], references: [uId])
   members      GroupMember[]
   messages     Message[]
   activities   Activity[]    @relation("AttachedActivites")
@@ -168,12 +165,13 @@ model GroupMember {
   gmId               Int      @id @default(autoincrement())
   uId                Int
   aId                Int
-  groupId            Int
+  gId                Int
+  isAdmin            Boolean  @default(false)
   acceptedInvitation Boolean  @default(false)
   invitedAt          DateTime @default(now())
-  group              Group    @relation(fields: [groupId], references: [gId])
-  user               User     @relation(fields: [uId], references: [uId])
-  account            Account  @relation(fields: [aId], references: [aId])
+  group              Group    @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  user               User     @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  account            Account  @relation(fields: [aId], references: [aId], onDelete: Cascade)
 }
 
 model Notification {
