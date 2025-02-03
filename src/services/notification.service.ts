@@ -18,7 +18,7 @@ export const handleUserSubscription = async (uId: number) => {
           token: true,
         },
       },
-      joinedGroups: true,
+      groups: true,
       events: true,
     },
   });
@@ -28,11 +28,11 @@ export const handleUserSubscription = async (uId: number) => {
   );
   assert(token, new ApiError(NOT_FOUND, 'Kein Notification-Token present'));
 
-  subscribeToGroups(token.token, user.joinedGroups);
+  subscribeToGroups(token.token, user.groups);
 };
 
-const subscribeToGroups = (token: string, groups: { groupId: number }[]) => {
-  groups.forEach(({ groupId }) =>
-    messaging.subscribeToTopic(token, `g-${groupId}-all`),
+const subscribeToGroups = (token: string, groups: { gId: number }[]) => {
+  groups.forEach(({ gId }) =>
+    messaging.subscribeToTopic(token, `g-${gId}-all`),
   );
 };
