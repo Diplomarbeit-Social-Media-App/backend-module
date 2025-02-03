@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import {
-  ABO_REQUEST_STATE,
   deleteAboType,
   getForeignProfileType,
   postAboType,
@@ -32,7 +31,7 @@ export const putRequestState = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { frId, state } = req.body;
+    const { frId, accept } = req.body;
     const { aId } = req.user as Account;
     const aboRequest = await service.abo.loadRequestById(frId);
     const { fromUser, toUser } = aboRequest;
@@ -48,7 +47,7 @@ export const putRequestState = catchAsync(
       !isFriendedAlready,
       new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
     );
-    await service.abo.modifyRequest(aboRequest, state);
+    await service.abo.modifyRequest(aboRequest, accept);
     return res.status(OK).json({});
   },
 );
@@ -104,9 +103,7 @@ export const getForeignProfile = catchAsync(
     const isFriendedWith = await service.abo.isFriendedWith(fuId, ruId);
 
     const openAboReq =
-      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)).filter(
-        (abo) => abo.state == ABO_REQUEST_STATE.PENDING,
-      ).length > 0;
+      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)) != null;
 
     const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);

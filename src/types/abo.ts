@@ -8,25 +8,6 @@ import {
 } from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
 
-export enum ABO_REQUEST_STATE {
-  PENDING = 0,
-  ACCEPTED = 1,
-  DECLINED = 2,
-  DELETED = 3,
-}
-
-export enum ABO_FILTER_SCHEMA {
-  ALL = 0,
-  OPEN = 1,
-  CLOSED = 2,
-}
-
-export enum ABO_REQUEST_MODIFY {
-  ACCEPT = 0,
-  DECLINE = 1,
-  DELETE = 2,
-}
-
 type postAboBody = typeof postAboSchema.shape.body;
 export type postAboType = Zod.infer<postAboBody>;
 

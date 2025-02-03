@@ -1,19 +1,9 @@
 import db from '../utils/db';
-import {
-  ABO_REQUEST_MODIFY,
-  ABO_REQUEST_STATE,
-  BasicAccountRepresentation,
-  extendedAboRequest,
-} from '../types/abo';
+import { BasicAccountRepresentation, extendedAboRequest } from '../types/abo';
 import { Prisma, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
-import {
-  ACCEPTED,
-  CONFLICT,
-  INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
-} from 'http-status';
+import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import logger from '../logger';
 import query from '../query';
 
@@ -302,48 +292,20 @@ export const findUniqueUserSuggestions = async (
 
 export const modifyRequest = async (
   aboRequest: extendedAboRequest,
-  state: ABO_REQUEST_MODIFY,
+  accept: boolean,
 ) => {
-  assert(
-    aboRequest.state == ABO_REQUEST_STATE.PENDING,
-    new ApiError(CONFLICT, 'Anfrage wurde schon bearbeitet'),
-  );
-  const whereCondition = {
-    where: {
-      frId: aboRequest.frId,
-    },
-  };
-  switch (state) {
-    case ABO_REQUEST_MODIFY.ACCEPT:
-      await db.$transaction([
-        db.aboRequest.update({
-          ...whereCondition,
-          data: {
-            state: ABO_REQUEST_STATE.ACCEPTED,
-          },
-        }),
-        db.friendship.create({
-          data: {
-            userId: aboRequest.fromUserId,
-            friendId: aboRequest.toUserId,
-          },
-        }),
-      ]);
-      break;
-    case ABO_REQUEST_MODIFY.DECLINE:
-      await db.aboRequest.update({
-        ...whereCondition,
+  await db.$transaction(async (tx) => {
+    if (accept)
+      await tx.friendship.create({
         data: {
-          state: ABO_REQUEST_STATE.DECLINED,
+          friendId: aboRequest.toUserId,
+          userId: aboRequest.fromUserId,
         },
       });
-      break;
-    case ABO_REQUEST_MODIFY.DELETE:
-      await db.aboRequest.delete({
-        ...whereCondition,
-      });
-      break;
-  }
+    await tx.aboRequest.delete({
+      where: { frId: aboRequest.frId },
+    });
+  });
 };
 
 export const loadRequestById = async (frId: number) => {
@@ -535,25 +497,17 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
     });
   }
 
-  const hasOpenRequests = aboRequests.some(
-    (r) => r.state == ABO_REQUEST_STATE.PENDING,
+  const hasOpenRequests = aboRequests != null;
+
+  const isFriendedAlready = await isFriendedWith(
+    fromUser.uId,
+    requestedUser.user.uId,
   );
-  const hasClosedRequests = aboRequests.some(
-    (r) =>
-      r.state == ABO_REQUEST_STATE.DECLINED ||
-      r.state == ABO_REQUEST_STATE.DELETED,
-  );
-  const isFriendedAlready = aboRequests.some((r) => r.state == ACCEPTED);
 
   if (hasOpenRequests)
     throw new ApiError(CONFLICT, 'Du hast bereits offene Anfrangen');
   if (isFriendedAlready)
     throw new ApiError(CONFLICT, 'Du bist bereits mit der Person befreundet');
-  if (hasClosedRequests)
-    throw new ApiError(
-      CONFLICT,
-      'Warte, bis die Person dir eine Anfrage schickt',
-    );
 };
 
 export const loadOpenAboRequests = async (aId: number) => {

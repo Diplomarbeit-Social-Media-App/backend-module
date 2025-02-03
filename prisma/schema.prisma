@@ -184,7 +184,6 @@ model Notification {
 
 model AboRequest {
   frId       Int      @id @default(autoincrement())
-  state      Int      @default(0)
   createdAt  DateTime @default(now()) @updatedAt
   fromUserId Int
   toUserId   Int

@@ -1,12 +1,9 @@
-import { coerce, nativeEnum, number, object, string } from 'zod';
-import { ABO_REQUEST_MODIFY } from '../types/abo';
+import { coerce, number, object, string } from 'zod';
 
 export const requestStateSchema = object({
   body: object({
     frId: number({ message: 'Abo-Request-Id fehlt' }),
-    state: nativeEnum(ABO_REQUEST_MODIFY, {
-      message: 'State-Wert ist von 0 bis 2',
-    }),
+    accept: coerce.boolean({ message: 'Das Feld `accept` fehlt' }),
   }),
 });
 
