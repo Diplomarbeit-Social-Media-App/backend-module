@@ -96,19 +96,27 @@ export const loadFriendships = async (
 
 export const findRandomUsers = async (
   USER_COUNT: number = 20,
+  fromUId: number,
 ): Promise<BasicAccountRepresentation[]> => {
   const allUserIds = await db.user.findMany({
     select: { uId: true },
-    take: 20_000,
+    take: 5_000,
   });
+
   const idArray = allUserIds.map((user) => user.uId);
-  if (idArray.length === 0) {
-    throw new ApiError(NOT_FOUND, 'Keine User gefunden');
-  }
-  const randomIds = shuffleArray(idArray).slice(0, USER_COUNT);
+  if (idArray.length === 0) return [];
+
+  const randomIds = shuffleArray(idArray);
 
   const users = await db.user.findMany({
-    where: { uId: { in: randomIds } },
+    where: {
+      uId: { in: randomIds },
+      friendedBy: {
+        none: { OR: [{ friendId: fromUId }, { userId: fromUId }] },
+      },
+      friends: { none: { OR: [{ friendId: fromUId }, { userId: fromUId }] } },
+      NOT: { uId: fromUId },
+    },
     select: {
       uId: true,
       account: {
@@ -119,6 +127,7 @@ export const findRandomUsers = async (
         },
       },
     },
+    take: USER_COUNT,
   });
   return users.map((user) => {
     return { ...user, hId: null, isUserAccount: true };
@@ -225,91 +234,72 @@ export const findHostSuggestions = async (
   });
 };
 
-export const findUserSuggestions = async (
-  user: User,
-): Promise<BasicAccountRepresentation[]> => {
-  const USER_COUNT = 20;
+const mapToBasicAccountFormat = (user: {
+  uId: number;
+  account: { aId: number; picture: string | null; userName: string };
+}): BasicAccountRepresentation => {
+  return { ...user, hId: null, isUserAccount: true };
+};
 
-  const mapOutput = (user: {
-    uId: number;
-    account: { aId: number; picture: string | null; userName: string };
-  }): BasicAccountRepresentation => {
-    return { ...user, hId: null, isUserAccount: true };
-  };
-
+const findUserSuggestionsThroughFriends = async ({
+  uId,
+}: User): Promise<null | BasicAccountRepresentation[]> => {
   const friends = await db.friendship.findMany({
-    where: {
-      OR: [
-        {
-          friendId: user.uId,
-        },
-        {
-          userId: user.uId,
-        },
-      ],
-    },
-    include: {
-      friend: {
-        include: {
-          friendedBy: true,
-        },
-      },
-      user: {
-        include: {
-          friendedBy: true,
-        },
-      },
-    },
+    where: query.abo.isFriendedWhereCondition(uId),
   });
-  if (friends.length == 0)
-    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
+  if (!friends || friends.length == 0) return null;
 
-  const mapedFriends = friends
-    .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
-    .map((f) => f.friendedBy)
-    .flatMap((f) => f.map((k) => k.userId))
-    .filter((id) => id != user.uId);
+  logger.debug(
+    `{AboService | findUserSuggestionsThroughFriends} - amount of friends: ${friends?.length ?? 0}`,
+  );
 
-  const foundFriends = await db.user.findMany({
+  const mappedToUnknownIds = friends.map((f) =>
+    f.friendId === uId ? f.userId : f.friendId,
+  );
+
+  const foundUnknown = await db.friendship.findMany({
     where: {
-      uId: {
-        in: mapedFriends,
+      friendId: {
+        in: mappedToUnknownIds,
       },
-      friendedBy: {
-        none: {
-          OR: [
-            {
-              friendId: user.uId,
-            },
-            {
-              userId: user.uId,
-            },
-          ],
-        },
+      userId: {
+        in: mappedToUnknownIds,
       },
     },
     select: {
-      uId: true,
-      account: {
-        select: {
-          picture: true,
-          userName: true,
-          aId: true,
-        },
+      user: {
+        select: query.abo.friendByUserTableSelection,
+      },
+      friend: {
+        select: query.abo.friendByUserTableSelection,
       },
     },
-    take: USER_COUNT,
   });
-  if (foundFriends.length == 0)
-    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
-  if (foundFriends.length < USER_COUNT) {
-    const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
-    return [
-      ...foundFriends.filter((f) => f.uId != user.uId).map((v) => mapOutput(v)),
-      ...addRandoms.filter((f) => f.uId != user.uId),
-    ];
+
+  logger.debug(
+    `{AboService | findUserSuggestionsThroughFriends} - found friend of friends: ${foundUnknown.length}`,
+  );
+
+  const uniqueFiltered = foundUnknown
+    .map((f) => (mappedToUnknownIds.includes(f.friend.uId) ? f.user : f.friend))
+    .filter((f) => f.uId !== uId)
+    .map((v) => mapToBasicAccountFormat(v));
+  return uniqueFiltered;
+};
+
+export const findUniqueUserSuggestions = async (
+  user: User,
+): Promise<BasicAccountRepresentation[]> => {
+  let suggestions: BasicAccountRepresentation[] | null =
+    await findUserSuggestionsThroughFriends(user);
+
+  if (!suggestions) suggestions = [];
+  if (suggestions.length < 20) {
+    const rest = 20 - (suggestions?.length ?? 0);
+    const randoms = await findRandomUsers(rest, user.uId);
+    suggestions.push(...randoms);
   }
-  return foundFriends.map((v) => mapOutput(v));
+  return suggestions;
 };
 
 export const modifyRequest = async (

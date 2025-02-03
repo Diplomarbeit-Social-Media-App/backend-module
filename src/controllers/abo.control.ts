@@ -19,7 +19,7 @@ export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
-    const userSuggestions = await service.abo.findUserSuggestions(user);
+    const userSuggestions = await service.abo.findUniqueUserSuggestions(user);
     const hostSuggestions = await service.abo.findHostSuggestions(user);
     return res
       .status(OK)

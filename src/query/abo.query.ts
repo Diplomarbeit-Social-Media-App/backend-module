@@ -26,6 +26,37 @@ const friendByUserTableSelection = {
   uId: true,
 };
 
-const queries = { mutualFriendsSelection, friendByUserTableSelection };
+const isFriendedWhereCondition = (uId: number) => {
+  return {
+    OR: [
+      {
+        friendId: uId,
+      },
+      {
+        userId: uId,
+      },
+    ],
+  };
+};
+
+const suggestionAccountIncludation = {
+  friend: {
+    include: {
+      friendedBy: true,
+    },
+  },
+  user: {
+    include: {
+      friendedBy: true,
+    },
+  },
+};
+
+const queries = {
+  mutualFriendsSelection,
+  friendByUserTableSelection,
+  isFriendedWhereCondition,
+  suggestionAccountIncludation,
+};
 
 export default queries;
