@@ -21,8 +21,13 @@ router.put(
 );
 router.get(
   '/:gId',
-  [validate(schema.group.groupDataSchema)],
+  [validate(schema.group.groupIdOnlySchema)],
   controllers.group.getGroupData,
+);
+router.delete(
+  '/:gId',
+  [validate(schema.group.groupIdOnlySchema)],
+  controllers.group.deleteGroup,
 );
 
 export default router;

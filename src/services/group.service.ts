@@ -29,6 +29,7 @@ export const createGroup = async (
           aId: account.aId,
           uId,
           isAdmin: true,
+          acceptedInvitation: true,
         },
       },
     },
@@ -43,7 +44,7 @@ export const createGroup = async (
 /**
  * Searches for groups where the User uId has admin permissions
  * Won't check if uId is valid or not
- * Only checks groups where the user accepted the invitation regardless the permission status
+ * Only checks groups where the user accepted the invitation
  * @param uId User id
  * @returns standard group format
  */
@@ -60,6 +61,18 @@ export const findGroupsAdministratedByUId = async (uId: number) => {
     },
   });
   return groups;
+};
+
+export const checkGroupExists = async (gId: number) => {
+  return (await db.group.findFirst({ where: { gId } })) != null;
+};
+
+export const deleteGroup = async (gId: number) => {
+  await db.group.delete({
+    where: {
+      gId,
+    },
+  });
 };
 
 export const findGroupsByUId = async (uId: number) => {

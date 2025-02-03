@@ -1,6 +1,6 @@
 import {
   createGroupSchema,
-  groupDataSchema,
+  groupIdOnlySchema,
   inviteAcceptGroupSchema,
   inviteGroupSchema,
 } from '../schema/group.schema';
@@ -14,5 +14,5 @@ export type inviteGroupType = Zod.infer<inviteGroupBody>;
 type inviteAcceptGroupBody = typeof inviteAcceptGroupSchema.shape.body;
 export type inviteAcceptType = Zod.infer<inviteAcceptGroupBody>;
 
-type groupDataParams = typeof groupDataSchema.shape.params;
-export type groupDataType = Zod.infer<groupDataParams>;
+type groupIdOnlyParams = typeof groupIdOnlySchema.shape.params;
+export type groupIdOnlyType = Zod.infer<groupIdOnlyParams>;

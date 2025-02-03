@@ -42,7 +42,7 @@ export const inviteAcceptGroupSchema = object({
   }),
 });
 
-export const groupDataSchema = object({
+export const groupIdOnlySchema = object({
   params: object({
     gId: coerce.number({
       invalid_type_error: 'Groupe-Id Datentyp ungültig',

@@ -3,7 +3,7 @@ import catchAsync from '../utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import {
   createGroupType,
-  groupDataType,
+  groupIdOnlyType,
   inviteAcceptType,
   inviteGroupType,
 } from '../types/group';
@@ -77,7 +77,7 @@ export const putInviteAcceptGroup = catchAsync(
 );
 
 export const getGroupData = catchAsync(
-  async (req: Request<groupDataType>, res: Response, _next: NextFunction) => {
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
     const { gId } = req.params;
     const { aId } = req.user as Account;
     const { uId } = await service.user.findUserByAId(aId);
@@ -91,5 +91,25 @@ export const getGroupData = catchAsync(
     );
     const group = await service.group.loadAllData(gId);
     return res.status(OK).json(group);
+  },
+);
+
+export const deleteGroup = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { gId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const groupExists = await service.group.checkGroupExists(gId);
+    assert(groupExists, new ApiError(NOT_FOUND, 'Gruppe existiert nicht'));
+    const groupsAdministratedBy =
+      await service.group.findGroupsAdministratedByUId(uId);
+    console.log(groupsAdministratedBy);
+    const hasAdminRights = groupsAdministratedBy.some((g) => g.gId === gId);
+    assert(hasAdminRights, new ApiError(UNAUTHORIZED, 'Kein Admin der Gruppe'));
+
+    await service.group.deleteGroup(gId);
+
+    return res.status(OK).json({ message: 'Gruppe gelöscht' });
   },
 );
