@@ -351,11 +351,8 @@ export const modifyRequest = async (
       });
       break;
     case ABO_REQUEST_MODIFY.DELETE:
-      await db.aboRequest.update({
+      await db.aboRequest.delete({
         ...whereCondition,
-        data: {
-          state: ABO_REQUEST_STATE.DELETED,
-        },
       });
       break;
   }

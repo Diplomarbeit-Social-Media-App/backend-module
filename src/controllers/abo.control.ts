@@ -3,7 +3,6 @@ import {
   ABO_FILTER_SCHEMA,
   ABO_REQUEST_STATE,
   deleteAboType,
-  deleteRequestType,
   getForeignProfileType,
   postAboType,
   requestStateType,
@@ -131,39 +130,6 @@ export const getForeignProfile = catchAsync(
       mutualContacts: [...mutualFriends, ...mutualHosts],
       allContacts,
     });
-  },
-);
-
-export const deleteRequest = catchAsync(
-  async (
-    req: Request<deleteRequestType>,
-    res: Response,
-    _next: NextFunction,
-  ) => {
-    const { aId } = req.user as Account;
-    const { frId } = req.params;
-
-    const user = await service.user.findUserByAId(aId);
-    const request = await service.abo.loadRequestById(frId);
-
-    assert(
-      request.fromUserId == user.uId,
-      new ApiError(UNAUTHORIZED, 'Die Anfrage wurde nicht von dir gestellt'),
-    );
-
-    assert(
-      request.state == ABO_REQUEST_STATE.PENDING,
-      new ApiError(CONFLICT, 'Nur das löschen von offenen Anfragen erlaubt'),
-    );
-
-    assert(
-      !(await service.abo.isFriendedWith(user.uId, request.toUserId)),
-      new ApiError(CONFLICT, 'Bitte entferne stattdessen deinen Freund'),
-    );
-
-    await service.abo.deleteAboRequest(frId);
-
-    return res.status(OK).json({});
   },
 );
 

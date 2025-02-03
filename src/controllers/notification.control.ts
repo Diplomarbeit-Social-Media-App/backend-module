@@ -17,6 +17,7 @@ export const postNotificationToken = catchAsync(
   ) => {
     const { token } = req.body;
     const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
     const foundToken = await service.token.findNotificationToken(aId);
     if (foundToken != null)
       await service.token.deleteTokensOfType(aId, TOKEN_TYPES.NOTIFICATION);
@@ -27,6 +28,7 @@ export const postNotificationToken = catchAsync(
       token,
       TOKEN_TYPES.NOTIFICATION,
     );
+    await service.notification.handleUserSubscription(uId);
     return res.status(OK).json({});
   },
 );

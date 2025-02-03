@@ -1,4 +1,4 @@
-import { object, string } from 'zod';
+import { coerce, object, string } from 'zod';
 import validator from 'validator';
 
 export const createGroupSchema = object({
@@ -13,5 +13,40 @@ export const createGroupSchema = object({
       .nullable()
       .default("Let's go partying gurrl!"),
     picture: string({ required_error: 'Gruppenbild fehlt' }).nullable(),
+  }),
+});
+
+export const inviteGroupSchema = object({
+  body: object({
+    gId: coerce.number({
+      invalid_type_error: 'Groupe-Id Datentyp ungültig',
+      required_error: 'Gruppen-Id fehlt',
+    }),
+    userName: string({
+      required_error: 'Username fehlt',
+      invalid_type_error: 'Username Datentyp ungültig',
+    }),
+  }),
+});
+
+export const inviteAcceptGroupSchema = object({
+  body: object({
+    gId: coerce.number({
+      invalid_type_error: 'Groupe-Id Datentyp ungültig',
+      required_error: 'Gruppen-Id fehlt',
+    }),
+    accept: coerce.boolean({
+      required_error: 'Acceptance fehlt',
+      invalid_type_error: 'Acceptance Datentyp ungültig',
+    }),
+  }),
+});
+
+export const groupDataSchema = object({
+  params: object({
+    gId: coerce.number({
+      invalid_type_error: 'Groupe-Id Datentyp ungültig',
+      required_error: 'Gruppen-Id fehlt',
+    }),
   }),
 });
