@@ -33,7 +33,7 @@ export const postCreateGroup = catchAsync(
 
 export const postInviteGroup = catchAsync(
   async (req: Request<object, object, inviteGroupType>, res, _next) => {
-    const { gId, userName } = req.body;
+    const { gId, userName, hasAdminPermission } = req.body;
     const { aId, userName: ownUserName } = req.user as Account;
 
     const user = await service.user.findUserByAId(aId);
@@ -49,7 +49,7 @@ export const postInviteGroup = catchAsync(
       found,
       new ApiError(NOT_FOUND, `Du bist nicht der Besitzer einer Gruppe ${gId}`),
     );
-    await service.group.inviteByUserName(gId, userName);
+    await service.group.inviteByUserName(gId, userName, hasAdminPermission);
 
     return res.status(OK).json({});
   },

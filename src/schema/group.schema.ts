@@ -26,6 +26,12 @@ export const inviteGroupSchema = object({
       required_error: 'Username fehlt',
       invalid_type_error: 'Username Datentyp ungültig',
     }),
+    hasAdminPermission: coerce
+      .boolean({
+        required_error: 'Admin-Permission fehlt',
+        invalid_type_error: 'Admin-Permission Datentyp ungültig',
+      })
+      .default(false),
   }),
 });
 

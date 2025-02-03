@@ -140,7 +140,11 @@ export const acceptInvitation = async (gId: number, uId: number) => {
   });
 };
 
-export const inviteByUserName = async (gId: number, userName: string) => {
+export const inviteByUserName = async (
+  gId: number,
+  userName: string,
+  adminPerm: boolean,
+) => {
   const acc = await db.account.findUnique({
     where: {
       userName,
@@ -165,6 +169,7 @@ export const inviteByUserName = async (gId: number, userName: string) => {
       gId,
       aId: acc.aId,
       uId: acc.user.uId,
+      isAdmin: adminPerm,
     },
   });
 };
