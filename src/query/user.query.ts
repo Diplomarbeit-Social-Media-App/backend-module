@@ -5,6 +5,7 @@ const publicInformationSelection = {
       firstName: true,
       userName: true,
       description: true,
+      loginOs: true,
     },
   },
 };

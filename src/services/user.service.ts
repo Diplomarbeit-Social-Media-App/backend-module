@@ -2,7 +2,7 @@ import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import service from './index';
-import { Account, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import assert from 'node:assert';
 import { PublicUserInformationResponse } from '../types/user';
 import query from '../query';
