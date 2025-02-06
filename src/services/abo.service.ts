@@ -1,6 +1,6 @@
 import db from '../utils/db';
 import { BasicAccountRepresentation, extendedAboRequest } from '../types/abo';
-import { Prisma, User } from '@prisma/client';
+import { Friendship, Prisma, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
@@ -82,9 +82,10 @@ export const loadFriendships = async (
   });
 };
 
-export const findRandomUsers = async (
+export const findRandomUsersFilterFriends = async (
   USER_COUNT: number = 20,
   fromUId: number,
+  friends: number[],
 ): Promise<BasicAccountRepresentation[]> => {
   const allUserIds = await db.user.findMany({
     select: { uId: true },
@@ -117,9 +118,10 @@ export const findRandomUsers = async (
     },
     take: USER_COUNT,
   });
-  return users.map((user) => {
-    return { ...user, hId: null, isUserAccount: true };
-  });
+
+  return users
+    .map((user) => ({ ...user, hId: null, isUserAccount: true }))
+    .filter((u) => !friends.includes(u.uId));
 };
 
 export const findAllFriendsByUId = async (userId: number) => {
@@ -143,9 +145,7 @@ export const findAllFriendsByUId = async (userId: number) => {
     },
     select: query.abo.friendByUserTableSelection,
   });
-  return friends.map((fr) => {
-    return { ...fr, isUserAccount: true, hId: null };
-  });
+  return friends.map((fr) => ({ ...fr, isUserAccount: true, hId: null }));
 };
 
 export const findMutualFriends = async (fromId: number, toId: number) => {
@@ -229,12 +229,10 @@ const mapToBasicAccountFormat = (user: {
   return { ...user, hId: null, isUserAccount: true };
 };
 
-const findUserSuggestionsThroughFriends = async ({
-  uId,
-}: User): Promise<null | BasicAccountRepresentation[]> => {
-  const friends = await db.friendship.findMany({
-    where: query.abo.isFriendedWhereCondition(uId),
-  });
+const findUserSuggestionsThroughFriends = async (
+  { uId }: User,
+  friends: Friendship[],
+): Promise<null | BasicAccountRepresentation[]> => {
   if (!friends || friends.length == 0) return null;
 
   logger.debug(
@@ -271,6 +269,14 @@ const findUserSuggestionsThroughFriends = async ({
   const uniqueFiltered = foundUnknown
     .map((f) => (mappedToUnknownIds.includes(f.friend.uId) ? f.user : f.friend))
     .filter((f) => f.uId !== uId)
+    .filter(
+      (f) =>
+        !friends
+          .map((friend) =>
+            friend.friendId === uId ? friend.userId : friend.friendId,
+          )
+          .some((friend) => friend === f.uId),
+    )
     .map((v) => mapToBasicAccountFormat(v));
   return uniqueFiltered;
 };
@@ -278,13 +284,24 @@ const findUserSuggestionsThroughFriends = async ({
 export const findUniqueUserSuggestions = async (
   user: User,
 ): Promise<BasicAccountRepresentation[]> => {
+  const friends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(user.uId),
+  });
+  const mappedToUnknownIds = friends.map((f) =>
+    f.friendId === user.uId ? f.userId : f.friendId,
+  );
+
   let suggestions: BasicAccountRepresentation[] | null =
-    await findUserSuggestionsThroughFriends(user);
+    await findUserSuggestionsThroughFriends(user, friends);
 
   if (!suggestions) suggestions = [];
   if (suggestions.length < 20) {
     const rest = 20 - (suggestions?.length ?? 0);
-    const randoms = await findRandomUsers(rest, user.uId);
+    const randoms = await findRandomUsersFilterFriends(
+      rest,
+      user.uId,
+      mappedToUnknownIds,
+    );
     suggestions.push(...randoms);
   }
   return suggestions;
