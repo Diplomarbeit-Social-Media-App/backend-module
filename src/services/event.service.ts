@@ -187,6 +187,9 @@ export const findEventsPartUser = async (uId: number) => {
         },
       },
     },
+    orderBy: {
+      startsAt: 'desc',
+    },
     select: {
       coverImage: true,
       name: true,

@@ -148,7 +148,10 @@ export const findAllFriendsByUId = async (userId: number) => {
   return friends.map((fr) => ({ ...fr, isUserAccount: true, hId: null }));
 };
 
-export const findMutualFriends = async (fromId: number, toId: number) => {
+export const findMutualFriends = async (
+  fromId: number,
+  toId: number,
+): Promise<BasicAccountRepresentation[]> => {
   const fromFriends = await db.friendship.findMany({
     where: {
       OR: [{ friendId: fromId }, { userId: fromId }],

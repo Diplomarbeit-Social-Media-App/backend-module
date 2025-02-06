@@ -98,9 +98,13 @@ export const getForeignProfile = catchAsync(
     const requestingUser = await service.user.findUserByAId(aId);
     const [fuId, ruId] = [foreignUser.uId, requestingUser.uId];
 
+    assert(fuId !== ruId, new ApiError(CONFLICT, 'Dein eigenes Profil'));
+
     const publicInformation = await service.user.getUserPublicInformation(uId);
 
     const isFriendedWith = await service.abo.isFriendedWith(fuId, ruId);
+
+    const followerCount = (await service.abo.loadFriendships(uId))?.length ?? 0;
 
     const openAboReq =
       (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)) != null;
@@ -109,18 +113,27 @@ export const getForeignProfile = catchAsync(
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
 
     let allContacts: null | unknown[] = null;
+    let participatingEvents: null | unknown[] = null;
+
+    const events = await service.event.findEventsPartUser(uId);
+    const eventCount = events.length;
+
     if (isFriendedWith) {
       const friends = await service.abo.findAllFriendsByUId(fuId);
       const hosts = await service.host.findAllFollowedHostsByUid(fuId);
-      allContacts = [...friends, ...hosts];
+      allContacts = [...friends.filter((f) => f.uId !== ruId), ...hosts];
+      participatingEvents = [...events];
     }
 
     return res.status(OK).json({
       ...publicInformation,
       isFriendedWith,
       hasPendingAboReq: openAboReq,
+      followerCount,
+      eventCount,
       mutualContacts: [...mutualFriends, ...mutualHosts],
       allContacts,
+      participatingEvents,
     });
   },
 );
