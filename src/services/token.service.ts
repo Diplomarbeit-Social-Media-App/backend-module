@@ -9,6 +9,17 @@ import assert from 'assert';
 
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
 
+export const updateNotificationToken = async (aId: number, token: string) => {
+  const created = await createToken(
+    aId,
+    dayjs().add(270, 'day').toDate(),
+    dayjs().toDate(),
+    token,
+    TOKEN_TYPES.NOTIFICATION,
+  );
+  return created;
+};
+
 export const findNotificationToken = async (
   aId: number,
 ): Promise<string | null> => {

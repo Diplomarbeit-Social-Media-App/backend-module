@@ -27,13 +27,15 @@ export const findUserByUserName = async (userName: string) => {
   return found;
 };
 
-export const findUser = async (
-  userName: string,
-  password: string,
-): Promise<Account> => {
+export const findUser = async (userName: string, password: string) => {
   const found = await db.account.findFirst({
     where: {
       userName,
+    },
+    include: {
+      user: {
+        select: { uId: true },
+      },
     },
   });
   if (!found) throw new ApiError(NOT_FOUND, 'Username oder Passwort falsch');
