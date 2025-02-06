@@ -10,6 +10,12 @@ import assert from 'assert';
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
 
 export const updateNotificationToken = async (aId: number, token: string) => {
+  await db.token.deleteMany({
+    where: {
+      aId,
+      type: TOKEN_TYPES.NOTIFICATION.toString(),
+    },
+  });
   const created = await createToken(
     aId,
     dayjs().add(270, 'day').toDate(),
