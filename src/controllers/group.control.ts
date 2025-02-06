@@ -173,3 +173,27 @@ export const getUserGroups = catchAsync(
     return res.status(OK).json(groups);
   },
 );
+
+export const deleteLeaveGroup = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { gId } = req.params;
+
+    const group = await service.group.findGroupsByUId(uId);
+    const foundGroup = group.find((g) => g.gId === gId);
+    const memberOfGroup = foundGroup != null;
+
+    assert(
+      foundGroup && memberOfGroup,
+      new ApiError(NOT_FOUND, 'Gruppe nicht gefunden'),
+    );
+
+    const { admins, nonAdmins } = await service.group.leaveGroup(uId, gId);
+    if (admins + nonAdmins === 0) await service.group.deleteGroup(gId);
+    if (admins === 0 && nonAdmins > 0)
+      await service.group.assignRandomAdmin(gId);
+
+    return res.status(OK).json({});
+  },
+);

@@ -120,18 +120,40 @@ export const isInvitedOrMember = async (gId: number, uId: number) => {
   };
 };
 
-// export const isAssociatedWithGroup = async (gId: number, uId: number) => {
-//   const group = await db.group.findFirst({
-//     where: {
-//       gId,
-//     },
-//     include: {
-//       members: true,
-//     },
-//   });
-//   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
-//   return group.owningUser === uId || group.members.some((m) => m.uId === uId);
-// };
+export const assignRandomAdmin = async (gId: number) => {
+  const member = await db.groupMember.findFirst({
+    where: { gId, isAdmin: false },
+  });
+  if (!member) throw new ApiError(INTERNAL_SERVER_ERROR, 'Kein Admin ernannt');
+  await db.groupMember.update({
+    where: {
+      gmId: member.gmId,
+    },
+    data: {
+      isAdmin: true,
+    },
+  });
+};
+
+export const leaveGroup = async (uId: number, gId: number) => {
+  await db.groupMember.deleteMany({
+    where: { uId, gId },
+  });
+  const remaining = await db.groupMember.findMany({
+    where: { gId },
+    select: {
+      isAdmin: true,
+    },
+  });
+  const data = remaining.reduce(
+    (acc, user) =>
+      user.isAdmin
+        ? { admins: acc.admins + 1, nonAdmins: acc.nonAdmins }
+        : { nonAdmins: acc.nonAdmins + 1, admins: acc.admins },
+    { admins: 0, nonAdmins: 0 },
+  );
+  return data;
+};
 
 export const deleteInvitation = async (gId: number, uId: number) => {
   await db.groupMember.deleteMany({

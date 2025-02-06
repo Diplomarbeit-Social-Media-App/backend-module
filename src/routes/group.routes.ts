@@ -25,6 +25,11 @@ router.get(
   controllers.group.getGroupData,
 );
 router.delete(
+  '/leave/:gId',
+  validate(schema.group.groupIdOnlySchema),
+  controllers.group.deleteLeaveGroup,
+);
+router.delete(
   '/:gId',
   [validate(schema.group.groupIdOnlySchema)],
   controllers.group.deleteGroup,
