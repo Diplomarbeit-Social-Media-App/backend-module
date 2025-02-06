@@ -34,5 +34,6 @@ router.put(
   [validate(schema.group.generalEditGroupSchema)],
   controllers.group.putEditGroup,
 );
+router.get('/', controllers.group.getUserGroups);
 
 export default router;

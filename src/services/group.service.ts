@@ -4,6 +4,7 @@ import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import { generalEditGroupType } from '../types/group';
+import query from '../query';
 
 export const createGroup = async (
   name: string,
@@ -72,6 +73,19 @@ export const deleteGroup = async (gId: number) => {
   await db.group.delete({
     where: {
       gId,
+    },
+  });
+};
+
+export const findGroupsByUIdSimpleFormat = async (uId: number) => {
+  return await db.group.findMany({
+    select: query.group.simpleGroupSelection,
+    where: {
+      members: {
+        some: {
+          uId,
+        },
+      },
     },
   });
 };

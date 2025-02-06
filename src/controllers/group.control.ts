@@ -13,6 +13,7 @@ import service from '../services';
 import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import logger from '../logger';
+import { omit } from 'lodash';
 
 export const postCreateGroup = catchAsync(
   async (
@@ -154,5 +155,21 @@ export const putEditGroup = catchAsync(
     await service.group.editGroup(gId, edit, setAdmin);
 
     return res.status(OK).json({});
+  },
+);
+
+export const getUserGroups = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const user = await service.user.findUserByAId(aId);
+
+    const groups = (
+      await service.group.findGroupsByUIdSimpleFormat(user.uId)
+    ).map((group) => ({
+      ...omit(group, '_count'),
+      members: group._count.members,
+    }));
+
+    return res.status(OK).json(groups);
   },
 );
