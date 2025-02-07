@@ -10,6 +10,7 @@ import * as activityService from './activity.service';
 import * as groupService from './group.service';
 import * as notificationService from './notification.service';
 import * as adminService from './admin.service';
+import * as locationService from './location.service';
 
 const service = {
   user: userService,
@@ -24,6 +25,7 @@ const service = {
   group: groupService,
   notification: notificationService,
   admin: adminService,
+  loc: locationService,
 };
 
 export default service;

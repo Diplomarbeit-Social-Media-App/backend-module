@@ -4,6 +4,8 @@ import {
   groupIdOnlySchema,
   inviteAcceptGroupSchema,
   inviteGroupSchema,
+  postAttachPublicEventSchema,
+  generalAttachmentData,
 } from '../schema/group.schema';
 
 type createGroupBody = typeof createGroupSchema.shape.body;
@@ -20,3 +22,8 @@ export type groupIdOnlyType = Zod.infer<groupIdOnlyParams>;
 
 type generalEditGroupBody = typeof generalEditGroupSchema.shape.body;
 export type generalEditGroupType = Zod.infer<generalEditGroupBody>;
+
+type postAttachPublicEventBody = typeof postAttachPublicEventSchema.shape.body;
+export type attachPublicEventType = Zod.infer<postAttachPublicEventBody>;
+
+export type generalAttachmentDataType = Zod.infer<typeof generalAttachmentData>;

@@ -1,7 +1,8 @@
-import { CONFLICT, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
+import { CONFLICT, CREATED, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
 import catchAsync from '../utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import {
+  attachPublicEventType,
   createGroupType,
   generalEditGroupType,
   groupIdOnlyType,
@@ -14,6 +15,7 @@ import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import logger from '../logger';
 import { omit } from 'lodash';
+import dayjs from 'dayjs';
 
 export const postCreateGroup = catchAsync(
   async (
@@ -203,5 +205,49 @@ export const deleteLeaveGroup = catchAsync(
       await service.group.assignRandomAdmin(gId);
 
     return res.status(OK).json({});
+  },
+);
+
+export const postAttachEvent = catchAsync(
+  async (
+    req: Request<object, object, attachPublicEventType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { eId, gId, meetingPoint, meetingTime, pollEndsAt } = req.body;
+    const { aId, userName } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const group = await service.group.findGroupByGId(gId);
+    const isMember = group.members.find((m) => m.uId === uId);
+    assert(
+      isMember && isMember.acceptedInvitation,
+      new ApiError(UNAUTHORIZED, 'Kein Mitglied der Gruppe'),
+    );
+    assert(
+      isMember.isAdmin,
+      new ApiError(UNAUTHORIZED, 'Unzureichend Berechtigungen'),
+    );
+
+    const event = await service.event.findEventByEId(eId);
+    const hasPassed = dayjs(event.endsAt).isBefore(dayjs());
+    assert(!hasPassed, new ApiError(CONFLICT, 'Event bereits vorbei'));
+
+    const location = await service.loc.findLocationByLId(event.lId);
+
+    const eventAttachedYet = group.events
+      .filter((e) => e.eId)
+      .find((e) => e.eId === eId);
+    assert(
+      !eventAttachedYet,
+      new ApiError(CONFLICT, 'Event bereits in dieser Gruppe'),
+    );
+
+    await service.group.attachPublicEvent(gId, userName, event, location, {
+      meetingPoint,
+      meetingTime,
+      pollEndsAt,
+    });
+
+    return res.status(CREATED).json({ message: 'Event hinzugefügt' });
   },
 );

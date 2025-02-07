@@ -2,6 +2,7 @@ import { Router } from 'express';
 import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import schema from '../schema';
+import { postAttachPublicEventSchema } from '../schema/group.schema';
 const router = Router();
 
 router.post(
@@ -40,5 +41,14 @@ router.put(
   controllers.group.putEditGroup,
 );
 router.get('/', controllers.group.getUserGroups);
+
+/**
+ * Event/ Activity actions such as posting, reacting etc
+ */
+router.post(
+  '/events',
+  [validate(postAttachPublicEventSchema)],
+  controllers.group.postAttachEvent,
+);
 
 export default router;

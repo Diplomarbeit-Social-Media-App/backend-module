@@ -3,9 +3,13 @@ import db from '../utils/db';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
-import { generalEditGroupType } from '../types/group';
+import {
+  generalAttachmentDataType,
+  generalEditGroupType,
+} from '../types/group';
 import query from '../query';
 import { omit } from 'lodash';
+import { Event, Location } from '@prisma/client';
 
 export const createGroup = async (
   name: string,
@@ -78,6 +82,20 @@ export const deleteGroup = async (gId: number) => {
   });
 };
 
+export const findGroupByGId = async (gId: number) => {
+  const group = await db.group.findFirst({
+    where: {
+      gId,
+    },
+    include: {
+      events: true,
+      members: true,
+    },
+  });
+  assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} nicht gefunden`));
+  return group;
+};
+
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {
   return await db.group.findMany({
     select: query.group.simpleGroupSelection(uId),
@@ -89,6 +107,37 @@ export const findGroupsByUIdSimpleFormat = async (uId: number) => {
       },
     },
   });
+};
+
+export const attachPublicEvent = async (
+  gId: number,
+  userName: string,
+  event: Event,
+  loc: Location,
+  additionalData: generalAttachmentDataType,
+) => {
+  const { city, country, houseNumber, postCode, street } = loc;
+  const { meetingPoint, meetingTime, pollEndsAt } = additionalData;
+  const attached = await db.attachedEvent.create({
+    data: {
+      isPublic: true,
+      suggestedBy: userName,
+      name: event.name,
+      description: event.description,
+      image: event.coverImage,
+      gId,
+      city,
+      houseNumber,
+      postCode,
+      country,
+      street,
+      eId: event.eId,
+      meetingPoint,
+      meetingTime: String(meetingTime),
+      pollEndsAt,
+    },
+  });
+  return attached;
 };
 
 export const findGroupsByUId = async (uId: number) => {
