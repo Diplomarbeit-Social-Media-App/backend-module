@@ -56,3 +56,14 @@ export const broadcastMessage = async (title: string, message: string) => {
     tokens,
   });
 };
+
+export const sendMessage = async (
+  token: string,
+  title: string,
+  message: string,
+) => {
+  return await messaging.send({
+    notification: { title, body: message },
+    token,
+  });
+};

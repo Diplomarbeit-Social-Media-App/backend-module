@@ -6,3 +6,9 @@ export const postNotificationSchema = object({
     message: string({ message: 'Message invalid' }),
   }),
 });
+
+export const userNameParamSchema = object({
+  params: object({
+    userName: string({ message: 'Username invalid' }),
+  }),
+});

@@ -22,8 +22,10 @@ export const findUserByUId = async (uId: number): Promise<User> => {
 
 export const findUserByUserName = async (userName: string) => {
   const found = await db.account.findFirst({ where: { userName } });
-  if (!found || found.disabled)
-    return Promise.reject('User nicht gefunden oder gesperrt');
+  assert(
+    found && !found.disabled,
+    new ApiError(UNAUTHORIZED, 'User nicht gefunden oder gesperrt'),
+  );
   return found;
 };
 
