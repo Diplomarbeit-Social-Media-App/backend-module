@@ -107,7 +107,6 @@ export const deleteGroup = catchAsync(
     assert(groupExists, new ApiError(NOT_FOUND, 'Gruppe existiert nicht'));
     const groupsAdministratedBy =
       await service.group.findGroupsAdministratedByUId(uId);
-    console.log(groupsAdministratedBy);
     const hasAdminRights = groupsAdministratedBy.some((g) => g.gId === gId);
     assert(hasAdminRights, new ApiError(UNAUTHORIZED, 'Kein Admin der Gruppe'));
 
