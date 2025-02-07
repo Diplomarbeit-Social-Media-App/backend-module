@@ -48,7 +48,7 @@ export const postHostRating = catchAsync(
     const { hId, points, description } = req.body;
     // find uId -> check if user account available
     const user = await service.user.findUserByAId(aId);
-    await service.host.createHostRating(hId, points, description, user.uId);
+    await service.host.createHostRating(hId, points, description!, user.uId);
     return res.status(CREATED).json({});
   },
 );

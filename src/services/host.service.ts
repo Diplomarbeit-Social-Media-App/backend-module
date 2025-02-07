@@ -155,7 +155,7 @@ export const deleteHostRating = async (hostId: number, fromId: number) => {
 export const createHostRating = async (
   hostId: number,
   points: number,
-  description: string | undefined,
+  description: string | null,
   fromId: number,
 ) => {
   const hasRatedYet = await db.hostRating.findMany({
