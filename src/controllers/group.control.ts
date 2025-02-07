@@ -163,12 +163,20 @@ export const getUserGroups = catchAsync(
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
 
-    const groups = (
-      await service.group.findGroupsByUIdSimpleFormat(user.uId)
-    ).map((group) => ({
-      ...omit(group, '_count'),
-      members: group._count.members,
-    }));
+    const raw = await service.group.findGroupsByUIdSimpleFormat(user.uId);
+    const groups = raw.map((group) => {
+      const member = group.members.at(0);
+      assert(member, new ApiError(NOT_FOUND, 'Fehler beim Laden der Gruppen'));
+
+      const { isAdmin, acceptedInvitation: hasAcceptedInvitation } = member;
+      const members = group._count.members;
+      return {
+        ...omit(group, '_count', 'members'),
+        members,
+        isAdmin,
+        hasAcceptedInvitation,
+      };
+    });
 
     return res.status(OK).json(groups);
   },

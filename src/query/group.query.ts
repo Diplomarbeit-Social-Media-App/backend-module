@@ -1,4 +1,4 @@
-const simpleGroupSelection = {
+const simpleGroupSelection = (uId: number) => ({
   _count: {
     select: {
       members: true,
@@ -8,7 +8,16 @@ const simpleGroupSelection = {
   name: true,
   picture: true,
   description: true,
-};
+  members: {
+    where: {
+      uId,
+    },
+    select: {
+      acceptedInvitation: true,
+      isAdmin: true,
+    },
+  },
+});
 
 const queries = { simpleGroupSelection };
 

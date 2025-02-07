@@ -79,7 +79,7 @@ export const deleteGroup = async (gId: number) => {
 
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {
   return await db.group.findMany({
-    select: query.group.simpleGroupSelection,
+    select: query.group.simpleGroupSelection(uId),
     where: {
       members: {
         some: {
