@@ -36,3 +36,23 @@ const subscribeToGroups = (token: string, groups: { gId: number }[]) => {
     messaging.subscribeToTopic(token, `g-${gId}-all`),
   );
 };
+
+export const findAllFcmTokens = async () => {
+  const tokens = await db.token.findMany({
+    where: {
+      type: TOKEN_TYPES.NOTIFICATION.toString(),
+    },
+    select: {
+      token: true,
+    },
+  });
+  return tokens.map((t) => t.token);
+};
+
+export const broadcastMessage = async (title: string, message: string) => {
+  const tokens = await findAllFcmTokens();
+  return await messaging.sendEachForMulticast({
+    notification: { title, body: message },
+    tokens,
+  });
+};

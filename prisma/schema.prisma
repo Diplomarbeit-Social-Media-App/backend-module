@@ -74,6 +74,7 @@ model Account {
   user               User?
   createdAt          DateTime            @default(now())
   groupMember        GroupMember[]
+  admin              AdminProfile?
 }
 
 model Message {
@@ -98,6 +99,12 @@ model Activity {
   location     Location   @relation(fields: [locationId], references: [lId])
   groups       Group[]    @relation("AttachedActivites")
   category     Category[] @relation("BelongsToCategory")
+}
+
+model AdminProfile {
+  aaId    Int     @id @default(autoincrement())
+  aId     Int     @unique
+  account Account @relation(fields: [aId], references: [aId])
 }
 
 model Category {

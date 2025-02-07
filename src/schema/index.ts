@@ -6,6 +6,7 @@ import * as eventSchema from './event.schema';
 import * as groupSchema from './group.schema';
 import * as hostSchema from './host.schema';
 import * as notificationSchema from './notification.schema';
+import * as adminSchema from './admin.schema';
 
 export default {
   abo: aboSchema,
@@ -16,4 +17,5 @@ export default {
   group: groupSchema,
   host: hostSchema,
   notification: notificationSchema,
+  admin: adminSchema,
 };

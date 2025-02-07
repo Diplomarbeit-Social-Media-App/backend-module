@@ -7,7 +7,8 @@ import hostRoutes from './host.routes';
 import activityRoutes from './activity.routes';
 import notificationRoutes from './notification.routes';
 import groupRoutes from './group.routes';
-import { hasValidAccunt } from '../middlewares/permission';
+import adminRoutes from './admin.routes';
+import { hasValidAccunt, isAdmin } from '../middlewares/permission';
 
 const allRoutes = Router();
 
@@ -19,5 +20,6 @@ allRoutes.use('/host', hasValidAccunt, hostRoutes);
 allRoutes.use('/activity', hasValidAccunt, activityRoutes);
 allRoutes.use('/notification', hasValidAccunt, notificationRoutes);
 allRoutes.use('/group', hasValidAccunt, groupRoutes);
+allRoutes.use('/admin', isAdmin, adminRoutes);
 
 export default allRoutes;
