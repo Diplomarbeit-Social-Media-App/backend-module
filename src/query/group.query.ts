@@ -19,6 +19,21 @@ const simpleGroupSelection = (uId: number) => ({
   },
 });
 
-const queries = { simpleGroupSelection };
+const richFormatSelection = {
+  gId: true,
+  name: true,
+  picture: true,
+  description: true,
+  _count: {
+    select: {
+      activities: true,
+      events: true,
+      members: true,
+      messages: true,
+    },
+  },
+};
+
+const queries = { simpleGroupSelection, richFormatSelection };
 
 export default queries;

@@ -5,6 +5,7 @@ import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import { generalEditGroupType } from '../types/group';
 import query from '../query';
+import { omit } from 'lodash';
 
 export const createGroup = async (
   name: string,
@@ -212,25 +213,21 @@ export const inviteByUserName = async (
 };
 
 export const loadAllData = async (gId: number) => {
-  return await db.group.findFirst({
+  const group = await db.group.findFirst({
     where: {
       gId,
     },
-    select: {
-      gId: true,
-      name: true,
-      picture: true,
-      description: true,
-      _count: {
-        select: {
-          activities: true,
-          events: true,
-          members: true,
-          messages: true,
-        },
-      },
-    },
+    select: query.group.richFormatSelection,
   });
+  assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
+  const count = group._count;
+  const data = {
+    activityCount: count.activities,
+    eventCount: count.events,
+    memberCount: count.members,
+    messageCount: count.messages,
+  };
+  return { ...omit(group, '_count'), ...data };
 };
 
 export const editGroup = async (

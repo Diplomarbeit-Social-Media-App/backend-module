@@ -93,6 +93,7 @@ export const getGroupData = catchAsync(
       new ApiError(UNAUTHORIZED, 'Kein Mitglied der Gruppe'),
     );
     const group = await service.group.loadAllData(gId);
+
     return res.status(OK).json(group);
   },
 );
