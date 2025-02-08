@@ -2,7 +2,10 @@ import { Router } from 'express';
 import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import schema from '../schema';
-import { postAttachPublicEventSchema } from '../schema/group.schema';
+import {
+  participateAttachedEventSchema,
+  postAttachPublicEventSchema,
+} from '../schema/group.schema';
 const router = Router();
 
 router.post(
@@ -49,6 +52,11 @@ router.post(
   '/events',
   [validate(postAttachPublicEventSchema)],
   controllers.group.postAttachEvent,
+);
+router.post(
+  '/participate/event',
+  [validate(participateAttachedEventSchema)],
+  controllers.group.postParticipateAttachedEvent,
 );
 
 export default router;

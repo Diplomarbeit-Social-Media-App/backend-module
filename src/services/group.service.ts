@@ -6,6 +6,7 @@ import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import {
   generalAttachmentDataType,
   generalEditGroupType,
+  participateAttachedEventType,
 } from '../types/group';
 import query from '../query';
 import { omit } from 'lodash';
@@ -225,6 +226,51 @@ export const acceptInvitation = async (gId: number, uId: number) => {
       acceptedInvitation: true,
     },
   });
+};
+
+export const findAttachedEventByAEId = async (aeId: number) => {
+  const event = await db.attachedEvent.findFirst({
+    where: { aeId },
+    include: { event: true, Group: { include: { members: true } } },
+  });
+  assert(event, new ApiError(NOT_FOUND, `Event ${aeId} not found`));
+  return event;
+};
+
+export const hasEventParticipationEntry = async (aeId: number, uId: number) => {
+  return await db.groupEventParticipation.findFirst({
+    where: {
+      aeId,
+      uId,
+    },
+  });
+};
+
+export const participateAttachedEvent = async (
+  uId: number,
+  gmId: number,
+  aId: number,
+  data: participateAttachedEventType,
+  oldGevId?: number,
+) => {
+  const upserted = await db.groupEventParticipation.upsert({
+    where: {
+      gevId: oldGevId ?? -1,
+    },
+    update: {
+      pickupOutbound: data.pickupOutbound,
+      pickupReturn: data.pickupOutbound,
+      vote: data.participation,
+    },
+    create: {
+      uId,
+      aId,
+      gmId,
+      ...omit(data, 'participation'),
+      vote: data.participation,
+    },
+  });
+  return upserted.vote;
 };
 
 export const inviteByUserName = async (

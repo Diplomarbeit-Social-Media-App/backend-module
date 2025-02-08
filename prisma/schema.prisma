@@ -27,20 +27,20 @@ model Location {
 }
 
 model User {
-  uId                 Int              @id @default(autoincrement())
-  aId                 Int              @unique
-  sentAboRequests     AboRequest[]     @relation("FromUserFA")
-  receivedAboRequests AboRequest[]     @relation("ToUserFA")
-  friendedBy          Friendship[]     @relation("UserFriendedBy")
-  friends             Friendship[]     @relation("UserFriends")
-  groups              GroupMember[]
-  HostRating          HostRating[]
-  Message             Message[]
-  notifications       Notification[]
-  account             Account          @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  followedHosts       Host[]           @relation("HostFollowers")
-  events              Event[]          @relation("Participates")
-  groupEventVotes     GroupEventVote[]
+  uId                     Int                       @id @default(autoincrement())
+  aId                     Int                       @unique
+  sentAboRequests         AboRequest[]              @relation("FromUserFA")
+  receivedAboRequests     AboRequest[]              @relation("ToUserFA")
+  friendedBy              Friendship[]              @relation("UserFriendedBy")
+  friends                 Friendship[]              @relation("UserFriends")
+  groups                  GroupMember[]
+  HostRating              HostRating[]
+  Message                 Message[]
+  notifications           Notification[]
+  account                 Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  followedHosts           Host[]                    @relation("HostFollowers")
+  events                  Event[]                   @relation("Participates")
+  groupEventParticipation GroupEventParticipation[]
 }
 
 model Host {
@@ -57,26 +57,26 @@ model Host {
 }
 
 model Account {
-  aId                Int                 @id @default(autoincrement())
-  userName           String              @unique
-  firstName          String
-  lastName           String
-  password           String
-  email              String              @unique
-  description        String
-  picture            String?
-  dateOfBirth        DateTime
-  disabled           Boolean             @default(false)
-  activated          Boolean             @default(false)
-  loginOs            String              @default("web")
-  host               Host?
-  passwordResetToken PasswordResetToken?
-  token              Token[]             @relation("UserTokens")
-  user               User?
-  createdAt          DateTime            @default(now())
-  groupMember        GroupMember[]
-  admin              AdminProfile?
-  groupEventVotes    GroupEventVote[]
+  aId                     Int                       @id @default(autoincrement())
+  userName                String                    @unique
+  firstName               String
+  lastName                String
+  password                String
+  email                   String                    @unique
+  description             String
+  picture                 String?
+  dateOfBirth             DateTime
+  disabled                Boolean                   @default(false)
+  activated               Boolean                   @default(false)
+  loginOs                 String                    @default("web")
+  host                    Host?
+  passwordResetToken      PasswordResetToken?
+  token                   Token[]                   @relation("UserTokens")
+  user                    User?
+  createdAt               DateTime                  @default(now())
+  groupMember             GroupMember[]
+  admin                   AdminProfile?
+  groupEventParticipation GroupEventParticipation[]
 }
 
 model Message {
@@ -172,48 +172,54 @@ model Group {
 }
 
 model AttachedEvent {
-  aeId         Int      @id @default(autoincrement())
-  suggestedBy  String
-  isPublic     Boolean
-  gId          Int
-  Group        Group    @relation(fields: [gId], references: [gId], onDelete: Cascade)
-  eId          Int
-  event        Event    @relation(fields: [eId], references: [eId], onDelete: Cascade)
-  pollEndsAt   DateTime
-  image        String?
-  name         String
-  description  String?
-  country      String   @default("Austria")
-  street       String
-  postCode     String
-  city         String
-  houseNumber  String
-  meetingPoint String
-  meetingTime  String
+  aeId           Int                       @id @default(autoincrement())
+  suggestedBy    String
+  isPublic       Boolean
+  gId            Int
+  Group          Group                     @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  eId            Int
+  event          Event                     @relation(fields: [eId], references: [eId], onDelete: Cascade)
+  pollEndsAt     DateTime
+  image          String?
+  name           String
+  description    String?
+  country        String                    @default("Austria")
+  street         String
+  postCode       String
+  city           String
+  houseNumber    String
+  meetingPoint   String
+  meetingTime    String
+  participations GroupEventParticipation[]
 }
 
-model GroupEventVote {
-  gevId          Int     @id @default(autoincrement())
+model GroupEventParticipation {
+  gevId          Int           @id @default(autoincrement())
   uId            Int
   aId            Int
-  user           User    @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  account        Account @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  gmId           Int
+  aeId           Int
+  user           User          @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  account        Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  groupMember    GroupMember   @relation(fields: [gmId], references: [gmId], onDelete: Cascade)
   vote           Boolean
-  pickupOutbound Boolean @default(false)
-  pickupReturn   Boolean @default(false)
+  pickupOutbound Boolean       @default(false)
+  pickupReturn   Boolean       @default(false)
+  AttachedEvent  AttachedEvent @relation(fields: [aeId], references: [aeId], onDelete: Cascade)
 }
 
 model GroupMember {
-  gmId               Int      @id @default(autoincrement())
-  uId                Int
-  aId                Int
-  gId                Int
-  isAdmin            Boolean  @default(false)
-  acceptedInvitation Boolean  @default(false)
-  invitedAt          DateTime @default(now())
-  group              Group    @relation(fields: [gId], references: [gId], onDelete: Cascade)
-  user               User     @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  account            Account  @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  gmId                Int                       @id @default(autoincrement())
+  uId                 Int
+  aId                 Int
+  gId                 Int
+  isAdmin             Boolean                   @default(false)
+  acceptedInvitation  Boolean                   @default(false)
+  invitedAt           DateTime                  @default(now())
+  group               Group                     @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  user                User                      @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  account             Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  eventParticipations GroupEventParticipation[]
 }
 
 model Notification {
