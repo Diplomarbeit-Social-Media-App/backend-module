@@ -2,23 +2,42 @@ import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import httpStatus, { NOT_FOUND, UNAUTHORIZED } from 'http-status';
 import service from './index';
-import { Account } from '@prisma/client';
+import { User } from '@prisma/client';
 import assert from 'node:assert';
+import { PublicUserInformationResponse } from '../types/user';
+import query from '../query';
+
+export const findUserByUId = async (uId: number): Promise<User> => {
+  const user = await db.user.findUnique({
+    where: {
+      uId,
+    },
+  });
+  assert(
+    user != null,
+    new ApiError(NOT_FOUND, 'Kein User-Profil für die ID gefunden'),
+  );
+  return user;
+};
 
 export const findUserByUserName = async (userName: string) => {
   const found = await db.account.findFirst({ where: { userName } });
-  if (!found || found.disabled)
-    return Promise.reject('User nicht gefunden oder gesperrt');
+  assert(
+    found && !found.disabled,
+    new ApiError(UNAUTHORIZED, 'User nicht gefunden oder gesperrt'),
+  );
   return found;
 };
 
-export const findUser = async (
-  userName: string,
-  password: string,
-): Promise<Account> => {
+export const findUser = async (userName: string, password: string) => {
   const found = await db.account.findFirst({
     where: {
       userName,
+    },
+    include: {
+      user: {
+        select: { uId: true },
+      },
     },
   });
   if (!found) throw new ApiError(NOT_FOUND, 'Username oder Passwort falsch');
@@ -45,6 +64,24 @@ export const findUserByAId = async (aId: number) => {
     new ApiError(NOT_FOUND, 'Kein User-Profil für die ID gefunden'),
   );
   return user;
+};
+
+/**
+ * Please notice that this function mostly returns data saved in 'Account' table
+ * @param uId unique pk of user
+ * @throws ApiError 404 if no user was found with this uId
+ */
+export const getUserPublicInformation = async (
+  uId: number,
+): Promise<PublicUserInformationResponse> => {
+  const user = await db.user.findFirst({
+    where: {
+      uId,
+    },
+    select: query.user.publicInformationSelection,
+  });
+  assert(user && user.account, new ApiError(NOT_FOUND, 'User not found'));
+  return user.account;
 };
 
 export const createUserByAccount = async (accountId: number) => {

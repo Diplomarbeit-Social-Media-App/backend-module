@@ -13,7 +13,8 @@ export const hostRatingSchema = object({
     description: coerce
       .string()
       .max(1024, { message: 'Beschreibung zu lang' })
-      .optional(),
+      .optional()
+      .nullable(),
     hId: coerce.number({ message: 'Host-Id fehlt' }),
   }),
 });

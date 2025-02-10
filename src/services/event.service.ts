@@ -13,6 +13,14 @@ import dayjs from 'dayjs';
 import { User } from '@prisma/client';
 import assert from 'assert';
 
+export const findEventByEId = async (eId: number) => {
+  const event = await db.event.findFirst({
+    where: { eId },
+  });
+  assert(event, new ApiError(NOT_FOUND, `Event ${eId} nicht gefunden`));
+  return event;
+};
+
 export const hasAttendance = async (
   aId: number,
   eId: number,
@@ -120,7 +128,7 @@ export const participateEvent = async (
       _count: {
         select: {
           users: true,
-          groups: true,
+          attachedEvents: true,
         },
       },
     },
@@ -186,6 +194,9 @@ export const findEventsPartUser = async (uId: number) => {
           uId,
         },
       },
+    },
+    orderBy: {
+      startsAt: 'desc',
     },
     select: {
       coverImage: true,

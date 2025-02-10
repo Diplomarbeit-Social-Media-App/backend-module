@@ -30,4 +30,8 @@ export const env = object({
   ACTIVATION_EXP_MINUTES: coerce.number({
     message: 'Activation expiration in minutes must be provided',
   }),
+  FIREBASE_ADMIN: string({
+    message:
+      'FIREBASE_ADMIN must be defined either as path to file (not prod) or a string representing the object in prod',
+  }),
 });

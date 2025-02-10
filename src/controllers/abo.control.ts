@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import {
-  ABO_FILTER_SCHEMA,
-  ABO_REQUEST_STATE,
   deleteAboType,
-  deleteRequestType,
+  getForeignProfileType,
   postAboType,
   requestStateType,
   searchType,
@@ -19,7 +17,7 @@ export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
-    const userSuggestions = await service.abo.findUserSuggestions(user);
+    const userSuggestions = await service.abo.findUniqueUserSuggestions(user);
     const hostSuggestions = await service.abo.findHostSuggestions(user);
     return res
       .status(OK)
@@ -33,7 +31,7 @@ export const putRequestState = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { frId, state } = req.body;
+    const { frId, accept } = req.body;
     const { aId } = req.user as Account;
     const aboRequest = await service.abo.loadRequestById(frId);
     const { fromUser, toUser } = aboRequest;
@@ -49,7 +47,7 @@ export const putRequestState = catchAsync(
       !isFriendedAlready,
       new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
     );
-    await service.abo.modifyRequest(aboRequest, state);
+    await service.abo.modifyRequest(aboRequest, accept);
     return res.status(OK).json({});
   },
 );
@@ -63,13 +61,9 @@ export const getSearchByUserName = catchAsync(
 );
 
 export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
-  const { filter } = req.params;
   const { aId } = req.user as Account;
-  const aboRequests = await service.abo.loadAboRequests(
-    filter as unknown as ABO_FILTER_SCHEMA,
-    aId,
-  );
-  return res.status(200).json({ requests: aboRequests });
+  const aboRequests = await service.abo.loadOpenAboRequests(aId);
+  return res.status(200).json(aboRequests);
 });
 
 /**
@@ -91,36 +85,56 @@ export const postAboRequests = catchAsync(
   },
 );
 
-export const deleteRequest = catchAsync(
+export const getForeignProfile = catchAsync(
   async (
-    req: Request<deleteRequestType>,
+    req: Request<getForeignProfileType>,
     res: Response,
     _next: NextFunction,
   ) => {
+    const { uId } = req.params;
     const { aId } = req.user as Account;
-    const { frId } = req.params;
 
-    const user = await service.user.findUserByAId(aId);
-    const request = await service.abo.loadRequestById(frId);
+    const foreignUser = await service.user.findUserByUId(uId);
+    const requestingUser = await service.user.findUserByAId(aId);
+    const [fuId, ruId] = [foreignUser.uId, requestingUser.uId];
 
-    assert(
-      request.fromUserId == user.uId,
-      new ApiError(UNAUTHORIZED, 'Die Anfrage wurde nicht von dir gestellt'),
-    );
+    assert(fuId !== ruId, new ApiError(CONFLICT, 'Dein eigenes Profil'));
 
-    assert(
-      request.state == ABO_REQUEST_STATE.PENDING,
-      new ApiError(CONFLICT, 'Nur das löschen von offenen Anfragen erlaubt'),
-    );
+    const publicInformation = await service.user.getUserPublicInformation(uId);
 
-    assert(
-      !(await service.abo.isFriendedWith(user.uId, request.toUserId)),
-      new ApiError(CONFLICT, 'Bitte entferne stattdessen deinen Freund'),
-    );
+    const isFriendedWith = await service.abo.isFriendedWith(fuId, ruId);
 
-    await service.abo.deleteAboRequest(frId);
+    const followerCount = (await service.abo.loadFriendships(uId))?.length ?? 0;
 
-    return res.status(OK).json({});
+    const openAboReq =
+      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)) != null;
+
+    const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
+    const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
+
+    let allContacts: null | unknown[] = null;
+    let participatingEvents: null | unknown[] = null;
+
+    const events = await service.event.findEventsPartUser(uId);
+    const eventCount = events.length;
+
+    if (isFriendedWith) {
+      const friends = await service.abo.findAllFriendsByUId(fuId);
+      const hosts = await service.host.findAllFollowedHostsByUid(fuId);
+      allContacts = [...friends.filter((f) => f.uId !== ruId), ...hosts];
+      participatingEvents = [...events];
+    }
+
+    return res.status(OK).json({
+      ...publicInformation,
+      isFriendedWith,
+      hasPendingAboReq: openAboReq,
+      followerCount,
+      eventCount,
+      mutualContacts: [...mutualFriends, ...mutualHosts],
+      allContacts,
+      participatingEvents,
+    });
   },
 );
 

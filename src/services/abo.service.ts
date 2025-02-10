@@ -1,22 +1,11 @@
 import db from '../utils/db';
-import {
-  ABO_FILTER_SCHEMA,
-  ABO_REQUEST_MODIFY,
-  ABO_REQUEST_STATE,
-  BasicAccountRepresentation,
-  extendedAboRequest,
-  getFilterValues,
-} from '../types/abo';
-import { Prisma, User } from '@prisma/client';
+import { BasicAccountRepresentation, extendedAboRequest } from '../types/abo';
+import { Friendship, Prisma, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
-import {
-  ACCEPTED,
-  CONFLICT,
-  INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
-} from 'http-status';
+import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import logger from '../logger';
+import query from '../query';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -93,21 +82,30 @@ export const loadFriendships = async (
   });
 };
 
-export const findRandomUsers = async (
+export const findRandomUsersFilterFriends = async (
   USER_COUNT: number = 20,
+  fromUId: number,
+  friends: number[],
 ): Promise<BasicAccountRepresentation[]> => {
   const allUserIds = await db.user.findMany({
     select: { uId: true },
-    take: 20_000,
+    take: 5_000,
   });
+
   const idArray = allUserIds.map((user) => user.uId);
-  if (idArray.length === 0) {
-    throw new ApiError(NOT_FOUND, 'Keine User gefunden');
-  }
-  const randomIds = shuffleArray(idArray).slice(0, USER_COUNT);
+  if (idArray.length === 0) return [];
+
+  const randomIds = shuffleArray(idArray);
 
   const users = await db.user.findMany({
-    where: { uId: { in: randomIds } },
+    where: {
+      uId: { in: randomIds },
+      friendedBy: {
+        none: { OR: [{ friendId: fromUId }, { userId: fromUId }] },
+      },
+      friends: { none: { OR: [{ friendId: fromUId }, { userId: fromUId }] } },
+      NOT: { uId: fromUId },
+    },
     select: {
       uId: true,
       account: {
@@ -118,10 +116,84 @@ export const findRandomUsers = async (
         },
       },
     },
+    take: USER_COUNT,
   });
-  return users.map((user) => {
-    return { ...user, hId: null, isUserAccount: true };
+
+  return users
+    .map((user) => ({ ...user, hId: null, isUserAccount: true }))
+    .filter((u) => !friends.includes(u.uId));
+};
+
+export const findAllFriendsByUId = async (userId: number) => {
+  const friendsId = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: userId }, { userId: userId }],
+    },
+    select: {
+      friendId: true,
+      userId: true,
+    },
   });
+  const mappedForeignId = friendsId.map(({ friendId, userId: friendedId }) =>
+    friendId == userId ? friendedId : friendId,
+  );
+  const friends = await db.user.findMany({
+    where: {
+      uId: {
+        in: mappedForeignId,
+      },
+    },
+    select: query.abo.friendByUserTableSelection,
+  });
+  return friends.map((fr) => ({ ...fr, isUserAccount: true, hId: null }));
+};
+
+export const findMutualFriends = async (
+  fromId: number,
+  toId: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const fromFriends = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: fromId }, { userId: fromId }],
+    },
+    select: query.abo.mutualFriendsSelection,
+  });
+  const toFriends = await db.friendship.findMany({
+    where: {
+      OR: [{ friendId: toId }, { userId: toId }],
+    },
+    select: query.abo.mutualFriendsSelection,
+  });
+  const mapped: number[] = toFriends.map((fr) => {
+    return fr.friendId == toId ? fr.userId : fr.friendId;
+  });
+
+  return fromFriends
+    .filter((fr) => {
+      const valued = fr.friendId == fromId ? fr.userId : fr.friendId;
+      return mapped.includes(valued);
+    })
+    .map((fr) => {
+      return { ...fr.user, isUserAccount: true, hId: null };
+    });
+};
+
+export const hasSentRequestToUser = async (uId1: number, uId2: number) => {
+  const abos = await db.aboRequest.findMany({
+    where: {
+      OR: [
+        {
+          fromUserId: uId1,
+          toUserId: uId2,
+        },
+        {
+          fromUserId: uId2,
+          toUserId: uId1,
+        },
+      ],
+    },
+  });
+  return abos;
 };
 
 export const findHostSuggestions = async (
@@ -153,140 +225,107 @@ export const findHostSuggestions = async (
   });
 };
 
-export const findUserSuggestions = async (
-  user: User,
-): Promise<BasicAccountRepresentation[]> => {
-  const USER_COUNT = 20;
+const mapToBasicAccountFormat = (user: {
+  uId: number;
+  account: { aId: number; picture: string | null; userName: string };
+}): BasicAccountRepresentation => {
+  return { ...user, hId: null, isUserAccount: true };
+};
 
-  const mapOutput = (user: {
-    uId: number;
-    account: { aId: number; picture: string | null; userName: string };
-  }): BasicAccountRepresentation => {
-    return { ...user, hId: null, isUserAccount: true };
-  };
+const findUserSuggestionsThroughFriends = async (
+  { uId }: User,
+  friends: Friendship[],
+): Promise<null | BasicAccountRepresentation[]> => {
+  if (!friends || friends.length == 0) return null;
 
-  const friends = await db.friendship.findMany({
+  logger.debug(
+    `{AboService | findUserSuggestionsThroughFriends} - amount of friends: ${friends?.length ?? 0}`,
+  );
+
+  const mappedToUnknownIds = friends.map((f) =>
+    f.friendId === uId ? f.userId : f.friendId,
+  );
+
+  const foundUnknown = await db.friendship.findMany({
     where: {
-      OR: [
-        {
-          friendId: user.uId,
-        },
-        {
-          userId: user.uId,
-        },
-      ],
-    },
-    include: {
-      friend: {
-        include: {
-          friendedBy: true,
-        },
+      friendId: {
+        in: mappedToUnknownIds,
       },
-      user: {
-        include: {
-          friendedBy: true,
-        },
-      },
-    },
-  });
-  if (friends.length == 0)
-    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
-
-  const mapedFriends = friends
-    .map((f) => (f.friend.uId == user.uId ? f.user : f.friend))
-    .map((f) => f.friendedBy)
-    .flatMap((f) => f.map((k) => k.userId))
-    .filter((id) => id != user.uId);
-
-  const foundFriends = await db.user.findMany({
-    where: {
-      uId: {
-        in: mapedFriends,
-      },
-      friendedBy: {
-        none: {
-          OR: [
-            {
-              friendId: user.uId,
-            },
-            {
-              userId: user.uId,
-            },
-          ],
-        },
+      userId: {
+        in: mappedToUnknownIds,
       },
     },
     select: {
-      uId: true,
-      account: {
-        select: {
-          picture: true,
-          userName: true,
-          aId: true,
-        },
+      user: {
+        select: query.abo.friendByUserTableSelection,
+      },
+      friend: {
+        select: query.abo.friendByUserTableSelection,
       },
     },
-    take: USER_COUNT,
   });
-  if (foundFriends.length == 0)
-    return (await findRandomUsers()).filter((f) => f.uId != user.uId);
-  if (foundFriends.length < USER_COUNT) {
-    const addRandoms = await findRandomUsers(USER_COUNT - foundFriends.length);
-    return [
-      ...foundFriends.filter((f) => f.uId != user.uId).map((v) => mapOutput(v)),
-      ...addRandoms.filter((f) => f.uId != user.uId),
-    ];
+
+  logger.debug(
+    `{AboService | findUserSuggestionsThroughFriends} - found friend of friends: ${foundUnknown.length}`,
+  );
+
+  const uniqueFiltered = foundUnknown
+    .map((f) => (mappedToUnknownIds.includes(f.friend.uId) ? f.user : f.friend))
+    .filter((f) => f.uId !== uId)
+    .filter(
+      (f) =>
+        !friends
+          .map((friend) =>
+            friend.friendId === uId ? friend.userId : friend.friendId,
+          )
+          .some((friend) => friend === f.uId),
+    )
+    .map((v) => mapToBasicAccountFormat(v));
+  return uniqueFiltered;
+};
+
+export const findUniqueUserSuggestions = async (
+  user: User,
+): Promise<BasicAccountRepresentation[]> => {
+  const friends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(user.uId),
+  });
+  const mappedToUnknownIds = friends.map((f) =>
+    f.friendId === user.uId ? f.userId : f.friendId,
+  );
+
+  let suggestions: BasicAccountRepresentation[] | null =
+    await findUserSuggestionsThroughFriends(user, friends);
+
+  if (!suggestions) suggestions = [];
+  if (suggestions.length < 20) {
+    const rest = 20 - (suggestions?.length ?? 0);
+    const randoms = await findRandomUsersFilterFriends(
+      rest,
+      user.uId,
+      mappedToUnknownIds,
+    );
+    suggestions.push(...randoms);
   }
-  return foundFriends.map((v) => mapOutput(v));
+  return suggestions;
 };
 
 export const modifyRequest = async (
   aboRequest: extendedAboRequest,
-  state: ABO_REQUEST_MODIFY,
+  accept: boolean,
 ) => {
-  assert(
-    aboRequest.state == ABO_REQUEST_STATE.PENDING,
-    new ApiError(CONFLICT, 'Anfrage wurde schon bearbeitet'),
-  );
-  const whereCondition = {
-    where: {
-      frId: aboRequest.frId,
-    },
-  };
-  switch (state) {
-    case ABO_REQUEST_MODIFY.ACCEPT:
-      await db.$transaction([
-        db.aboRequest.update({
-          ...whereCondition,
-          data: {
-            state: ABO_REQUEST_STATE.ACCEPTED,
-          },
-        }),
-        db.friendship.create({
-          data: {
-            userId: aboRequest.fromUserId,
-            friendId: aboRequest.toUserId,
-          },
-        }),
-      ]);
-      break;
-    case ABO_REQUEST_MODIFY.DECLINE:
-      await db.aboRequest.update({
-        ...whereCondition,
+  await db.$transaction(async (tx) => {
+    if (accept)
+      await tx.friendship.create({
         data: {
-          state: ABO_REQUEST_STATE.DECLINED,
+          friendId: aboRequest.toUserId,
+          userId: aboRequest.fromUserId,
         },
       });
-      break;
-    case ABO_REQUEST_MODIFY.DELETE:
-      await db.aboRequest.update({
-        ...whereCondition,
-        data: {
-          state: ABO_REQUEST_STATE.DELETED,
-        },
-      });
-      break;
-  }
+    await tx.aboRequest.delete({
+      where: { frId: aboRequest.frId },
+    });
+  });
 };
 
 export const loadRequestById = async (frId: number) => {
@@ -478,37 +517,22 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
     });
   }
 
-  const hasOpenRequests = aboRequests.some(
-    (r) => r.state == ABO_REQUEST_STATE.PENDING,
+  const hasOpenRequests = aboRequests != null;
+
+  const isFriendedAlready = await isFriendedWith(
+    fromUser.uId,
+    requestedUser.user.uId,
   );
-  const hasClosedRequests = aboRequests.some(
-    (r) =>
-      r.state == ABO_REQUEST_STATE.DECLINED ||
-      r.state == ABO_REQUEST_STATE.DELETED,
-  );
-  const isFriendedAlready = aboRequests.some((r) => r.state == ACCEPTED);
 
   if (hasOpenRequests)
     throw new ApiError(CONFLICT, 'Du hast bereits offene Anfrangen');
   if (isFriendedAlready)
     throw new ApiError(CONFLICT, 'Du bist bereits mit der Person befreundet');
-  if (hasClosedRequests)
-    throw new ApiError(
-      CONFLICT,
-      'Warte, bis die Person dir eine Anfrage schickt',
-    );
 };
 
-export const loadAboRequests = async (
-  filter: ABO_FILTER_SCHEMA,
-  aId: number,
-) => {
-  const filterValues = getFilterValues(filter);
+export const loadOpenAboRequests = async (aId: number) => {
   return await db.aboRequest.findMany({
     where: {
-      state: {
-        in: filterValues,
-      },
       AND: [
         {
           OR: [

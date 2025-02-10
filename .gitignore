@@ -5,3 +5,6 @@ dist/*
 logs/*
 *.log*
 coverage/*
+*key*
+.VSCodeCounter/*
+.vscode/*

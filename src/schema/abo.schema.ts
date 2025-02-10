@@ -1,40 +1,15 @@
-import zod, { coerce, nativeEnum, number, object, string } from 'zod';
-import { ABO_FILTER_SCHEMA, ABO_REQUEST_MODIFY } from '../types/abo';
-import { ApiError } from '../utils/apiError';
-import { BAD_REQUEST } from 'http-status';
+import { coerce, number, object, string } from 'zod';
 
 export const requestStateSchema = object({
   body: object({
     frId: number({ message: 'Abo-Request-Id fehlt' }),
-    state: nativeEnum(ABO_REQUEST_MODIFY, {
-      message: 'State-Wert ist von 0 bis 2',
-    }),
+    accept: coerce.boolean({ message: 'Das Feld `accept` fehlt' }),
   }),
 });
 
 export const searchSchema = object({
   params: object({
     userName: string({ message: 'Der Username fehlt' }),
-  }),
-});
-
-export const getAboSchema = object({
-  params: object({
-    filter: zod.preprocess(
-      (val) => {
-        const num = Number(val);
-        if (isNaN(num)) {
-          throw new ApiError(
-            BAD_REQUEST,
-            'Filter muss als Zahl mitgegeben werden',
-          );
-        }
-        return num;
-      },
-      nativeEnum(ABO_FILTER_SCHEMA, {
-        message: 'Gib einen gültigen Filter an',
-      }),
-    ),
   }),
 });
 
@@ -51,6 +26,15 @@ export const deleteRequestSchema = object({
     frId: coerce.number({
       invalid_type_error: 'Frid ist keine Nummer',
       required_error: 'Frid fehlt',
+    }),
+  }),
+});
+
+export const getForeignProfileSchema = object({
+  params: object({
+    uId: coerce.number({
+      invalid_type_error: 'User-id muss eine Nummer sein',
+      required_error: 'User-id fehlt',
     }),
   }),
 });

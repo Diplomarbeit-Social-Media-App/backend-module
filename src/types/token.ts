@@ -2,6 +2,7 @@ export enum TOKEN_TYPES {
   ACCESS,
   REFRESH,
   ACTIVATION,
+  NOTIFICATION,
 }
 
 /**

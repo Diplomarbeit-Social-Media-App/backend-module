@@ -5,18 +5,20 @@ import { handleSevereErrors } from './middlewares/error';
 import logger from './logger';
 import config from './config/config';
 import app from './server';
+import admin from './config/firebase';
+import { INTERNAL_SERVER_ERROR } from 'http-status';
 
 process.env.UV_THREADPOOL = `${cpus.length}`;
 const PORT = config.PORT;
 
 export const server = app.listen(PORT, async () => {
-  const health = await getHealthCheck();
-  if (!health) throw new ApiError(500, 'CONNECTION TO DATABASE FAILED!', false);
+  const dbHealth = await getHealthCheck();
+  if (!dbHealth)
+    throw new ApiError(INTERNAL_SERVER_ERROR, 'DB connection failed', false);
 
-  logger.info('✨ SERVICE CONNECTED TO DB');
-  logger.info(
-    `🚀 REST SERVICE SUCCESFULLY STARTED ON http://localhost:${PORT}/`,
-  );
+  admin();
+  logger.info('✨ Database initialized');
+  logger.info(`🚀 Service started on PORT :${PORT}`);
 });
 
 process.on('uncaughtException', (e: Error) => handleSevereErrors(e.message));

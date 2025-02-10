@@ -48,11 +48,15 @@ export const hasHostPermission = catchAsync(
   },
 );
 
-export const hasAdminPermission = catchAsync(
-  async (_req: Request, _res: Response, _next: NextFunction) => {
-    // const user = req.user;
-    // TODO: implement admin permission
+const hasAdminPermission = catchAsync(
+  async (req: Request, _res: Response, next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const admin = await service.admin.findAdminProfileByAId(aId);
+    assert(admin, new ApiError(UNAUTHORIZED, 'Unzureichend Rechte'));
+    next();
   },
 );
 
 export const hasValidAccunt = [auth, hasActivatedAccount, hasBlockedAccount];
+
+export const isAdmin = [...hasValidAccunt, hasAdminPermission];

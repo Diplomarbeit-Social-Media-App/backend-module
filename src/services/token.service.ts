@@ -3,10 +3,83 @@ import db from '../utils/db';
 import { TOKEN_TYPES } from '../types/token';
 import dayjs from 'dayjs';
 import { ApiError } from '../utils/apiError';
-import { TOO_EARLY } from 'http-status';
+import { INTERNAL_SERVER_ERROR, TOO_EARLY } from 'http-status';
 import config from '../config/config';
+import assert from 'assert';
 
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
+
+export const updateNotificationToken = async (aId: number, token: string) => {
+  await db.token.deleteMany({
+    where: {
+      aId,
+      type: TOKEN_TYPES.NOTIFICATION.toString(),
+    },
+  });
+  const created = await createToken(
+    aId,
+    dayjs().add(270, 'day').toDate(),
+    dayjs().toDate(),
+    token,
+    TOKEN_TYPES.NOTIFICATION,
+  );
+  return created;
+};
+
+export const findNotificationToken = async (
+  aId: number,
+): Promise<string | null> => {
+  const token = await db.token.findFirst({
+    where: {
+      account: {
+        aId,
+      },
+      type: TOKEN_TYPES.NOTIFICATION.toString(),
+    },
+    orderBy: {
+      iat: 'asc',
+    },
+  });
+  return token ? token.token : null;
+};
+
+export const deleteTokensOfType = async (
+  aId: number,
+  type: TOKEN_TYPES,
+): Promise<void> => {
+  await db.token.deleteMany({
+    where: {
+      account: {
+        aId,
+      },
+      type: type.toString(),
+    },
+  });
+};
+
+export const createToken = async (
+  aId: number,
+  exp: Date,
+  iat: Date,
+  token: string,
+  type: TOKEN_TYPES,
+): Promise<Token> => {
+  const created = await db.token.create({
+    data: {
+      aId,
+      exp,
+      iat,
+      token,
+      type: type.toString(),
+      backlisted: false,
+    },
+  });
+  assert(
+    created != null,
+    new ApiError(INTERNAL_SERVER_ERROR, 'Could not create notification token'),
+  );
+  return created;
+};
 
 export const upsertActivationToken = async (aId: number) => {
   const foundToken = await db.token.findFirst({

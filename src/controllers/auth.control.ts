@@ -174,6 +174,9 @@ export const postLogin = catchAsync(
       foundUser.aId,
     );
     await service.auth.updateLoginOs(foundUser.aId, data.loginOs);
+    const { fcmToken } = data;
+    if (fcmToken)
+      await service.token.updateNotificationToken(foundUser.aId, fcmToken);
 
     return res.status(200).json({ access, refresh });
   },

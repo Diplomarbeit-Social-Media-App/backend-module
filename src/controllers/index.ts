@@ -5,6 +5,8 @@ import * as groupController from './group.control';
 import * as hostController from './host.control';
 import * as activityController from './activity.control';
 import * as aboController from './abo.control';
+import * as notificationController from './notification.control';
+import * as adminController from './admin.control';
 
 const controllers = {
   auth: authController,
@@ -14,6 +16,8 @@ const controllers = {
   host: hostController,
   activity: activityController,
   abo: aboController,
+  notification: notificationController,
+  admin: adminController,
 };
 
 export default controllers;

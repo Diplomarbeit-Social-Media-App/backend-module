@@ -4,6 +4,7 @@ import db from '../utils/db';
 import assert from 'assert';
 import { Activity, User } from '@prisma/client';
 import service from '.';
+import query from '../query';
 
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({
@@ -154,7 +155,7 @@ export const deleteHostRating = async (hostId: number, fromId: number) => {
 export const createHostRating = async (
   hostId: number,
   points: number,
-  description: string | undefined,
+  description: string | null,
   fromId: number,
 ) => {
   const hasRatedYet = await db.hostRating.findMany({
@@ -188,6 +189,52 @@ export const createHostRating = async (
       hostId,
     },
   });
+};
+
+export const findAllFollowedHostsByUid = async (uId: number) => {
+  const hosts = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId,
+        },
+      },
+    },
+    select: query.host.mutualHostSelection,
+  });
+  return hosts.map((h) => {
+    return { ...h, isUserAccount: false, uId: null };
+  });
+};
+
+export const findMutualHosts = async (uId1: number, uId2: number) => {
+  const fromUser = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: uId1,
+        },
+      },
+    },
+  });
+  const toUser = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: uId2,
+        },
+      },
+    },
+    select: query.host.mutualHostSelection,
+  });
+
+  const mapped: number[] = fromUser.map((u) => u.hId);
+
+  return toUser
+    .filter((h) => mapped.includes(h.hId))
+    .map((h) => {
+      return { ...h, isUserAccount: false, uId: null };
+    });
 };
 
 export const loadHostDetails = async (hostName: string, fromName: string) => {
