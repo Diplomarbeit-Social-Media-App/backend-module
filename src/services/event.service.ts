@@ -105,6 +105,34 @@ export const participateEvent = async (
       hasAttendance ? 'Du nimmst bereits teil' : 'Du nimmst gerade nicht teil',
     );
 
+  const blockingGroup = await db.attachedEvent.findFirst({
+    where: {
+      eId,
+      participations: {
+        some: {
+          aId,
+          vote: {
+            equals: true,
+          },
+        },
+      },
+    },
+    select: {
+      Group: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (blockingGroup && !attendance) {
+    throw new ApiError(
+      CONFLICT,
+      `Von Gruppe ${blockingGroup.Group.name} blockiert`,
+    );
+  }
+
   const action = attendance ? { connect: { aId } } : { disconnect: { aId } };
 
   await db.event.update({
