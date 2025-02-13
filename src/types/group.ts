@@ -7,6 +7,7 @@ import {
   postAttachPublicEventSchema,
   generalAttachmentData,
   participateAttachedEventSchema,
+  kickUserGroupSchema,
 } from '../schema/group.schema';
 
 type createGroupBody = typeof createGroupSchema.shape.body;
@@ -33,3 +34,6 @@ type participateAttachedEventBody =
   typeof participateAttachedEventSchema.shape.body;
 export type participateAttachedEventType =
   Zod.infer<participateAttachedEventBody>;
+
+type kickUserGroupQuery = typeof kickUserGroupSchema.shape.query;
+export type kickUserGroupType = Zod.infer<kickUserGroupQuery>;

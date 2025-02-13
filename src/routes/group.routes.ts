@@ -34,6 +34,11 @@ router.delete(
   controllers.group.deleteLeaveGroup,
 );
 router.delete(
+  '/kick',
+  validate(schema.group.kickUserGroupSchema),
+  controllers.group.deleteKickUser,
+);
+router.delete(
   '/:gId',
   [validate(schema.group.groupIdOnlySchema)],
   controllers.group.deleteGroup,

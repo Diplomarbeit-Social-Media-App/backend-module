@@ -83,6 +83,11 @@ export const deleteGroup = async (gId: number) => {
   });
 };
 
+export const isAdminOfGroup = async (gId: number, uId: number) => {
+  const groups = await findGroupsAdministratedByUId(uId);
+  return groups.some((g) => g.gId === gId);
+};
+
 export const findGroupByGId = async (gId: number) => {
   const group = await db.group.findFirst({
     where: {
@@ -164,7 +169,10 @@ export const isInvitedOrMember = async (gId: number, uId: number) => {
   });
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
   const member = group.members.find((m) => m.uId == uId);
-  assert(member, new ApiError(CONFLICT, `Keine Einladung erhalten`));
+  assert(
+    member,
+    new ApiError(CONFLICT, `Keine Einladung noch Mitglied der Gruppe`),
+  );
   return {
     isInvited: !member.acceptedInvitation,
     isMember: member.acceptedInvitation,

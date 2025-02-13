@@ -16,6 +16,7 @@ import {
   groupIdOnlyType,
   inviteAcceptType,
   inviteGroupType,
+  kickUserGroupType,
   participateAttachedEventType,
 } from '../types/group';
 import { Account } from '@prisma/client';
@@ -165,6 +166,33 @@ export const putEditGroup = catchAsync(
 
     await service.group.editGroup(gId, edit, setAdmin);
 
+    return res.status(OK).json({});
+  },
+);
+
+export const deleteKickUser = catchAsync(
+  async (req, res: Response, _next: NextFunction) => {
+    const { gId, userName } = req.query as object as kickUserGroupType;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const isAdmin = await service.group.isAdminOfGroup(gId, uId);
+    assert(isAdmin, new ApiError(UNAUTHORIZED, 'Kein Admin dieser Gruppe'));
+    const target = await service.user.findUserByUserName(userName);
+    assert(
+      target.aId !== aId,
+      new ApiError(CONFLICT, 'Du darfst dich nicht selbst kicken'),
+    );
+    const { uId: targetUId } = await service.user.findUserByAId(target.aId);
+    const { isInvited, isMember } = await service.group.isInvitedOrMember(
+      gId,
+      targetUId,
+    );
+    assert(
+      isInvited || isMember,
+      new ApiError(NOT_FOUND, `User ${target.userName} nicht in der Gruppe`),
+    );
+    if (isInvited) await service.group.deleteInvitation(gId, targetUId);
+    if (isMember) await service.group.leaveGroup(targetUId, gId);
     return res.status(OK).json({});
   },
 );

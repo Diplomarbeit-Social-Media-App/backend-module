@@ -1,6 +1,13 @@
 import { coerce, object, string } from 'zod';
 import validator from 'validator';
 
+export const kickUserGroupSchema = object({
+  query: object({
+    gId: coerce.number({ message: 'Gruppen-id ist ungültig' }),
+    userName: string({ message: 'Username ist ungültig' }),
+  }),
+});
+
 export const createGroupSchema = object({
   body: object({
     name: string({ message: 'Gruppenname fehlt' })
