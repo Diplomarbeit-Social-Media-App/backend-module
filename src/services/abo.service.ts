@@ -533,22 +533,7 @@ export const sendAboRequest = async (fromUser: User, toUser: string) => {
 export const loadOpenAboRequests = async (aId: number) => {
   return await db.aboRequest.findMany({
     where: {
-      AND: [
-        {
-          OR: [
-            {
-              fromUser: {
-                aId: Number(aId),
-              },
-            },
-            {
-              toUser: {
-                aId: Number(aId),
-              },
-            },
-          ],
-        },
-      ],
+      fromUserId: aId,
     },
     select: {
       frId: true,
