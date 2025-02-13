@@ -33,7 +33,7 @@ export const loginSchema = object({
     loginOs: nativeEnum(LOGIN_OS, {
       message: 'Bitte gib ein gültiges Login-OS an',
     }).default(LOGIN_OS.WEB),
-    fcmToken: string({ message: 'Token ungültig ' }).optional(),
+    fcmToken: string({ message: 'Token ungültig ' }).optional().nullable(),
   }),
 });
 
