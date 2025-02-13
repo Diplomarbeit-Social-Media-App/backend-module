@@ -506,7 +506,7 @@ export const sendAboRequest = async (from: User, target: string) => {
 export const loadOpenAboRequests = async (uId: number) => {
   return await db.aboRequest.findMany({
     where: {
-      fromUserId: uId,
+      toUserId: uId,
     },
     select: {
       frId: true,
