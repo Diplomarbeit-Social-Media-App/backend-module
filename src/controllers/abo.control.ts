@@ -126,6 +126,7 @@ export const getForeignProfile = catchAsync(
     }
 
     return res.status(OK).json({
+      uId: fuId,
       ...publicInformation,
       isFriendedWith,
       hasPendingAboReq: openAboReq,
