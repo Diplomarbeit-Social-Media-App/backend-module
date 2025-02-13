@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import {
+  BasicAccountRepresentation,
   deleteAboType,
   getForeignProfileType,
   postAboType,
@@ -62,7 +63,8 @@ export const getSearchByUserName = catchAsync(
 
 export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
   const { aId } = req.user as Account;
-  const aboRequests = await service.abo.loadOpenAboRequests(aId);
+  const { uId } = await service.user.findUserByAId(aId);
+  const aboRequests = await service.abo.loadOpenAboRequests(uId);
   return res.status(200).json(aboRequests);
 });
 
