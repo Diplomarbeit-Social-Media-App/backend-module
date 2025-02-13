@@ -80,6 +80,7 @@ export const postAboRequests = catchAsync(
     const { aId } = req.user as Account;
 
     const user = await service.user.findUserByAId(aId);
+
     await service.abo.sendAboRequest(user, userName);
     return res.status(CREATED).json({});
   },

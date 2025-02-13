@@ -3,9 +3,10 @@ import { BasicAccountRepresentation, extendedAboRequest } from '../types/abo';
 import { Friendship, Prisma, User } from '@prisma/client';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
+import { CONFLICT, NOT_FOUND, TOO_EARLY } from 'http-status';
 import logger from '../logger';
 import query from '../query';
+import service from '.';
 
 function shuffleArray(array: number[]): number[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -465,69 +466,41 @@ export const loadAllReqWithUser = async (aId: number) => {
  * @param fromUser User-Account model, whoose owner wants to send the request
  * @param toUser the userName of user -> wants the be friended with
  */
-export const sendAboRequest = async (fromUser: User, toUser: string) => {
+export const sendAboRequest = async (from: User, target: string) => {
+  const toAccount = await service.user.findUserByUserName(target);
+  const to = await service.user.findUserByAId(toAccount.aId);
+
+  // check if user not the same as username
   assert(
-    fromUser && toUser,
-    new ApiError(
-      INTERNAL_SERVER_ERROR,
-      'Beide Argumente müssen gültige Werte besitzen',
-    ),
+    from.uId !== to.uId,
+    new ApiError(CONFLICT, 'Du kannst dir nicht selbst folgen'),
   );
-  const requestedUser = await db.account.findUnique({
+
+  // check if both are friended already
+  const aboEstablished = await isFriendedWith(from.uId, to.uId);
+  assert(
+    !aboEstablished,
+    new ApiError(CONFLICT, `Bereits mit ${target} befreundet`),
+  );
+
+  // check if friend request has been sent to target
+  const reqSent = await db.aboRequest.findFirst({
     where: {
-      userName: toUser,
-    },
-    include: {
-      user: true,
+      fromUserId: from.uId,
+      toUserId: to.uId,
     },
   });
   assert(
-    requestedUser && requestedUser.user,
-    new ApiError(NOT_FOUND, 'Account oder User nicht gefunden'),
+    !reqSent,
+    new ApiError(TOO_EARLY, `Deine Anfrage an ${target} wartet noch`),
   );
-  assert(
-    requestedUser.user.uId != fromUser.uId,
-    new ApiError(CONFLICT, 'Du kannst dir selber keine Anfragen schicken'),
-  );
-  const isFriended = await isFriendedWith(fromUser.uId, requestedUser.user.uId);
-  assert(!isFriended, new ApiError(CONFLICT, 'Ihr seid bereits befreundet'));
-  // has sent abo req to user
-  const aboRequests = await db.aboRequest.findMany({
-    where: {
-      fromUser: {
-        aId: fromUser.aId,
-      },
-      toUser: {
-        aId: requestedUser.aId,
-      },
+
+  return await db.aboRequest.create({
+    data: {
+      fromUserId: from.uId,
+      toUserId: to.uId,
     },
   });
-
-  if (!aboRequests || aboRequests.length == 0) {
-    logger.debug('New friend request is being created...');
-    return await db.aboRequest.create({
-      data: {
-        fromUserId: fromUser.uId,
-        toUserId: requestedUser.user.uId,
-      },
-      include: {
-        fromUser: true,
-        toUser: true,
-      },
-    });
-  }
-
-  const hasOpenRequests = aboRequests != null;
-
-  const isFriendedAlready = await isFriendedWith(
-    fromUser.uId,
-    requestedUser.user.uId,
-  );
-
-  if (hasOpenRequests)
-    throw new ApiError(CONFLICT, 'Du hast bereits offene Anfrangen');
-  if (isFriendedAlready)
-    throw new ApiError(CONFLICT, 'Du bist bereits mit der Person befreundet');
 };
 
 export const loadOpenAboRequests = async (aId: number) => {
