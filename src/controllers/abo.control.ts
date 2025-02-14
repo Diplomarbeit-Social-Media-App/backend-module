@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import {
-  BasicAccountRepresentation,
   deleteAboType,
   getForeignProfileType,
   postAboType,
@@ -109,8 +108,7 @@ export const getForeignProfile = catchAsync(
 
     const followerCount = (await service.abo.loadFriendships(uId))?.length ?? 0;
 
-    const openAboReq =
-      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)) != null;
+    const openAboReq = await service.abo.hasSentRequestToUser(ruId, fuId);
 
     const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);

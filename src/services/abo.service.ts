@@ -179,22 +179,14 @@ export const findMutualFriends = async (
     });
 };
 
-export const hasSentRequestToUser = async (uId1: number, uId2: number) => {
+export const hasSentRequestToUser = async (fromUId: number, toUId: number) => {
   const abos = await db.aboRequest.findMany({
     where: {
-      OR: [
-        {
-          fromUserId: uId1,
-          toUserId: uId2,
-        },
-        {
-          fromUserId: uId2,
-          toUserId: uId1,
-        },
-      ],
+      fromUserId: fromUId,
+      toUserId: toUId,
     },
   });
-  return abos;
+  return abos && abos.length > 0;
 };
 
 export const findHostSuggestions = async (
