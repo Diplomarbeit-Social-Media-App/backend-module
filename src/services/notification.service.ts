@@ -28,12 +28,20 @@ export const handleUserSubscription = async (uId: number) => {
   );
   assert(token, new ApiError(NOT_FOUND, 'Kein Notification-Token present'));
 
-  subscribeToGroups(token.token, user.groups);
+  handleGroupSubscription(token.token, uId);
 };
 
-const subscribeToGroups = (token: string, groups: { gId: number }[]) => {
-  groups.forEach(({ gId }) =>
-    messaging.subscribeToTopic(token, `g-${gId}-all`),
+const handleGroupSubscription = async (token: string, uId: number) => {
+  const groupTopics = await db.notificationGroupTopic.findMany({
+    where: {
+      uId,
+    },
+    select: {
+      topic: true,
+    },
+  });
+  await Promise.allSettled(
+    groupTopics.map(({ topic }) => messaging.subscribeToTopic(token, topic)),
   );
 };
 

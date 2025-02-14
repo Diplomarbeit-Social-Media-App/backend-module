@@ -225,13 +225,26 @@ export const deleteInvitation = async (gId: number, uId: number) => {
 };
 
 export const acceptInvitation = async (gId: number, uId: number) => {
-  await db.groupMember.updateMany({
+  const member = await db.groupMember.findFirst({
+    where: { uId, gId },
+  });
+  assert(member, new ApiError(NOT_FOUND, 'Einladung nicht gefunden'));
+
+  await db.groupMember.update({
     where: {
-      gId,
-      uId,
+      gmId: member.gmId,
     },
     data: {
       acceptedInvitation: true,
+      groupTopic: {
+        create: {
+          topic: `g-${gId}`,
+          uId,
+        },
+      },
+    },
+    include: {
+      groupTopic: true,
     },
   });
 };

@@ -26,6 +26,34 @@ model Location {
   Event       Event?
 }
 
+model NotificationGroupTopic {
+  ngtId  Int         @id @default(autoincrement())
+  topic  String
+  uId    Int
+  gmId   Int         @unique
+  user   User        @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  member GroupMember @relation(fields: [gmId], references: [gmId], onDelete: Cascade)
+}
+
+model NotificationEventTopic {
+  netId Int    @id @default(autoincrement())
+  topic String
+  uId   Int
+  eId   Int
+  user  User   @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  event Event  @relation(fields: [eId], references: [eId], onDelete: Cascade)
+}
+
+// model NotificationActivityTopic {
+//   natId Int    @id @default(autoincrement())
+//   topic String
+// }
+
+// model NotificationHostTopic {
+//   nhtId Int    @id @default(autoincrement())
+//   topic String
+// }
+
 model User {
   uId                     Int                       @id @default(autoincrement())
   aId                     Int                       @unique
@@ -41,6 +69,8 @@ model User {
   followedHosts           Host[]                    @relation("HostFollowers")
   events                  Event[]                   @relation("Participates")
   groupEventParticipation GroupEventParticipation[]
+  groupTopics             NotificationGroupTopic[]
+  eventTopics             NotificationEventTopic[]
 }
 
 model Host {
@@ -119,22 +149,23 @@ model Category {
 }
 
 model Event {
-  eId            Int             @id @default(autoincrement())
+  eId            Int                      @id @default(autoincrement())
   name           String
   startsAt       DateTime?
   endsAt         DateTime?
   description    String
   lId            Int
-  locationId     Int             @unique
+  locationId     Int                      @unique
   minAge         Int
   creatorId      Int
   coverImage     String?
   galleryImages  String[]
-  isPublic       Boolean         @default(false)
-  host           Host            @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
-  location       Location        @relation(fields: [locationId], references: [lId])
-  users          User[]          @relation("Participates")
+  isPublic       Boolean                  @default(false)
+  host           Host                     @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
+  location       Location                 @relation(fields: [locationId], references: [lId])
+  users          User[]                   @relation("Participates")
   attachedEvents AttachedEvent[]
+  eventTopics    NotificationEventTopic[]
 }
 
 model Friendship {
@@ -220,6 +251,7 @@ model GroupMember {
   user                User                      @relation(fields: [uId], references: [uId], onDelete: Cascade)
   account             Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
   eventParticipations GroupEventParticipation[]
+  groupTopic          NotificationGroupTopic?
 }
 
 model Notification {
