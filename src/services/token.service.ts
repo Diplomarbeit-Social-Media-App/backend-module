@@ -6,16 +6,18 @@ import { ApiError } from '../utils/apiError';
 import { INTERNAL_SERVER_ERROR, TOO_EARLY } from 'http-status';
 import config from '../config/config';
 import assert from 'assert';
+import service from '.';
 
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
 
 export const updateNotificationToken = async (aId: number, token: string) => {
   await db.token.deleteMany({
     where: {
-      aId,
       type: TOKEN_TYPES.NOTIFICATION.toString(),
+      token,
     },
   });
+
   const created = await createToken(
     aId,
     dayjs().add(270, 'day').toDate(),
@@ -23,6 +25,9 @@ export const updateNotificationToken = async (aId: number, token: string) => {
     token,
     TOKEN_TYPES.NOTIFICATION,
   );
+
+  setImmediate(() => service.notification.handleUserSubscription(aId));
+
   return created;
 };
 

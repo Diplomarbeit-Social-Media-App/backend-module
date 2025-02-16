@@ -7,10 +7,10 @@ import { TOKEN_TYPES } from '../types/token';
 
 const messaging = getFirebase().messaging();
 
-export const handleUserSubscription = async (uId: number) => {
+export const handleUserSubscription = async (aId: number) => {
   const user = await db.user.findUnique({
     where: {
-      uId,
+      aId,
     },
     include: {
       account: {
@@ -26,9 +26,9 @@ export const handleUserSubscription = async (uId: number) => {
   const token = user.account.token.find(
     (t) => t.type === TOKEN_TYPES.NOTIFICATION.toString(),
   );
-  assert(token, new ApiError(NOT_FOUND, 'Kein Notification-Token present'));
+  assert(token, new ApiError(NOT_FOUND, 'Kein Notification-Token vorhanden'));
 
-  handleGroupSubscription(token.token, uId);
+  handleGroupSubscription(token.token, user.uId);
 };
 
 const handleGroupSubscription = async (token: string, uId: number) => {
