@@ -15,6 +15,28 @@ model PasswordResetToken {
   account Account  @relation(fields: [aId], references: [aId], onDelete: Cascade)
 }
 
+model Notification {
+  ntId      Int      @id @default(autoincrement())
+  type      String
+  timeStamp DateTime @default(now())
+  seen      Boolean  @default(false)
+
+  targetId Int
+  target   User @relation("Targeted", fields: [targetId], references: [uId], onDelete: Cascade)
+
+  userId Int?
+  user   User? @relation("Referenced", fields: [userId], references: [uId], onDelete: Cascade)
+
+  groupId Int?
+  group   Group? @relation(fields: [groupId], references: [gId], onDelete: Cascade)
+
+  eventId Int?
+  event   Event? @relation(fields: [eventId], references: [eId], onDelete: Cascade)
+
+  hostId Int?
+  host   Host? @relation(fields: [hostId], references: [hId], onDelete: Cascade)
+}
+
 model Location {
   lId         Int       @id @default(autoincrement())
   city        String
@@ -26,34 +48,6 @@ model Location {
   Event       Event?
 }
 
-model NotificationGroupTopic {
-  ngtId  Int         @id @default(autoincrement())
-  topic  String
-  uId    Int
-  gmId   Int         @unique
-  user   User        @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  member GroupMember @relation(fields: [gmId], references: [gmId], onDelete: Cascade)
-}
-
-model NotificationEventTopic {
-  netId Int    @id @default(autoincrement())
-  topic String
-  uId   Int
-  eId   Int
-  user  User   @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  event Event  @relation(fields: [eId], references: [eId], onDelete: Cascade)
-}
-
-// model NotificationActivityTopic {
-//   natId Int    @id @default(autoincrement())
-//   topic String
-// }
-
-// model NotificationHostTopic {
-//   nhtId Int    @id @default(autoincrement())
-//   topic String
-// }
-
 model User {
   uId                     Int                       @id @default(autoincrement())
   aId                     Int                       @unique
@@ -64,26 +58,26 @@ model User {
   groups                  GroupMember[]
   HostRating              HostRating[]
   Message                 Message[]
-  notifications           Notification[]
   account                 Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
   followedHosts           Host[]                    @relation("HostFollowers")
   events                  Event[]                   @relation("Participates")
   groupEventParticipation GroupEventParticipation[]
-  groupTopics             NotificationGroupTopic[]
-  eventTopics             NotificationEventTopic[]
+  notifications           Notification[]            @relation("Targeted")
+  linkedNotifications     Notification[]            @relation("Referenced")
 }
 
 model Host {
-  hId         Int           @id @default(autoincrement())
-  aId         Int           @unique
-  verified    Boolean       @default(false)
-  companyName String
-  Activity    Activity[]
-  Event       Event[]
-  account     Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  HostRating  HostRating[]
-  SocialLinks SocialLinks[]
-  followedBy  User[]        @relation("HostFollowers")
+  hId          Int            @id @default(autoincrement())
+  aId          Int            @unique
+  verified     Boolean        @default(false)
+  companyName  String
+  Activity     Activity[]
+  Event        Event[]
+  account      Account        @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  HostRating   HostRating[]
+  SocialLinks  SocialLinks[]
+  followedBy   User[]         @relation("HostFollowers")
+  Notification Notification[]
 }
 
 model Account {
@@ -149,23 +143,23 @@ model Category {
 }
 
 model Event {
-  eId            Int                      @id @default(autoincrement())
+  eId            Int             @id @default(autoincrement())
   name           String
   startsAt       DateTime?
   endsAt         DateTime?
   description    String
   lId            Int
-  locationId     Int                      @unique
+  locationId     Int             @unique
   minAge         Int
   creatorId      Int
   coverImage     String?
   galleryImages  String[]
-  isPublic       Boolean                  @default(false)
-  host           Host                     @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
-  location       Location                 @relation(fields: [locationId], references: [lId])
-  users          User[]                   @relation("Participates")
+  isPublic       Boolean         @default(false)
+  host           Host            @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
+  location       Location        @relation(fields: [locationId], references: [lId])
+  users          User[]          @relation("Participates")
   attachedEvents AttachedEvent[]
-  eventTopics    NotificationEventTopic[]
+  Notification   Notification[]
 }
 
 model Friendship {
@@ -199,7 +193,8 @@ model Group {
   messages     Message[]
   activities   Activity[]    @relation("AttachedActivites")
 
-  events AttachedEvent[]
+  events       AttachedEvent[]
+  Notification Notification[]
 }
 
 model AttachedEvent {
@@ -251,15 +246,6 @@ model GroupMember {
   user                User                      @relation(fields: [uId], references: [uId], onDelete: Cascade)
   account             Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
   eventParticipations GroupEventParticipation[]
-  groupTopic          NotificationGroupTopic?
-}
-
-model Notification {
-  nId       Int      @id @default(autoincrement())
-  text      String
-  timeStamp DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [uId])
 }
 
 model AboRequest {
