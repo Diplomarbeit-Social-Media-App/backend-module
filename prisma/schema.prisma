@@ -67,17 +67,17 @@ model User {
 }
 
 model Host {
-  hId          Int            @id @default(autoincrement())
-  aId          Int            @unique
-  verified     Boolean        @default(false)
-  companyName  String
-  Activity     Activity[]
-  Event        Event[]
-  account      Account        @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  HostRating   HostRating[]
-  SocialLinks  SocialLinks[]
-  followedBy   User[]         @relation("HostFollowers")
-  Notification Notification[]
+  hId           Int            @id @default(autoincrement())
+  aId           Int            @unique
+  verified      Boolean        @default(false)
+  companyName   String
+  Activity      Activity[]
+  Event         Event[]
+  account       Account        @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  HostRating    HostRating[]
+  SocialLinks   SocialLinks[]
+  followedBy    User[]         @relation("HostFollowers")
+  notifications Notification[]
 }
 
 model Account {
@@ -159,7 +159,7 @@ model Event {
   location       Location        @relation(fields: [locationId], references: [lId])
   users          User[]          @relation("Participates")
   attachedEvents AttachedEvent[]
-  Notification   Notification[]
+  notifications  Notification[]
 }
 
 model Friendship {
@@ -193,8 +193,8 @@ model Group {
   messages     Message[]
   activities   Activity[]    @relation("AttachedActivites")
 
-  events       AttachedEvent[]
-  Notification Notification[]
+  events        AttachedEvent[]
+  notifications Notification[]
 }
 
 model AttachedEvent {
