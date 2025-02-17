@@ -236,15 +236,6 @@ export const acceptInvitation = async (gId: number, uId: number) => {
     },
     data: {
       acceptedInvitation: true,
-      groupTopic: {
-        create: {
-          topic: `g-${gId}`,
-          uId,
-        },
-      },
-    },
-    include: {
-      groupTopic: true,
     },
   });
 };
