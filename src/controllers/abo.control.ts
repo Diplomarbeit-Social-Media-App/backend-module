@@ -9,7 +9,7 @@ import {
 import catchAsync from '../utils/catchAsync';
 import service from '../services';
 import { Account } from '@prisma/client';
-import { CONFLICT, CREATED, OK, UNAUTHORIZED } from 'http-status';
+import { CONFLICT, CREATED, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 
@@ -146,11 +146,25 @@ export const deleteAbo = catchAsync(
     const { uId } = req.params;
 
     const user = await service.user.findUserByAId(aId);
+
     const isFriendedWith = await service.abo.isFriendedWith(uId, user.uId);
+    const hasPendingReq = await service.abo.hasSentRequestToUser(user.uId, uId);
 
-    assert(isFriendedWith, new ApiError(CONFLICT, 'Ihr seit nicht befreundet'));
+    assert(
+      isFriendedWith || hasPendingReq,
+      new ApiError(CONFLICT, 'Keine Anfrage oder Freundschaft'),
+    );
 
-    await service.abo.deleteFriendship(user.uId, uId);
+    if (isFriendedWith) await service.abo.deleteFriendship(user.uId, uId);
+    if (hasPendingReq) {
+      const requests = await service.abo.loadAllReqWithUser(aId);
+      const found = requests.sent?.find((r) => r.toUserId === uId);
+      assert(
+        found,
+        new ApiError(NOT_FOUND, 'Anfrage konnte nicht gefunden werden'),
+      );
+      await service.abo.deleteAboRequest(found.frId);
+    }
 
     return res.status(OK).json({});
   },
