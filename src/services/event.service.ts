@@ -5,6 +5,7 @@ import lodash from 'lodash';
 import { ApiError } from '../utils/apiError';
 import {
   CONFLICT,
+  FORBIDDEN,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   UNAUTHORIZED,
@@ -12,6 +13,7 @@ import {
 import dayjs from 'dayjs';
 import { User } from '@prisma/client';
 import assert from 'assert';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
 
 export const findEventByEId = async (eId: number) => {
   const event = await db.event.findFirst({
@@ -378,6 +380,8 @@ export const createEvent = async (event: eventType, aId: number) => {
         'Location konnte nicht erzeugt werden',
       ),
     );
+    const host = await db.host.findFirst({ where: { account: { aId } } });
+    assert(host, new ApiError(FORBIDDEN, 'Keine Host-Berechtigungen'));
     const e = await db.event.create({
       data: {
         startsAt: dayjs(event.startsAt).toDate(),
@@ -400,6 +404,7 @@ export const createEvent = async (event: eventType, aId: number) => {
         },
       },
     });
+    notification.emit(GENERIC_NOT_EVENT.EVENT_PUBLISHED, host.hId, e.name);
     return e;
   });
 };

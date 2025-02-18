@@ -11,6 +11,7 @@ import {
 import query from '../query';
 import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
 
 export const createGroup = async (
   name: string,
@@ -317,6 +318,8 @@ export const inviteByUserName = async (
       isAdmin: adminPerm,
     },
   });
+
+  notification.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, acc.user.uId);
 };
 
 export const loadAllData = async (gId: number) => {

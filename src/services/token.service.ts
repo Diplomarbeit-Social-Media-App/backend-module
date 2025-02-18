@@ -10,6 +10,20 @@ import service from '.';
 
 const activationExpMinutes = config.ACTIVATION_EXP_MINUTES;
 
+export const findNotificationTokenByUId = async (uId: number) => {
+  const token = await db.token.findFirst({
+    where: {
+      account: {
+        user: {
+          uId,
+        },
+      },
+      type: TOKEN_TYPES.NOTIFICATION.toString(),
+    },
+  });
+  return token;
+};
+
 export const updateNotificationToken = async (aId: number, token: string) => {
   await db.token.deleteMany({
     where: {
