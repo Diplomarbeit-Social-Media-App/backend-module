@@ -103,7 +103,7 @@ export const findGroupByGId = async (gId: number) => {
 };
 
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {
-  return await db.group.findMany({
+  return db.group.findMany({
     select: query.group.simpleGroupSelection(uId),
     where: {
       members: {
@@ -147,7 +147,7 @@ export const attachPublicEvent = async (
 };
 
 export const findGroupsByUId = async (uId: number) => {
-  return await db.group.findMany({
+  return db.group.findMany({
     where: {
       members: {
         some: {
@@ -236,15 +236,6 @@ export const acceptInvitation = async (gId: number, uId: number) => {
     },
     data: {
       acceptedInvitation: true,
-      groupTopic: {
-        create: {
-          topic: `g-${gId}`,
-          uId,
-        },
-      },
-    },
-    include: {
-      groupTopic: true,
     },
   });
 };

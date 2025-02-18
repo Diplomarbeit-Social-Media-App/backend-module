@@ -3,7 +3,6 @@
  * @author @TheConsoleLog
  * @since 02-16-2025
  */
-
 import { NOT_FOUND } from 'http-status';
 import query from '../query';
 import { ApiError } from '../utils/apiError';

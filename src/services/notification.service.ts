@@ -4,6 +4,7 @@ import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import { NOT_FOUND } from 'http-status';
 import { TOKEN_TYPES } from '../types/token';
+import service from '.';
 
 const messaging = getFirebase().messaging();
 
@@ -32,17 +33,8 @@ export const handleUserSubscription = async (aId: number) => {
 };
 
 const handleGroupSubscription = async (token: string, uId: number) => {
-  const groupTopics = await db.notificationGroupTopic.findMany({
-    where: {
-      uId,
-    },
-    select: {
-      topic: true,
-    },
-  });
-  await Promise.allSettled(
-    groupTopics.map(({ topic }) => messaging.subscribeToTopic(token, topic)),
-  );
+  const groups = await service.group.findGroupsByUId(uId);
+  groups.forEach((g) => messaging.subscribeToTopic(token, `g-${g.gId}`));
 };
 
 export const findAllFcmTokens = async () => {
