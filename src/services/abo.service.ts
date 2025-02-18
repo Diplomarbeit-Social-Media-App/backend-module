@@ -6,6 +6,7 @@ import { ApiError } from '../utils/apiError';
 import { CONFLICT, NOT_FOUND, TOO_EARLY } from 'http-status';
 import logger from '../logger';
 import query from '../query';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
 import service from '.';
 
 function shuffleArray(array: number[]): number[] {
@@ -15,6 +16,27 @@ function shuffleArray(array: number[]): number[] {
   }
   return array;
 }
+
+export const findFriendRequestByFRId = async (frId: number) => {
+  const req = await db.aboRequest.findUnique({
+    where: {
+      frId,
+    },
+    include: {
+      fromUser: {
+        include: {
+          account: true,
+        },
+      },
+      toUser: {
+        include: {
+          account: true,
+        },
+      },
+    },
+  });
+  return req;
+};
 
 export const deleteFriendship = async (fromUId: number, toUId: number) => {
   const friendship = await db.friendship.findFirst({
@@ -308,13 +330,19 @@ export const modifyRequest = async (
   accept: boolean,
 ) => {
   await db.$transaction(async (tx) => {
-    if (accept)
+    if (accept) {
       await tx.friendship.create({
         data: {
           friendId: aboRequest.toUserId,
           userId: aboRequest.fromUserId,
         },
       });
+      notification.emit(
+        GENERIC_NOT_EVENT.FRIEND_REQ_ACCEPTED,
+        aboRequest.fromUserId,
+        aboRequest.toUserId,
+      );
+    }
     await tx.aboRequest.delete({
       where: { frId: aboRequest.frId },
     });

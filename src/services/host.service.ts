@@ -2,7 +2,7 @@ import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
 import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import assert from 'assert';
-import { Activity, User } from '@prisma/client';
+import { Activity, Token, User } from '@prisma/client';
 import service from '.';
 import query from '../query';
 
@@ -235,6 +235,25 @@ export const findMutualHosts = async (uId1: number, uId2: number) => {
     .map((h) => {
       return { ...h, isUserAccount: false, uId: null };
     });
+};
+
+/**
+ * The main idea of this fn is to return all necessary information of host followers
+ * in order to send them notifications if xxx happens.
+ * Only tokens of type "Notification" (FCM) are found in this token array!
+ * @throws { ApiError(404) } if host not found with #hId
+ * @param hId Primary key of host
+ */
+export const findHostFollowers = async (
+  hId: number,
+): Promise<{
+  followedBy?: { uId: number; account: { aId: number; token: Token[] } }[];
+}> => {
+  const host = await db.host.findFirst(
+    query.host.completeHostFollowerQuery(hId),
+  );
+  assert(host, new ApiError(NOT_FOUND, 'Host nicht gefunden'));
+  return host;
 };
 
 export const loadHostDetails = async (hostName: string, fromName: string) => {

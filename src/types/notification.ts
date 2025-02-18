@@ -1,9 +1,17 @@
 import schema from '../schema';
 
+export enum APP_NOTIFICATION_TYPE {
+  FRIEND_REQUEST_RECEIVED = 'FRIEND_REQUEST_RECEIVED',
+  FRIEND_REQUEST_ACCEPTED = 'FRIEND_REQUEST_ACCEPTED',
+  GROUP_INVITATION = 'GROUP_INVITATION',
+  EVENT_PUBLICATION = 'EVENT_PUBLICATION',
+}
+
 export type BaseNotification = {
-  nId: number;
+  ntId: number;
   timeStamp: number;
   seen: boolean;
+  type: APP_NOTIFICATION_TYPE | string;
 };
 
 export type NotificationUserInfo = {
