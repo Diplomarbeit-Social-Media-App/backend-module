@@ -515,12 +515,16 @@ export const sendAboRequest = async (from: User, target: string) => {
     new ApiError(TOO_EARLY, `Deine Anfrage an ${target} wartet noch`),
   );
 
-  return await db.aboRequest.create({
+  const req = await db.aboRequest.create({
     data: {
       fromUserId: from.uId,
       toUserId: to.uId,
     },
   });
+
+  notification.emit(GENERIC_NOT_EVENT.FRIEND_REQ_RECEIVED, req.frId);
+
+  return req;
 };
 
 export const loadOpenAboRequests = async (uId: number) => {

@@ -18,15 +18,48 @@ const emitter = new EventEmitter();
 const event = GENERIC_NOT_EVENT;
 
 emitter.on(event.GROUP_MESSAGE, () => {});
-emitter.on(event.GROUP_INVITATION, () => {});
+
+emitter.on(event.GROUP_INVITATION, async (gId: number, targetUId: number) => {
+  try {
+    const group = await service.group.loadAllData(gId);
+    const { name } = group;
+
+    const fcmToken = await service.token.findNotificationTokenByUId(targetUId);
+    appNotifications.sendGroupInvitationNotification(targetUId, gId);
+
+    if (!fcmToken?.token) return;
+    pushNotifications.sendNotification(
+      'Gruppeneinladung',
+      `Du hast eine Einladung für die Gruppe ${name} erhalten`,
+      fcmToken.token,
+    );
+  } catch (e) {
+    logger.error((e as Error).message);
+  }
+});
+
 emitter.on(event.FRIEND_REQ_RECEIVED, async (frId: number) => {
-  const req = await service.abo.findFriendRequestByFRId(frId);
-  if (!req) return;
+  try {
+    const req = await service.abo.findFriendRequestByFRId(frId);
+    if (!req) return;
 
-  const target = req.toUser;
-  const origin = req.fromUser;
+    const target = req.toUser;
+    const origin = req.fromUser;
 
-  appNotifications.sendAboReceiveNotification(target.uId, origin.uId);
+    const fcmToken = await service.token.findNotificationTokenByUId(target.uId);
+
+    appNotifications.sendAboReceiveNotification(target.uId, origin.uId);
+
+    if (!fcmToken?.token) return;
+
+    await pushNotifications.sendNotification(
+      'Freundschaftsanfrage',
+      `Du hast eine Freundschaftsanfrage von ${origin.account.userName} bekommen`,
+      fcmToken.token,
+    );
+  } catch (e) {
+    logger.error((e as Error).message);
+  }
 });
 
 emitter.on(
