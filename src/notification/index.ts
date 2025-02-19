@@ -17,7 +17,27 @@ import { EventEmitter } from 'events';
 const emitter = new EventEmitter();
 const event = GENERIC_NOT_EVENT;
 
-emitter.on(event.GROUP_MESSAGE, () => {});
+emitter.on(
+  event.GROUP_MESSAGE,
+  async (gId: number, userName: number, uId: number) => {
+    try {
+      const members = await service.group.findMembersOfGroup(gId);
+      const filtered = members?.filter((m) => m.uId !== uId);
+      const fcmTokens = filtered
+        .flatMap((v) => v.account.token)
+        .filter((t) => t?.token !== null)
+        .map((t) => t.token);
+      if (fcmTokens.length === 0) return;
+      pushNotifications.sendNotifications(
+        'Neue Nachricht',
+        `${userName} hat eine Nachricht gesendet`,
+        ...fcmTokens,
+      );
+    } catch (e) {
+      logger.error((e as Error).message);
+    }
+  },
+);
 
 emitter.on(event.GROUP_INVITATION, async (gId: number, targetUId: number) => {
   try {
@@ -25,7 +45,7 @@ emitter.on(event.GROUP_INVITATION, async (gId: number, targetUId: number) => {
     const { name } = group;
 
     const fcmToken = await service.token.findNotificationTokenByUId(targetUId);
-    appNotifications.sendGroupInvitationNotification(targetUId, gId);
+    await appNotifications.sendGroupInvitationNotification(targetUId, gId);
 
     if (!fcmToken?.token) return;
     pushNotifications.sendNotification(
@@ -99,10 +119,6 @@ emitter.on(event.EVENT_PUBLISHED, async (hId: number, eventName: string) => {
       host.followedBy?.flatMap((user) =>
         user.account.token
           .map((t) => t.token)
-          .map((t) => {
-            console.log(t);
-            return t;
-          })
           .filter((token) => token.length > 0)
           .filter((token) => token !== ''),
       ) || [];

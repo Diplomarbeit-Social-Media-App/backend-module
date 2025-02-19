@@ -12,6 +12,7 @@ import query from '../query';
 import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
 import notification, { GENERIC_NOT_EVENT } from '../notification';
+import { TOKEN_TYPES } from '../types/token';
 
 export const createGroup = async (
   name: string,
@@ -320,6 +321,39 @@ export const inviteByUserName = async (
   });
 
   notification.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, acc.user.uId);
+};
+
+/**
+ * Only returns members who accepted the invitation
+ * Should be used to send messages; includes account and token
+ */
+export const findMembersOfGroup = async (gId: number) => {
+  const group = await db.group.findUnique({
+    where: {
+      gId,
+    },
+    select: {
+      members: {
+        select: {
+          uId: true,
+          account: {
+            select: {
+              token: {
+                where: {
+                  type: TOKEN_TYPES.NOTIFICATION.toString(),
+                },
+              },
+            },
+          },
+        },
+        where: {
+          acceptedInvitation: true,
+        },
+      },
+    },
+  });
+  assert(group, new ApiError(NOT_FOUND, "Group wasn't found"));
+  return group.members;
 };
 
 export const loadAllData = async (gId: number) => {
