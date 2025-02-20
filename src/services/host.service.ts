@@ -5,6 +5,8 @@ import assert from 'assert';
 import { Activity, Token, User } from '@prisma/client';
 import service from '.';
 import query from '../query';
+import logger from '../logger';
+import { BasicAccountRepresentation } from '../types/abo';
 
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({
@@ -374,4 +376,49 @@ export const createHostByAccount = async (aId: number, companyName: string) => {
     },
   });
   return host;
+};
+
+export const findNonMutualHostFollowings = async (
+  target: number,
+  origin: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const originHostFollowings = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: origin,
+        },
+      },
+    },
+    select: {
+      hId: true,
+    },
+  });
+  const originIds: number[] = originHostFollowings.map((h) => h.hId);
+  logger.debug('Origin host followings' + originIds);
+
+  const targetHostFollowings = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: target,
+        },
+      },
+      NOT: {
+        hId: {
+          in: originIds,
+        },
+      },
+    },
+    select: query.host.mutualHostSelection,
+  });
+
+  const mapped = targetHostFollowings.map((h) => ({
+    hId: h.hId,
+    uId: null,
+    isUserAccount: false,
+    account: h.account,
+  }));
+
+  return mapped;
 };

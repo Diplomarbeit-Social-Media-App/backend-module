@@ -8,6 +8,8 @@ import query from '../query';
 import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import assert from 'assert';
+import { BasicAccountRepresentation } from '../types/abo';
+import logger from '../logger';
 
 export const findFriendshipByUIds = async (uId1: number, uId2: number) => {
   const friendship = await db.friendship.findFirst({
@@ -34,33 +36,55 @@ export const findFriendshipByUIds = async (uId1: number, uId2: number) => {
 };
 
 /**
+ * Finds friends of `target` that are not `target`, `origin`, or friends of `origin`.
  *
- * @param target userId to find non mutual friends for
- * @param origin
+ * @param target userId to find non-mutual friends for
+ * @param origin userId whose friends should be excluded
+ * @returns List of non-mutual friends
  */
 export const findNonMutualFriendIds = async (
   target: number,
   origin: number,
-) => {
+): Promise<BasicAccountRepresentation[]> => {
   const originFriends = await db.friendship.findMany({
     where: query.abo.isFriendedWhereCondition(origin),
-    select: { friendId: true, userId: true },
-  });
-  const originFriendIds = originFriends.flatMap((friend) => [
-    friend.friendId,
-    friend.userId,
-  ]);
-  const nonMutuals = await db.friendship.findMany({
-    where: {
-      ...query.abo.isFriendedWhereCondition(target),
-      friendId: {
-        notIn: originFriendIds,
-      },
-      userId: {
-        notIn: originFriendIds,
-      },
-    },
+    include: { user: true, friend: true },
   });
 
-  return nonMutuals;
+  const originFriendIds: number[] = originFriends.map((k) =>
+    k.friendId === origin ? k.userId : k.friendId,
+  );
+  originFriendIds.push(origin);
+  logger.debug("Origin's friends: " + originFriendIds);
+
+  const targetFriends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(target),
+    include: { user: true, friend: true },
+  });
+
+  const targetFriendIds: number[] = targetFriends.map((f) =>
+    f.friendId === target ? f.userId : f.friendId,
+  );
+  logger.debug("Target's friends: " + targetFriendIds);
+
+  const nonMutualFriendIds = targetFriendIds.filter(
+    (id) => !originFriendIds.includes(id),
+  );
+
+  logger.debug('Non-mutual friends: ' + nonMutualFriendIds);
+  const nonMutualFriends = await db.user.findMany({
+    where: { uId: { in: nonMutualFriendIds } },
+    select: query.abo.friendByUserTableSelection,
+  });
+
+  return nonMutualFriends.map((f) => ({
+    isUserAccount: true,
+    uId: f.uId,
+    hId: null,
+    account: {
+      userName: f.account.userName,
+      picture: f.account.picture,
+      aId: f.account.aId,
+    },
+  }));
 };

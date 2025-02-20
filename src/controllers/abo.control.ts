@@ -113,17 +113,24 @@ export const getForeignProfile = catchAsync(
     const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
 
-    let allContacts: null | unknown[] = null;
+    // let allContacts: null | unknown[] = null;
     let participatingEvents: null | unknown[] = null;
+    let nonMutualContacts: null | unknown[] = [];
 
     const events = await service.event.findEventsPartUser(uId);
     const eventCount = events.length;
 
     if (isFriendedWith) {
-      const friends = await service.abo.findAllFriendsByUId(fuId);
-      const hosts = await service.host.findAllFollowedHostsByUid(fuId);
-      allContacts = [...friends.filter((f) => f.uId !== ruId), ...hosts];
       participatingEvents = [...events];
+      const nonMutFriends = await service.friend.findNonMutualFriendIds(
+        fuId,
+        ruId,
+      );
+      const nonMutHosts = await service.host.findNonMutualHostFollowings(
+        fuId,
+        ruId,
+      );
+      nonMutualContacts = [...nonMutFriends, ...nonMutHosts];
     }
 
     return res.status(OK).json({
@@ -134,7 +141,7 @@ export const getForeignProfile = catchAsync(
       followerCount,
       eventCount,
       mutualContacts: [...mutualFriends, ...mutualHosts],
-      allContacts,
+      nonMutualContacts,
       participatingEvents,
     });
   },
