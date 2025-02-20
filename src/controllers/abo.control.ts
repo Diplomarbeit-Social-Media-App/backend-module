@@ -115,7 +115,7 @@ export const getForeignProfile = catchAsync(
 
     // let allContacts: null | unknown[] = null;
     let participatingEvents: null | unknown[] = null;
-    let nonMutualContacts: null | unknown[] = [];
+    let nonMutualContacts: null | unknown[] = null;
 
     const events = await service.event.findEventsPartUser(uId);
     const eventCount = events.length;
