@@ -110,7 +110,7 @@ export const getForeignProfile = catchAsync(
 
     const openAboReq = await service.abo.hasSentRequestToUser(ruId, fuId);
 
-    const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
+    const mutualFriends = await service.friend.findMutualFriendIds(fuId, ruId);
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
 
     // let allContacts: null | unknown[] = null;

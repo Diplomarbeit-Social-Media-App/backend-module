@@ -193,7 +193,9 @@ export const createHostRating = async (
   });
 };
 
-export const findAllFollowedHostsByUid = async (uId: number) => {
+export const findAllFollowedHostsByUid = async (
+  uId: number,
+): Promise<BasicAccountRepresentation[]> => {
   const hosts = await db.host.findMany({
     where: {
       followedBy: {
@@ -210,33 +212,22 @@ export const findAllFollowedHostsByUid = async (uId: number) => {
 };
 
 export const findMutualHosts = async (uId1: number, uId2: number) => {
-  const fromUser = await db.host.findMany({
+  const mutualHosts = await db.host.findMany({
     where: {
-      followedBy: {
-        some: {
-          uId: uId1,
-        },
-      },
-    },
-  });
-  const toUser = await db.host.findMany({
-    where: {
-      followedBy: {
-        some: {
-          uId: uId2,
-        },
-      },
+      AND: [
+        { followedBy: { some: { uId: uId1 } } },
+        { followedBy: { some: { uId: uId2 } } },
+      ],
     },
     select: query.host.mutualHostSelection,
   });
-
-  const mapped: number[] = fromUser.map((u) => u.hId);
-
-  return toUser
-    .filter((h) => mapped.includes(h.hId))
-    .map((h) => {
-      return { ...h, isUserAccount: false, uId: null };
-    });
+  logger.debug('mutual hosts length: ' + mutualHosts.length);
+  const mapped = mutualHosts.map((host) => ({
+    ...host,
+    isUserAccount: false,
+    uId: null,
+  }));
+  return mapped;
 };
 
 /**

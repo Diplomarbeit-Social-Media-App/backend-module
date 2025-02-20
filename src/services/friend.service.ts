@@ -36,6 +36,61 @@ export const findFriendshipByUIds = async (uId1: number, uId2: number) => {
 };
 
 /**
+ * Finds mutual friends between `target` and `origin`, excluding `origin` and `target` themselves.
+ *
+ * @param target userId to find mutual friends for
+ * @param origin userId whose friends should be checked for mutuality
+ * @returns List of mutual friends
+ */
+export const findMutualFriendIds = async (
+  target: number,
+  origin: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const originFriends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(origin),
+    include: { user: true, friend: true },
+  });
+
+  const originFriendIds: number[] = originFriends.map((k) =>
+    k.friendId === origin ? k.userId : k.friendId,
+  );
+  originFriendIds.push(origin);
+  logger.debug("Origin's friends: " + originFriendIds);
+
+  const targetFriends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(target),
+    include: { user: true, friend: true },
+  });
+
+  const targetFriendIds: number[] = targetFriends.map((f) =>
+    f.friendId === target ? f.userId : f.friendId,
+  );
+  targetFriendIds.push(target);
+  logger.debug("Target's friends: " + targetFriendIds);
+
+  const mutualFriendIds = targetFriendIds.filter(
+    (id) => originFriendIds.includes(id) && id !== origin && id !== target,
+  );
+
+  logger.debug('Mutual friends: ' + mutualFriendIds);
+  const mutualFriends = await db.user.findMany({
+    where: { uId: { in: mutualFriendIds } },
+    select: query.abo.friendByUserTableSelection,
+  });
+
+  return mutualFriends.map((f) => ({
+    isUserAccount: true,
+    uId: f.uId,
+    hId: null,
+    account: {
+      userName: f.account.userName,
+      picture: f.account.picture,
+      aId: f.account.aId,
+    },
+  }));
+};
+
+/**
  * Finds friends of `target` that are not `target`, `origin`, or friends of `origin`.
  *
  * @param target userId to find non-mutual friends for
