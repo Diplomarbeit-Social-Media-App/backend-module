@@ -24,12 +24,11 @@ export const updateAccountData = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { description, firstName, lastName, userName } = req.body;
+    const { description, firstName, userName } = req.body;
     const { aId } = req.user as Account;
     const updatedAccount = await service.auth.updateAccountData(
       aId,
       firstName,
-      lastName,
       userName,
       description,
     );
@@ -104,7 +103,6 @@ export const getProfileDetails = catchAsync(
     const pickedData = lodash.pick(account, [
       'aId',
       'firstName',
-      'lastName',
       'email',
       'picture',
       'dateOfBirth',

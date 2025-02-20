@@ -17,7 +17,6 @@ export enum LOGIN_OS {
 export type accountSchema = {
   userName: string;
   firstName: string;
-  lastName: string;
   password: string;
   email: string;
   description: string;

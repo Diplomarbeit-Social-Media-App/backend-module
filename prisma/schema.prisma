@@ -84,7 +84,6 @@ model Account {
   aId                     Int                       @id @default(autoincrement())
   userName                String                    @unique
   firstName               String
-  lastName                String
   password                String
   email                   String                    @unique
   description             String
