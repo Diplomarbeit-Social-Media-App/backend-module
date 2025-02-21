@@ -9,6 +9,11 @@ import {
   participateAttachedEventSchema,
   kickUserGroupSchema,
 } from '../schema/group.schema';
+import { BasicAccountRepresentation } from './abo';
+
+export type BasicGroupMemberPresentation = BasicAccountRepresentation & {
+  isAdmin: boolean;
+};
 
 type createGroupBody = typeof createGroupSchema.shape.body;
 export type createGroupType = Zod.infer<createGroupBody>;

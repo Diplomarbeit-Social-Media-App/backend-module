@@ -100,11 +100,13 @@ export const getGroupData = catchAsync(
       gId,
       uId,
     );
+    const members = await service.group.findMembersAndFormat(gId);
     assert(
       isAssociatedWithGroup,
       new ApiError(UNAUTHORIZED, 'Kein Mitglied der Gruppe'),
     );
     const group = await service.group.loadAllData(gId);
+    Object.assign(group, { members });
 
     return res.status(OK).json(group);
   },

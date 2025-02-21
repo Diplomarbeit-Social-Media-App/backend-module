@@ -4,6 +4,7 @@ import assert from 'assert';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import {
+  BasicGroupMemberPresentation,
   generalAttachmentDataType,
   generalEditGroupType,
   participateAttachedEventType,
@@ -321,6 +322,24 @@ export const inviteByUserName = async (
   });
 
   notification.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, acc.user.uId);
+};
+
+/**
+ * Searches for all group members of group gId who accepted the invitation
+ * @param gId group id
+ * @returns array of group members;
+ */
+export const findMembersAndFormat = async (
+  gId: number,
+): Promise<BasicGroupMemberPresentation[]> => {
+  const group = await db.groupMember.findMany({
+    where: {
+      gId,
+      acceptedInvitation: true,
+    },
+    select: { ...query.abo.friendByUserTableSelection, isAdmin: true },
+  });
+  return group.map((m) => ({ hId: null, isUserAccount: true, ...m }));
 };
 
 /**
