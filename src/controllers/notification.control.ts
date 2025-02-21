@@ -51,9 +51,19 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
     group: pick(n.group, groupInformation),
   }));
 
-  const accountMapper = (data: { account?: { userName?: string } }) => ({
+  const accountMapper = (data: {
+    account?: { userName?: string };
+  }): object => ({
     ...omit(data, 'account'),
     userName: data?.account?.userName,
+  });
+
+  const locationMapper = (data: {
+    location?: { city?: string; postCode?: string };
+  }): object => ({
+    ...omit(data, 'location'),
+    city: data.location?.city,
+    postCode: data.location?.postCode,
   });
 
   const friendNots = mapped
@@ -67,7 +77,9 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
 
   const eventNots = mapped
     .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.EVENT_PUBLICATION)
-    .map((m) => ({ ...m.base, ...m.event, ...m.host }));
+    .map((m) => ({ ...m.base, ...m.event, ...m.host }))
+    .map(locationMapper)
+    .map(accountMapper);
 
   const groupNots = mapped
     .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.GROUP_INVITATION)

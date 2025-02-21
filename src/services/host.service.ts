@@ -8,6 +8,20 @@ import query from '../query';
 import logger from '../logger';
 import { BasicAccountRepresentation } from '../types/abo';
 
+export const findFollowersByHId = async (hId: number) => {
+  const host = await db.host.findFirst({
+    where: {
+      hId,
+    },
+    select: {
+      followedBy: true,
+      hId: true,
+    },
+  });
+  assert(host, new ApiError(NOT_FOUND, `Host ${hId} not found`));
+  return host;
+};
+
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({
     where: {

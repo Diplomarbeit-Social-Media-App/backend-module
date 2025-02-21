@@ -404,7 +404,12 @@ export const createEvent = async (event: eventType, aId: number) => {
         },
       },
     });
-    notification.emit(GENERIC_NOT_EVENT.EVENT_PUBLISHED, host.hId, e.name);
+    notification.emit(
+      GENERIC_NOT_EVENT.EVENT_PUBLISHED,
+      e.eId,
+      host.hId,
+      e.name,
+    );
     return e;
   });
 };

@@ -119,28 +119,33 @@ emitter.on(
   },
 );
 
-emitter.on(event.EVENT_PUBLISHED, async (hId: number, eventName: string) => {
-  try {
-    const host = await service.host.findHostFollowers(hId);
-    console.table(host.followedBy);
-    const fcmTokens =
-      host.followedBy?.flatMap((user) =>
-        user.account.token
-          .map((t) => t.token)
-          .filter((token) => token.length > 0)
-          .filter((token) => token !== ''),
-      ) || [];
+emitter.on(
+  event.EVENT_PUBLISHED,
+  async (eId: number, hId: number, eventName: string) => {
+    try {
+      const host = await service.host.findHostFollowers(hId);
 
-    if (fcmTokens.length <= 0) return;
-    pushNotifications.sendNotifications(
-      'Neues Event',
-      `${eventName} wurde gerade veröffentlicht`,
-      ...fcmTokens,
-    );
-  } catch (e) {
-    logger.error((e as Error).message);
-  }
-});
+      await appNotifications.sendEventPublishedNotification(eId);
+
+      const fcmTokens =
+        host.followedBy?.flatMap((user) =>
+          user.account.token
+            .map((t) => t.token)
+            .filter((token) => token.length > 0)
+            .filter((token) => token !== ''),
+        ) || [];
+
+      if (fcmTokens.length <= 0) return;
+      pushNotifications.sendNotifications(
+        'Neues Event',
+        `${eventName} wurde gerade veröffentlicht`,
+        ...fcmTokens,
+      );
+    } catch (e) {
+      logger.error((e as Error).message);
+    }
+  },
+);
 
 emitter.on(
   event.CUSTOM_PUSH,
