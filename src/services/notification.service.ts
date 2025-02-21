@@ -83,10 +83,14 @@ export const findNotificationsUpdateSeen = async (uId: number) => {
           gte: dayjs().subtract(30, 'day').toDate(),
         },
       },
-      orderBy: {
-        seen: 'asc',
-        timeStamp: 'desc',
-      },
+      orderBy: [
+        {
+          seen: 'asc',
+        },
+        {
+          timeStamp: 'desc',
+        },
+      ],
       include: {
         event: {
           include: {
