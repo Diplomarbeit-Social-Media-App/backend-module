@@ -11,3 +11,5 @@ router.post(
   [validate(postNotificationTokenSchema)],
   controllers.notification.postNotificationToken,
 );
+
+router.get('/', controllers.notification.getNotifications);

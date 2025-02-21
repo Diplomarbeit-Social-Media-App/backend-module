@@ -5,6 +5,7 @@ import db from '../utils/db';
 import { NOT_FOUND } from 'http-status';
 import { TOKEN_TYPES } from '../types/token';
 import service from '.';
+import dayjs from 'dayjs';
 
 const messaging = getFirebase().messaging();
 
@@ -66,4 +67,61 @@ export const sendMessage = async (
     notification: { title, body: message },
     token,
   });
+};
+
+/**
+ * This service method not only searches for all in app notifications
+ * less or equal than 30 days old, but also sets seen to true
+ * @param uId target uid
+ */
+export const findNotificationsUpdateSeen = async (uId: number) => {
+  const notifications = await db.$transaction(async (tx) => {
+    const userNots = await tx.notification.findMany({
+      where: {
+        targetId: uId,
+        timeStamp: {
+          gte: dayjs().subtract(30, 'day').toDate(),
+        },
+      },
+      orderBy: {
+        seen: 'asc',
+      },
+      include: {
+        event: {
+          include: {
+            location: true,
+          },
+        },
+        group: {
+          select: {
+            gId: true,
+            name: true,
+            _count: {
+              select: {
+                members: true,
+              },
+            },
+          },
+        },
+        host: {
+          include: {
+            account: true,
+          },
+        },
+        target: true,
+        user: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+    const notIds = userNots.map((n) => n.ntId);
+    await tx.notification.updateMany({
+      where: { ntId: { in: notIds } },
+      data: { seen: true },
+    });
+    return userNots;
+  });
+  return notifications;
 };

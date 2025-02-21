@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../utils/catchAsync';
-import { postNotificationType } from '../types/notification';
+import {
+  APP_NOTIFICATION_TYPE,
+  postNotificationType,
+} from '../types/notification';
 import { Account } from '@prisma/client';
 import service from '../services';
 import { OK } from 'http-status';
+import { omit, pick } from 'lodash';
 
 export const postNotificationToken = catchAsync(
   async (
@@ -17,3 +21,53 @@ export const postNotificationToken = catchAsync(
     return res.status(OK).json({});
   },
 );
+
+export const getNotifications = catchAsync(async (req, res, _next) => {
+  const { aId } = req.user as Account;
+  const { uId } = await service.user.findUserByAId(aId);
+
+  const notifications =
+    await service.notification.findNotificationsUpdateSeen(uId);
+
+  // map to different types of app notifications
+  const baseInformation = ['ntId', 'timeStamp', 'seen', 'type'];
+  const userInformation = ['uId', 'aId', 'account.userName'];
+  const hostInformation = ['hId', 'aId', 'companyName', 'account.userName'];
+  const groupInformation = ['_count.members', 'gId', 'name'];
+  const eventInformation = [
+    'eId',
+    'name',
+    'startDate',
+    'description',
+    'location.postCode',
+    'location.city',
+  ];
+
+  const mapped = notifications.map((n) => ({
+    base: pick(n, baseInformation),
+    user: pick(n.user, userInformation),
+    event: pick(n.event, eventInformation),
+    host: pick(n.host, hostInformation),
+    group: pick(n.group, groupInformation),
+  }));
+
+  const friendNots = mapped
+    .filter(
+      (m) =>
+        m.base.type === APP_NOTIFICATION_TYPE.FRIEND_REQUEST_ACCEPTED ||
+        m.base.type === APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
+    )
+    .map((m) => ({ ...m.base, ...m.user }))
+    .map((m) => ({ ...omit(m, 'account'), userName: m.account?.userName }));
+
+  const eventNots = mapped
+    .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.EVENT_PUBLICATION)
+    .map((m) => ({ ...m.base, ...m.event, ...m.host }));
+
+  const groupNots = mapped
+    .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.GROUP_INVITATION)
+    .map((m) => ({ ...m.base, ...m.group, ...m.user }))
+    .map((m) => ({ ...omit(m, '_count'), memberCount: m._count?.members }));
+
+  return res.status(OK).json({ friendNots, eventNots, groupNots });
+});
