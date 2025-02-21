@@ -91,6 +91,23 @@ export const putInviteAcceptGroup = catchAsync(
   },
 );
 
+export const getFriendsNotInGroup = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { gId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const isGroupMember = await service.group.isInvitedOrMember(gId, uId);
+    assert(
+      isGroupMember.isMember,
+      new ApiError(CONFLICT, 'Nicht in dieser Gruppe'),
+    );
+
+    const friends = await service.group.findFriendsNotInGroup(gId, uId);
+    return res.status(OK).json(friends);
+  },
+);
+
 export const getGroupData = catchAsync(
   async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
     const { gId } = req.params;

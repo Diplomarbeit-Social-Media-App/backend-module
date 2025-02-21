@@ -14,6 +14,44 @@ import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
 import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { TOKEN_TYPES } from '../types/token';
+import { BasicAccountRepresentation } from '../types/abo';
+
+/**
+ * Lists friends of user uId who are not yet invited/ member of group gId
+ * @param gId Group id
+ * @param uId User id
+ * @returns array of friends - BasicAccountRepresentation[]
+ */
+export const findFriendsNotInGroup = async (
+  gId: number,
+  uId: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const friends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(uId),
+    select: { friendId: true, userId: true },
+  });
+  const uniqueMapped = friends.map((f) =>
+    f.friendId === uId ? f.userId : f.friendId,
+  );
+  const friendsNotInGroup = await db.user.findMany({
+    where: {
+      uId: {
+        in: uniqueMapped,
+      },
+      groups: {
+        none: {
+          gId,
+        },
+      },
+    },
+    select: query.abo.friendByUserTableSelection,
+  });
+  return friendsNotInGroup.map((f) => ({
+    isUserAccount: true,
+    hId: null,
+    ...f,
+  }));
+};
 
 export const createGroup = async (
   name: string,

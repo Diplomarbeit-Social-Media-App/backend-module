@@ -24,6 +24,11 @@ router.put(
   controllers.group.putInviteAcceptGroup,
 );
 router.get(
+  '/friends/:gId',
+  [validate(schema.group.groupIdOnlySchema)],
+  controllers.group.getFriendsNotInGroup,
+);
+router.get(
   '/:gId',
   [validate(schema.group.groupIdOnlySchema)],
   controllers.group.getGroupData,
