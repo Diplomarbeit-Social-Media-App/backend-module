@@ -85,6 +85,7 @@ export const findNotificationsUpdateSeen = async (uId: number) => {
       },
       orderBy: {
         seen: 'asc',
+        timeStamp: 'desc',
       },
       include: {
         event: {
