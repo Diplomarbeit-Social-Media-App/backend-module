@@ -39,24 +39,32 @@ emitter.on(
   },
 );
 
-emitter.on(event.GROUP_INVITATION, async (gId: number, targetUId: number) => {
-  try {
-    const group = await service.group.loadAllData(gId);
-    const { name } = group;
+emitter.on(
+  event.GROUP_INVITATION,
+  async (gId: number, targetUId: number, originUId: number) => {
+    try {
+      const group = await service.group.loadAllData(gId);
+      const { name } = group;
 
-    const fcmToken = await service.token.findNotificationTokenByUId(targetUId);
-    await appNotifications.sendGroupInvitationNotification(targetUId, gId);
+      const fcmToken =
+        await service.token.findNotificationTokenByUId(targetUId);
+      await appNotifications.sendGroupInvitationNotification(
+        targetUId,
+        gId,
+        originUId,
+      );
 
-    if (!fcmToken?.token) return;
-    pushNotifications.sendNotification(
-      'Gruppeneinladung',
-      `Du hast eine Einladung für die Gruppe ${name} erhalten`,
-      fcmToken.token,
-    );
-  } catch (e) {
-    logger.error((e as Error).message);
-  }
-});
+      if (!fcmToken?.token) return;
+      pushNotifications.sendNotification(
+        'Gruppeneinladung',
+        `Du hast eine Einladung für die Gruppe ${name} erhalten`,
+        fcmToken.token,
+      );
+    } catch (e) {
+      logger.error((e as Error).message);
+    }
+  },
+);
 
 emitter.on(event.FRIEND_REQ_RECEIVED, async (frId: number) => {
   try {

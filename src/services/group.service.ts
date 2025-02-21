@@ -12,7 +12,6 @@ import {
 import query from '../query';
 import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
-import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { TOKEN_TYPES } from '../types/token';
 import { BasicAccountRepresentation } from '../types/abo';
 
@@ -359,7 +358,7 @@ export const inviteByUserName = async (
     },
   });
 
-  notification.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, acc.user.uId);
+  return { gId, targetUId: acc.user.uId };
 };
 
 /**

@@ -24,6 +24,7 @@ import service from '../services';
 import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import logger from '../logger';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
 
@@ -64,7 +65,18 @@ export const postInviteGroup = catchAsync(
       found,
       new ApiError(NOT_FOUND, `Du bist nicht der Besitzer einer Gruppe ${gId}`),
     );
-    await service.group.inviteByUserName(gId, userName, hasAdminPermission);
+    const { targetUId } = await service.group.inviteByUserName(
+      gId,
+      userName,
+      hasAdminPermission,
+    );
+
+    notification.emit(
+      GENERIC_NOT_EVENT.GROUP_INVITATION,
+      gId,
+      targetUId,
+      user.uId,
+    );
 
     return res.status(OK).json({});
   },

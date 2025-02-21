@@ -51,6 +51,11 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
     group: pick(n.group, groupInformation),
   }));
 
+  const accountMapper = (data: { account?: { userName?: string } }) => ({
+    ...omit(data, 'account'),
+    userName: data?.account?.userName,
+  });
+
   const friendNots = mapped
     .filter(
       (m) =>
@@ -58,7 +63,7 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
         m.base.type === APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
     )
     .map((m) => ({ ...m.base, ...m.user }))
-    .map((m) => ({ ...omit(m, 'account'), userName: m.account?.userName }));
+    .map(accountMapper);
 
   const eventNots = mapped
     .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.EVENT_PUBLICATION)
@@ -67,7 +72,8 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
   const groupNots = mapped
     .filter((m) => m.base.type === APP_NOTIFICATION_TYPE.GROUP_INVITATION)
     .map((m) => ({ ...m.base, ...m.group, ...m.user }))
-    .map((m) => ({ ...omit(m, '_count'), memberCount: m._count?.members }));
+    .map((m) => ({ ...omit(m, '_count'), memberCount: m._count?.members }))
+    .map(accountMapper);
 
   return res.status(OK).json({ friendNots, eventNots, groupNots });
 });

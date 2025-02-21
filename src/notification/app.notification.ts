@@ -31,11 +31,13 @@ export const sendAboAcceptNotification = async (
 export const sendGroupInvitationNotification = async (
   targetId: number,
   groupId: number,
+  userId: number,
 ) => {
   await db.notification.create({
     data: {
       groupId,
       targetId,
+      userId,
       type: APP_NOTIFICATION_TYPE.GROUP_INVITATION,
     },
   });
