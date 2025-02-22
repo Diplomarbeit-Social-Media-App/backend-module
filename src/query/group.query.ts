@@ -24,6 +24,8 @@ const richFormatSelection = {
   name: true,
   picture: true,
   description: true,
+  createdAt: true,
+  createdFrom: true,
   _count: {
     select: {
       activities: true,

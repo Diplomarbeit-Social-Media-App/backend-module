@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import db from '../utils/db';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
@@ -68,7 +67,7 @@ export const createGroup = async (
   assert(account, new ApiError(NOT_FOUND, 'Account wurde nicht gefunden'));
   const group = await db.group.create({
     data: {
-      creationDate: dayjs().toDate(),
+      createdFrom: account.userName,
       description,
       name,
       picture,

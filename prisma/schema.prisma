@@ -188,14 +188,15 @@ model Token {
 }
 
 model Group {
-  gId          Int           @id @default(autoincrement())
-  picture      String?
-  name         String        @default("Party gurrrls")
-  creationDate DateTime
-  description  String?
-  members      GroupMember[]
-  messages     Message[]
-  activities   Activity[]    @relation("AttachedActivites")
+  gId         Int           @id @default(autoincrement())
+  picture     String?
+  name        String        @default("Party gurrrls")
+  createdAt   DateTime?     @default(now())
+  createdFrom String?
+  description String?
+  members     GroupMember[]
+  messages    Message[]
+  activities  Activity[]    @relation("AttachedActivites")
 
   events        AttachedEvent[]
   notifications Notification[]
