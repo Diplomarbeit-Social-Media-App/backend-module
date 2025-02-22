@@ -30,7 +30,7 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
     await service.notification.findNotificationsUpdateSeen(uId);
 
   // map to different types of app notifications
-  const baseInformation = ['ntId', 'timeStamp', 'seen', 'type'];
+  const baseInformation = ['ntId', 'timeStamp', 'seen', 'type', 'consumed'];
   const userInformation = ['uId', 'aId', 'account.userName'];
   const hostInformation = ['hId', 'aId', 'companyName', 'account.userName'];
   const groupInformation = ['_count.members', 'gId', 'name'];

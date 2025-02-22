@@ -27,6 +27,7 @@ import logger from '../logger';
 import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
+import consumer from '../notification/consumer.notification';
 
 export const postCreateGroup = catchAsync(
   async (
@@ -97,6 +98,10 @@ export const putInviteAcceptGroup = catchAsync(
     );
     if (!accept) await service.group.deleteInvitation(gId, uId);
     else await service.group.acceptInvitation(gId, uId);
+
+    // Update app notification on consumed field
+    consumer.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, uId, accept);
+
     return res
       .status(OK)
       .json({ message: `Einladung ${accept ? 'angenommen' : 'abgelehnt'}` });

@@ -69,6 +69,30 @@ export const sendMessage = async (
   });
 };
 
+export const updateConsumed = async (ntId: number, consumed?: boolean) => {
+  return db.notification.update({
+    where: { ntId },
+    data: { consumed },
+  });
+};
+
+/**
+ * Finds group invitation app notification by gId and uId
+ * @param gId Group id
+ * @param uId User id
+ * @returns notification
+ */
+export const findGroupInviteNotification = async (gId: number, uId: number) => {
+  const not = await db.notification.findFirst({
+    where: {
+      groupId: gId,
+      userId: uId,
+    },
+  });
+  assert(not, new ApiError(NOT_FOUND, `Gruppe ${gId} nicht gefunden`));
+  return not;
+};
+
 /**
  * This service method not only searches for all in app notifications
  * less or equal than 30 days old, but also sets seen to true

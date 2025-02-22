@@ -35,6 +35,8 @@ model Notification {
 
   hostId Int?
   host   Host? @relation(fields: [hostId], references: [hId], onDelete: Cascade)
+
+  consumed Boolean?
 }
 
 model Location {
