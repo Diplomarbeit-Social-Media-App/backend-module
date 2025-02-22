@@ -239,21 +239,41 @@ export const getUserGroups = catchAsync(
     const user = await service.user.findUserByAId(aId);
 
     const raw = await service.group.findGroupsByUIdSimpleFormat(user.uId);
-    const groups = raw.map((group) => {
-      const member = group.members.at(0);
-      assert(member, new ApiError(NOT_FOUND, 'Fehler beim Laden der Gruppen'));
+    const groups = await Promise.allSettled(
+      raw.map(async (group) => {
+        const member = group.members.at(0);
+        assert(
+          member,
+          new ApiError(NOT_FOUND, 'Fehler beim Laden der Gruppen'),
+        );
+        const lastMessage = await service.message.findLastMessageByGId(
+          group.gId,
+        );
+        const formatLastMessage = lastMessage
+          ? {
+              userName: lastMessage?.user?.account?.userName,
+              text: lastMessage?.text,
+              timeStamp: lastMessage?.timeStamp,
+            }
+          : null;
 
-      const { isAdmin, acceptedInvitation: hasAcceptedInvitation } = member;
-      const members = group._count.members;
-      return {
-        ...omit(group, '_count', 'members'),
-        members,
-        isAdmin,
-        hasAcceptedInvitation,
-      };
-    });
+        const { isAdmin, acceptedInvitation: hasAcceptedInvitation } = member;
+        const members = group._count.members;
+        return {
+          ...omit(group, '_count', 'members'),
+          members,
+          isAdmin,
+          hasAcceptedInvitation,
+          lastMessage: formatLastMessage,
+        };
+      }),
+    );
 
-    return res.status(OK).json(groups);
+    const filteredAndMapped = groups
+      .filter((g) => g.status === 'fulfilled')
+      .map((g) => g.value);
+
+    return res.status(OK).json(filteredAndMapped);
   },
 );
 

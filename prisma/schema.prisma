@@ -111,10 +111,10 @@ model Message {
   mId       Int      @id @default(autoincrement())
   text      String
   timeStamp DateTime @default(now())
-  groupGId  Int
-  sentBy    Int
-  group     Group    @relation(fields: [groupGId], references: [gId])
-  user      User     @relation(fields: [sentBy], references: [uId], onDelete: Cascade)
+  gId       Int
+  uId       Int
+  group     Group    @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  user      User     @relation(fields: [uId], references: [uId], onDelete: Cascade)
 }
 
 model Activity {
