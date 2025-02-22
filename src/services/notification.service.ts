@@ -6,8 +6,31 @@ import { NOT_FOUND } from 'http-status';
 import { TOKEN_TYPES } from '../types/token';
 import service from '.';
 import dayjs from 'dayjs';
+import { APP_NOTIFICATION_TYPE } from '../types/notification';
+import logger from '../logger';
 
 const messaging = getFirebase().messaging();
+
+export const deleteFriendReqNot = async (frId: number) => {
+  const deleted = await db.notification.deleteMany({
+    where: {
+      frId,
+      type: APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
+    },
+  });
+  logger.debug('friend req received deleted: ' + deleted.count);
+};
+
+export const findFriendReqNot = async (frId: number) => {
+  const not = await db.notification.findFirst({
+    where: {
+      frId,
+      type: APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
+    },
+  });
+  assert(not, new ApiError(NOT_FOUND, `FA ${frId} not found`));
+  return not;
+};
 
 export const handleUserSubscription = async (aId: number) => {
   const user = await db.user.findUnique({
@@ -86,7 +109,7 @@ export const findGroupInviteNotification = async (gId: number, uId: number) => {
   const not = await db.notification.findFirst({
     where: {
       groupId: gId,
-      userId: uId,
+      targetId: uId,
     },
   });
   assert(not, new ApiError(NOT_FOUND, `Gruppe ${gId} nicht gefunden`));

@@ -5,16 +5,17 @@ import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import assert from 'assert';
 
-// TODO: LINK Friend Request to table in order to auto delete when accepted/ declined?
 export const sendAboReceiveNotification = async (
   targetId: number,
   userId: number,
+  frId: number,
 ) => {
   await db.notification.create({
     data: {
       type: APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
       targetId,
       userId,
+      frId,
     },
   });
 };

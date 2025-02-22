@@ -36,6 +36,9 @@ model Notification {
   hostId Int?
   host   Host? @relation(fields: [hostId], references: [hId], onDelete: Cascade)
 
+  frId Int?
+  abo  AboRequest? @relation(fields: [frId], references: [frId], onDelete: SetNull)
+
   consumed Boolean?
 }
 
@@ -250,12 +253,13 @@ model GroupMember {
 }
 
 model AboRequest {
-  frId       Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now()) @updatedAt
-  fromUserId Int
-  toUserId   Int
-  fromUser   User     @relation("FromUserFA", fields: [fromUserId], references: [uId], onDelete: Cascade)
-  toUser     User     @relation("ToUserFA", fields: [toUserId], references: [uId], onDelete: Cascade)
+  frId          Int            @id @default(autoincrement())
+  createdAt     DateTime       @default(now()) @updatedAt
+  fromUserId    Int
+  toUserId      Int
+  fromUser      User           @relation("FromUserFA", fields: [fromUserId], references: [uId], onDelete: Cascade)
+  toUser        User           @relation("ToUserFA", fields: [toUserId], references: [uId], onDelete: Cascade)
+  notifications Notification[]
 }
 
 model HostRating {

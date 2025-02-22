@@ -20,4 +20,15 @@ consumer.on(
   },
 );
 
+consumer.on(
+  GENERIC_NOT_EVENT.FRIEND_REQ_RECEIVED,
+  async (ntId: number, accept?: boolean) => {
+    try {
+      await service.notification.updateConsumed(ntId, accept);
+    } catch (e) {
+      logger.error((e as Error).message);
+    }
+  },
+);
+
 export default consumer;

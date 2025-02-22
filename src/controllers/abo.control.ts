@@ -12,6 +12,8 @@ import { Account } from '@prisma/client';
 import { CONFLICT, CREATED, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
+import consumer from '../notification/consumer.notification';
+import { GENERIC_NOT_EVENT } from '../notification';
 
 export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
@@ -47,7 +49,9 @@ export const putRequestState = catchAsync(
       !isFriendedAlready,
       new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
     );
+    const not = await service.notification.findFriendReqNot(frId);
     await service.abo.modifyRequest(aboRequest, accept);
+    consumer.emit(GENERIC_NOT_EVENT.FRIEND_REQ_RECEIVED, not.ntId, accept);
     return res.status(OK).json({});
   },
 );
@@ -170,6 +174,9 @@ export const deleteAbo = catchAsync(
         found,
         new ApiError(NOT_FOUND, 'Anfrage konnte nicht gefunden werden'),
       );
+      // deleting notification when user revokes abo request
+      await service.notification.deleteFriendReqNot(found.frId);
+
       await service.abo.deleteAboRequest(found.frId);
     }
 

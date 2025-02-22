@@ -76,7 +76,7 @@ emitter.on(event.FRIEND_REQ_RECEIVED, async (frId: number) => {
 
     const fcmToken = await service.token.findNotificationTokenByUId(target.uId);
 
-    appNotifications.sendAboReceiveNotification(target.uId, origin.uId);
+    appNotifications.sendAboReceiveNotification(target.uId, origin.uId, frId);
 
     if (!fcmToken?.token) return;
 
