@@ -55,7 +55,6 @@ emitter.on(
       );
 
       if (!fcmToken?.token) return;
-      logger.debug('fcm token: ' + fcmToken.token);
       await pushNotifications.sendNotification(
         'Gruppeneinladung',
         `Du hast eine Einladung für die Gruppe ${name} erhalten`,
