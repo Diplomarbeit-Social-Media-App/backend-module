@@ -60,7 +60,7 @@ export const handleError = async (
   _next: NextFunction,
 ) => {
   if (!err.isOperational) {
-    return await handleSevereErrors(err.message, err.stack);
+    return await handleSevereErrors(err);
   }
   if (res.headersSent) return;
   const errorFormat: errorResFormat = {
@@ -77,20 +77,21 @@ export const handleError = async (
     .json(errorFormat);
 };
 
-export const handleSevereErrors = async (e?: string, stack: string = '') => {
-  logger.error(`An uncaught problem was encountered! Shutting down...`);
-  logger.error(`Error stack: ` + stack);
-  if (e) logger.error(`Error message: ${e}`);
+export const handleSevereErrors = async (e?: Error) => {
+  logger.error(`A serious problem has arisen unexpectedly`);
+  logger.error(`Name: ${e?.name ?? ''}`);
+  logger.error(`Message: ${e?.message} ?? ''`);
+  logger.error(`Stack: ${e?.stack} ?? ''`);
   try {
-    logger.error(`Closing db connection if open...`);
     await db.$disconnect();
+    logger.error(`Database connection closed due to error`);
   } catch {
-    logger.error(`Uncaught problem encountered! Error disconnecting database`);
+    logger.error(`ERROR: Could not close db connection!`);
   }
   if (server)
     await Promise.resolve(
       new Promise((resolve, _reject) => server.close(resolve)),
     );
-  logger.error('Exiting process...');
+  logger.error('Exiting container with error message 1');
   process.exit(1);
 };
