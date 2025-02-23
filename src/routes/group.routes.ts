@@ -3,6 +3,7 @@ import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import schema from '../schema';
 import {
+  groupIdOnlySchema,
   participateAttachedEventSchema,
   postAttachPublicEventSchema,
 } from '../schema/group.schema';
@@ -52,6 +53,11 @@ router.put(
   '/',
   [validate(schema.group.generalEditGroupSchema)],
   controllers.group.putEditGroup,
+);
+router.get(
+  '/chat/:gId',
+  [validate(groupIdOnlySchema)],
+  controllers.group.getChatInformations,
 );
 router.get('/', controllers.group.getUserGroups);
 

@@ -15,6 +15,51 @@ import { TOKEN_TYPES } from '../types/token';
 import { BasicAccountRepresentation } from '../types/abo';
 
 /**
+ * @param gId group id
+ * @param originId user id (requester)
+ * @returns gross group chat data needed for group chat endpoint
+ */
+export const findGroupChatData = async (gId: number, originId: number) => {
+  const memberData = await db.groupMember.findFirst({
+    where: { gId, uId: originId },
+    select: { lastReadAt: true },
+  });
+
+  const messages = await db.message.findMany({
+    where: { gId },
+    select: {
+      text: true,
+      timeStamp: true,
+      user: {
+        select: { account: { select: { userName: true, picture: true } } },
+      },
+      uId: true,
+    },
+    orderBy: { timeStamp: 'desc' },
+  });
+  const flattendMessages = messages.map(({ text, timeStamp, uId, user }) => ({
+    text,
+    timeStamp,
+    uId,
+    userName: user.account.userName,
+    picture: user.account.picture,
+    isOwnMessage: uId === originId,
+  }));
+
+  const memberCount = await db.groupMember.count({
+    where: { gId, acceptedInvitation: true },
+  });
+
+  return {
+    lastReadAt: memberData?.lastReadAt,
+    messages: flattendMessages,
+    memberCount,
+  };
+};
+
+export const findClosestAttachedEvent = async (_gId: number) => {};
+
+/**
  * Lists friends of user uId who are not yet invited/ member of group gId
  * @param gId Group id
  * @param uId User id

@@ -247,6 +247,7 @@ model GroupMember {
   isAdmin             Boolean                   @default(false)
   acceptedInvitation  Boolean                   @default(false)
   invitedAt           DateTime                  @default(now())
+  lastReadAt          DateTime                  @default(now())
   group               Group                     @relation(fields: [gId], references: [gId], onDelete: Cascade)
   user                User                      @relation(fields: [uId], references: [uId], onDelete: Cascade)
   account             Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)

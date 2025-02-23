@@ -100,6 +100,25 @@ export const postInviteGroup = catchAsync(
   },
 );
 
+export const getChatInformations = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { gId } = req.params;
+
+    const { isMember, isInvited } = await service.group.isInvitedOrMember(
+      gId,
+      uId,
+    );
+    assert(!isInvited, new ApiError(FORBIDDEN, 'Nimm zuerst die Einladung an'));
+    assert(isMember, new ApiError(FORBIDDEN, 'Nicht in dieser Gruppe'));
+
+    const grossGroupChatData = await service.group.findGroupChatData(gId, uId);
+
+    return res.status(OK).json(grossGroupChatData);
+  },
+);
+
 export const putInviteAcceptGroup = catchAsync(
   async (req: Request<object, object, inviteAcceptType>, res, _next) => {
     const { accept, gId } = req.body;
