@@ -28,7 +28,7 @@ emitter.on(
         .filter((t) => t?.token !== null)
         .map((t) => t.token);
       if (fcmTokens.length === 0) return;
-      pushNotifications.sendNotifications(
+      await pushNotifications.sendNotifications(
         'Neue Nachricht',
         `${userName} hat eine Nachricht gesendet`,
         ...fcmTokens,
@@ -55,7 +55,8 @@ emitter.on(
       );
 
       if (!fcmToken?.token) return;
-      pushNotifications.sendNotification(
+      logger.debug('fcm token: ' + fcmToken.token);
+      await pushNotifications.sendNotification(
         'Gruppeneinladung',
         `Du hast eine Einladung für die Gruppe ${name} erhalten`,
         fcmToken.token,
@@ -100,6 +101,12 @@ emitter.on(
       );
       const tokenUId = friends.userId;
       const token = await service.token.findNotificationTokenByUId(tokenUId);
+
+      appNotifications.sendAboAcceptNotification(
+        friends.userId,
+        friends.friendId,
+      );
+
       if (!token?.token)
         return logger.warn(
           'Could not send accepted friend req bc token is missing',
@@ -108,10 +115,6 @@ emitter.on(
         'Freundschaft akzeptiert',
         `${friends.friend.account.userName} hat deine Freundschaftsanfrage angenommen`,
         token.token,
-      );
-      appNotifications.sendAboAcceptNotification(
-        friends.userId,
-        friends.friendId,
       );
     } catch (e) {
       logger.error((e as Error).message);
@@ -136,7 +139,7 @@ emitter.on(
         ) || [];
 
       if (fcmTokens.length <= 0) return;
-      pushNotifications.sendNotifications(
+      await pushNotifications.sendNotifications(
         'Neues Event',
         `${eventName} wurde gerade veröffentlicht`,
         ...fcmTokens,

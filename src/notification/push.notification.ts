@@ -15,5 +15,5 @@ export const sendNotifications = (
   body: string,
   ...tokens: string[]
 ) => {
-  messaging.sendEachForMulticast({ tokens, data: { title, body } });
+  return messaging.sendEachForMulticast({ tokens, data: { title, body } });
 };
