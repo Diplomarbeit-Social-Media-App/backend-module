@@ -192,7 +192,7 @@ export const findGroupsByUIdSimpleFormat = async (uId: number) => {
     where: {
       members: {
         some: {
-          uId,
+          AND: [{ uId }, { acceptedInvitation: true }],
         },
       },
     },
