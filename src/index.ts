@@ -21,7 +21,9 @@ export const server = app.listen(PORT, async () => {
   logger.info(`🚀 Service started on PORT :${PORT}`);
 });
 
-process.on('uncaughtException', (e: Error) => handleSevereErrors(e.message));
+process.on('uncaughtException', (e: Error) =>
+  handleSevereErrors(e.message, e.stack),
+);
 process.on('unhandledRejection', (reason: Error) =>
   handleSevereErrors(`${reason?.message}|${reason?.name}`),
 );

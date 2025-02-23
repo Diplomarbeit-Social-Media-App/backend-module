@@ -79,7 +79,7 @@ export const handleError = async (
 
 export const handleSevereErrors = async (e?: string, stack: string = '') => {
   logger.error(`An uncaught problem was encountered! Shutting down...`);
-  logger.error(stack);
+  logger.error(`Error stack: ` + stack);
   if (e) logger.error(`Error message: ${e}`);
   try {
     logger.error(`Closing db connection if open...`);
