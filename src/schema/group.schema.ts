@@ -1,4 +1,4 @@
-import { coerce, object, string } from 'zod';
+import { array, coerce, object, string } from 'zod';
 import validator from 'validator';
 
 export const kickUserGroupSchema = object({
@@ -20,6 +20,9 @@ export const createGroupSchema = object({
       .nullable()
       .default("Let's go partying gurrl!"),
     picture: string({ required_error: 'Gruppenbild fehlt' }).nullable(),
+    invitations: array(string().min(3, 'Username bei Einladung zu kurz'))
+      .nullable()
+      .optional(),
   }),
 });
 

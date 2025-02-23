@@ -35,7 +35,7 @@ export const postCreateGroup = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { description, name, picture } = req.body;
+    const { description, name, picture, invitations } = req.body;
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
     const group = await service.group.createGroup(
@@ -44,6 +44,23 @@ export const postCreateGroup = catchAsync(
       picture,
       user.uId,
     );
+    if (invitations && invitations?.length > 0) {
+      const statistic = await Promise.allSettled(
+        invitations.map(
+          async (invite) =>
+            await service.group.inviteByUserName(group.gId, invite, false),
+        ),
+      );
+      const { fulfilled, rejected } = statistic.reduce(
+        (acc, result) => {
+          if (result.status === 'fulfilled') acc.fulfilled++;
+          else acc.rejected++;
+          return acc;
+        },
+        { fulfilled: 0, rejected: 0 },
+      );
+      Object.assign(group, { invitations: { fulfilled, rejected } });
+    }
     return res.status(OK).json(group);
   },
 );
