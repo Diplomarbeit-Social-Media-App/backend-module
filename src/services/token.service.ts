@@ -27,8 +27,10 @@ export const findNotificationTokenByUId = async (uId: number) => {
 export const updateNotificationToken = async (aId: number, token: string) => {
   await db.token.deleteMany({
     where: {
-      type: TOKEN_TYPES.NOTIFICATION.toString(),
-      token,
+      OR: [
+        { type: TOKEN_TYPES.NOTIFICATION.toString(), token },
+        { type: TOKEN_TYPES.NOTIFICATION.toString(), aId },
+      ],
     },
   });
 
