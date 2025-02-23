@@ -157,7 +157,12 @@ export const getGroupData = catchAsync(
       new ApiError(UNAUTHORIZED, 'Kein Mitglied der Gruppe'),
     );
     const group = await service.group.loadAllData(gId);
-    Object.assign(group, { members });
+
+    const isSelfAdmin = await service.group.isAdminOfGroup(gId, uId);
+    Object.assign(group, { isSelfAdmin });
+
+    const mappedMembers = members.map((m) => ({ ...m, isSelf: m.uId === uId }));
+    Object.assign(group, { members: mappedMembers });
 
     return res.status(OK).json(group);
   },
