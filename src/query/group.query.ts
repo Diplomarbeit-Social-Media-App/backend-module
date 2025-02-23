@@ -30,7 +30,11 @@ const richFormatSelection = {
     select: {
       activities: true,
       events: true,
-      members: true,
+      members: {
+        where: {
+          acceptedInvitation: true,
+        },
+      },
       messages: true,
     },
   },
