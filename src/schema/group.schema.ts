@@ -67,23 +67,6 @@ export const groupIdOnlySchema = object({
   }),
 });
 
-export const participateAttachedEventSchema = object({
-  body: object({
-    aeId: coerce.number({
-      message: 'Event-Id ist ungültig',
-    }),
-    pickupOutbound: coerce.boolean({
-      message: 'Mitnahme Möglichkeit ist ungültig',
-    }),
-    pickupReturn: coerce.boolean({
-      message: 'Mitnahme Möglichkeit ist ungültig',
-    }),
-    participation: coerce.boolean({
-      message: 'Teilnahme ist ungültig',
-    }),
-  }),
-});
-
 export const generalEditGroupSchema = object({
   body: object({
     gId: coerce.number({ message: 'Gruppen-Id fehlt' }),

@@ -2,7 +2,6 @@ import {
   CONFLICT,
   CREATED,
   FORBIDDEN,
-  INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   OK,
   UNAUTHORIZED,
@@ -17,7 +16,6 @@ import {
   inviteAcceptType,
   inviteGroupType,
   kickUserGroupType,
-  participateAttachedEventType,
 } from '../types/group';
 import { Account } from '@prisma/client';
 import service from '../services';
@@ -383,57 +381,5 @@ export const postAttachEvent = catchAsync(
     });
 
     return res.status(CREATED).json({ message: 'Event hinzugefügt' });
-  },
-);
-
-export const postParticipateAttachedEvent = catchAsync(
-  async (
-    req: Request<object, object, participateAttachedEventType>,
-    res: Response,
-    _next: NextFunction,
-  ) => {
-    const { aeId } = req.body;
-    const { aId } = req.user as Account;
-    const { uId } = await service.user.findUserByAId(aId);
-    const attachedEvent = await service.group.findAttachedEventByAEId(aeId);
-
-    const { gId, members } = attachedEvent.Group;
-    const { isMember } = await service.group.isInvitedOrMember(gId, uId);
-    assert(isMember, new ApiError(UNAUTHORIZED, 'Kein Gruppenmitglied'));
-    const member = members.find((m) => m.uId === uId);
-    assert(
-      member,
-      new ApiError(
-        INTERNAL_SERVER_ERROR,
-        'Konnte Mitglieder der Gruppe nicht richtig zuordnen',
-      ),
-    );
-
-    const pollEnded = dayjs(attachedEvent.pollEndsAt).isBefore(dayjs());
-    assert(
-      !pollEnded,
-      new ApiError(FORBIDDEN, 'Teilnahme-Umfrage geschlossen'),
-    );
-
-    const hasEntryYet = await service.group.hasEventParticipationEntry(
-      aeId,
-      uId,
-    );
-
-    const participation = await service.group.participateAttachedEvent(
-      uId,
-      member.gmId,
-      aId,
-      req.body,
-      hasEntryYet?.gevId,
-    );
-
-    const { eId, event } = attachedEvent;
-    if (eId && event)
-      await service.event.participateEvent(aId, eId, participation);
-
-    return res.status(OK).json({
-      message: `${participation ? 'Teilnahme bestätigt' : 'Teilnahme zurückgezogen'}`,
-    });
   },
 );
