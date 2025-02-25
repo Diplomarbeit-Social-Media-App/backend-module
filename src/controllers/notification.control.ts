@@ -34,6 +34,7 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
   const userInformation = ['uId', 'aId', 'account.userName'];
   const hostInformation = ['hId', 'aId', 'companyName', 'account.userName'];
   const groupInformation = ['_count.members', 'gId', 'name'];
+  const friendReqInformation = ['frId'];
   const eventInformation = [
     'eId',
     'name',
@@ -49,6 +50,7 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
     event: pick(n.event, eventInformation),
     host: pick(n.host, hostInformation),
     group: pick(n.group, groupInformation),
+    abo: pick(n, friendReqInformation),
   }));
 
   const accountMapper = (data: {
@@ -72,7 +74,7 @@ export const getNotifications = catchAsync(async (req, res, _next) => {
         m.base.type === APP_NOTIFICATION_TYPE.FRIEND_REQUEST_ACCEPTED ||
         m.base.type === APP_NOTIFICATION_TYPE.FRIEND_REQUEST_RECEIVED,
     )
-    .map((m) => ({ ...m.base, ...m.user }))
+    .map((m) => ({ ...m.base, ...m.user, ...m.abo }))
     .map(accountMapper);
 
   const eventNots = mapped
