@@ -59,10 +59,23 @@ const groupMessageCreationSelection = {
   mId: true,
 };
 
+const groupAttachedEventSelection = {
+  name: true,
+  aeId: true,
+  eId: true,
+  city: true,
+  street: true,
+  isPublic: true,
+  image: true,
+  startsAt: true,
+  suggestedBy: true,
+};
+
 const queries = {
   simpleGroupSelection,
   richFormatSelection,
   groupMessageCreationSelection,
+  groupAttachedEventSelection,
 };
 
 export default queries;

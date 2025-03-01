@@ -96,29 +96,6 @@ export const generalEditGroupSchema = object({
   }),
 });
 
-export const generalAttachmentData = object({
-  meetingPoint: string({
-    invalid_type_error: 'Treffpunkt ist ungültig',
-    required_error: 'Treffpunkt fehlt',
-  }).min(1, 'Treffpunkt leer'),
-  meetingTime: coerce.date({
-    errorMap: (issue, { defaultError }) => ({
-      message:
-        issue.code === 'invalid_date'
-          ? 'Treffpunkt (Datum) ist ungültig'
-          : defaultError,
-    }),
-  }),
-  pollEndsAt: coerce.date({
-    errorMap: (issue, { defaultError }) => ({
-      message:
-        issue.code === 'invalid_date'
-          ? 'Umfrageende ist ungültig'
-          : defaultError,
-    }),
-  }),
-});
-
 export const postAttachPublicEventSchema = object({
   body: object({
     gId: coerce
@@ -133,6 +110,5 @@ export const postAttachPublicEventSchema = object({
         required_error: 'Event-Id fehlt',
       })
       .min(0, { message: 'Event-Id muss positiv sein' }),
-    ...generalAttachmentData.shape,
   }),
 });

@@ -4,9 +4,7 @@ import { ApiError } from '../utils/apiError';
 import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import {
   BasicGroupMemberPresentation,
-  generalAttachmentDataType,
   generalEditGroupType,
-  participateAttachedEventType,
 } from '../types/group';
 import query from '../query';
 import { omit } from 'lodash';
@@ -70,7 +68,37 @@ export const updateReadTimeStamp = async (uId: number, gId: number) => {
   });
 };
 
-export const findClosestAttachedEvent = async (_gId: number) => {};
+export const findClosestAttachedEvent = async (gId: number) => {
+  const futureEvent = await db.attachedEvent.findFirst({
+    where: {
+      gId,
+      startsAt: {
+        gte: dayjs().toDate(),
+      },
+    },
+    orderBy: {
+      startsAt: 'desc',
+    },
+    select: query.group.groupAttachedEventSelection,
+  });
+  if (futureEvent) return { ...futureEvent, isFutureEvent: true };
+
+  const pastEvent = await db.attachedEvent.findFirst({
+    where: {
+      gId,
+      startsAt: {
+        lte: dayjs().toDate(),
+      },
+    },
+    orderBy: {
+      startsAt: 'asc',
+    },
+    select: query.group.groupAttachedEventSelection,
+  });
+  if (pastEvent) return { ...pastEvent, isFutureEvent: false };
+
+  return null;
+};
 
 /**
  * Lists friends of user uId who are not yet invited/ member of group gId
@@ -232,10 +260,8 @@ export const attachPublicEvent = async (
   userName: string,
   event: Event,
   loc: Location,
-  additionalData: generalAttachmentDataType,
 ) => {
   const { city, country, houseNumber, postCode, street } = loc;
-  const { meetingPoint, meetingTime, pollEndsAt } = additionalData;
   const attached = await db.attachedEvent.create({
     data: {
       isPublic: true,
@@ -250,9 +276,7 @@ export const attachPublicEvent = async (
       country,
       street,
       eId: event.eId,
-      meetingPoint,
-      meetingTime: String(meetingTime),
-      pollEndsAt,
+      startsAt: event.startsAt!,
     },
   });
   return attached;
@@ -355,46 +379,10 @@ export const acceptInvitation = async (gId: number, uId: number) => {
 export const findAttachedEventByAEId = async (aeId: number) => {
   const event = await db.attachedEvent.findFirst({
     where: { aeId },
-    include: { event: true, Group: { include: { members: true } } },
+    include: { event: true, group: { include: { members: true } } },
   });
   assert(event, new ApiError(NOT_FOUND, `Event ${aeId} not found`));
   return event;
-};
-
-export const hasEventParticipationEntry = async (aeId: number, uId: number) => {
-  return await db.groupEventParticipation.findFirst({
-    where: {
-      aeId,
-      uId,
-    },
-  });
-};
-
-export const participateAttachedEvent = async (
-  uId: number,
-  gmId: number,
-  aId: number,
-  data: participateAttachedEventType,
-  oldGevId?: number,
-) => {
-  const upserted = await db.groupEventParticipation.upsert({
-    where: {
-      gevId: oldGevId ?? -1,
-    },
-    update: {
-      pickupOutbound: data.pickupOutbound,
-      pickupReturn: data.pickupOutbound,
-      vote: data.participation,
-    },
-    create: {
-      uId,
-      aId,
-      gmId,
-      ...omit(data, 'participation'),
-      vote: data.participation,
-    },
-  });
-  return upserted.vote;
 };
 
 export const inviteByUserName = async (

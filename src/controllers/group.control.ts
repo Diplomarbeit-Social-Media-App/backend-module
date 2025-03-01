@@ -113,7 +113,16 @@ export const getChatInformations = catchAsync(
 
     const grossGroupChatData = await service.group.findGroupChatData(gId, uId);
 
-    return res.status(OK).json(grossGroupChatData);
+    await service.group.updateReadTimeStamp(uId, gId);
+
+    const closestEvent = await service.group.findClosestAttachedEvent(gId);
+
+    const data = {
+      ...grossGroupChatData,
+      closestEvent,
+    };
+
+    return res.status(OK).json(data);
   },
 );
 
@@ -346,7 +355,7 @@ export const postAttachEvent = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { eId, gId, meetingPoint, meetingTime, pollEndsAt } = req.body;
+    const { eId, gId } = req.body;
     const { aId, userName } = req.user as Account;
     const { uId } = await service.user.findUserByAId(aId);
     const group = await service.group.findGroupByGId(gId);
@@ -374,11 +383,7 @@ export const postAttachEvent = catchAsync(
       new ApiError(CONFLICT, 'Event bereits in dieser Gruppe'),
     );
 
-    await service.group.attachPublicEvent(gId, userName, event, location, {
-      meetingPoint,
-      meetingTime,
-      pollEndsAt,
-    });
+    await service.group.attachPublicEvent(gId, userName, event, location);
 
     return res.status(CREATED).json({ message: 'Event hinzugefügt' });
   },
