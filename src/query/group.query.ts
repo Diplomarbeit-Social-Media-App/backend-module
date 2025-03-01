@@ -65,6 +65,7 @@ const groupAttachedEventSelection = {
   eId: true,
   city: true,
   street: true,
+  houseNumber: true,
   isPublic: true,
   image: true,
   startsAt: true,
