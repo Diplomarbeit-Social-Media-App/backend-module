@@ -40,6 +40,29 @@ const richFormatSelection = {
   },
 };
 
-const queries = { simpleGroupSelection, richFormatSelection };
+const groupMessageCreationSelection = {
+  timeStamp: true,
+  user: {
+    select: {
+      uId: true,
+      aId: true,
+      account: {
+        select: {
+          userName: true,
+          picture: true,
+        },
+      },
+    },
+  },
+  text: true,
+  gId: true,
+  mId: true,
+};
+
+const queries = {
+  simpleGroupSelection,
+  richFormatSelection,
+  groupMessageCreationSelection,
+};
 
 export default queries;

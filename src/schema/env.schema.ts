@@ -34,4 +34,8 @@ export const env = object({
     message:
       'FIREBASE_ADMIN must be defined either as path to file (not prod) or a string representing the object in prod',
   }),
+  REDIS_URL: string({ message: 'Redis url must be defined' }),
+  REDIS_USER: string({ message: 'Redis user must be defined' }),
+  REDIS_PWD: string({ message: 'Redis pwd must be defined' }),
+  REDIS_PORT: coerce.number({ message: 'Redis port must be defined' }),
 });
