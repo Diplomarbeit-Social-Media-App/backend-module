@@ -98,6 +98,51 @@ export const postInviteGroup = catchAsync(
   },
 );
 
+export const getAttachedEvents = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { gId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const allowed = await service.group.isInvitedOrMember(gId, uId);
+    assert(
+      allowed.isMember,
+      new ApiError(FORBIDDEN, 'Kein Mitglied der Gruppe'),
+    );
+
+    const { privateEvents, publicEvents } =
+      await service.group.findAttachedEvents(gId);
+
+    const groupMemberCount = (await service.group.findMembersOfGroup(gId))
+      .length;
+
+    const publicWithAttendees = await Promise.all(
+      publicEvents.map(async (e) => {
+        const attendees = await service.event.findAttendeesOfGroupByEId(
+          e.eId,
+          gId,
+        );
+        return { ...e, participations: attendees };
+      }),
+    );
+
+    const privateWithAttendees = privateEvents?.map((e) => ({
+      ...e,
+      participations: e.participations?.map((u) => ({
+        ...u,
+        hId: null,
+        isUserAccount: true,
+      })),
+    }));
+
+    return res.status(OK).json({
+      privateEvents: privateWithAttendees,
+      publicEvents: publicWithAttendees,
+      groupMemberCount,
+    });
+  },
+);
+
 export const getChatInformations = catchAsync(
   async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;

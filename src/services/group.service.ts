@@ -13,6 +13,19 @@ import { TOKEN_TYPES } from '../types/token';
 import { BasicAccountRepresentation } from '../types/abo';
 import dayjs from 'dayjs';
 
+export const findAttachedEvents = async (gId: number) => {
+  const attachedEvents = await db.attachedEvent.findMany({
+    where: { gId },
+    select: query.group.groupAttachedEventParticipationsSelection,
+    orderBy: [{ startsAt: 'desc' }, { isPublic: 'desc' }],
+  });
+
+  const privateEvents = attachedEvents.filter((e) => !e.isPublic);
+  const publicEvents = attachedEvents.filter((e) => e.isPublic);
+
+  return { publicEvents, privateEvents };
+};
+
 /**
  * @param gId group id
  * @param originId user id (requester)

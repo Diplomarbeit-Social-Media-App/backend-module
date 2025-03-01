@@ -14,6 +14,45 @@ import dayjs from 'dayjs';
 import { User } from '@prisma/client';
 import assert from 'assert';
 import notification, { GENERIC_NOT_EVENT } from '../notification';
+import { BasicAccountRepresentation } from '../types/abo';
+import query from '../query';
+
+/**
+ * Finds the attendees of an event who are also members of a specific group.
+ *
+ * This function retrieves all users who are part of the given group (`gId`) and
+ * checks which of them have attended the event (`eId`). It returns an array of
+ * attendees formatted as `BasicAccountRepresentation`.
+ *
+ * @param {number} eId - The ID of the event to search attendees for.
+ * @param {number} gId - The ID of the group whose members should be filtered.
+ * @returns {Promise<BasicAccountRepresentation[]>} A promise resolving to an array
+ * of attendees who are part of the given group.
+ */
+export const findAttendeesOfGroupByEId = async (
+  eId: number,
+  gId: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const groupMembers = await db.groupMember.findMany({
+    where: { gId, acceptedInvitation: true },
+    select: { uId: true },
+  });
+  const mappedUId = groupMembers.map((m) => m.uId);
+
+  const event = await db.event.findFirst({
+    where: { eId },
+    select: query.event.attendeesInGroupSelection(mappedUId),
+  });
+
+  const response: BasicAccountRepresentation[] =
+    event?.users?.map((u) => ({
+      ...u,
+      isUserAccount: true,
+      hId: null,
+    })) ?? [];
+
+  return response;
+};
 
 export const findEventByEId = async (eId: number) => {
   const event = await db.event.findFirst({

@@ -69,4 +69,10 @@ router.post(
   controllers.group.postAttachEvent,
 );
 
+router.get(
+  '/events/:gId',
+  [validate(groupIdOnlySchema)],
+  controllers.group.getAttachedEvents,
+);
+
 export default router;

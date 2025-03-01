@@ -71,11 +71,33 @@ const groupAttachedEventSelection = {
   suggestedBy: true,
 };
 
+const groupAttachedEventParticipationsSelection = {
+  ...groupAttachedEventSelection,
+  participations: {
+    where: {
+      groupMember: {
+        acceptedInvitation: true,
+      },
+    },
+    select: {
+      uId: true,
+      account: {
+        select: {
+          userName: true,
+          picture: true,
+          aId: true,
+        },
+      },
+    },
+  },
+};
+
 const queries = {
   simpleGroupSelection,
   richFormatSelection,
   groupMessageCreationSelection,
   groupAttachedEventSelection,
+  groupAttachedEventParticipationsSelection,
 };
 
 export default queries;
