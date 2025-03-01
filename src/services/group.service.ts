@@ -13,6 +13,7 @@ import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
 import { TOKEN_TYPES } from '../types/token';
 import { BasicAccountRepresentation } from '../types/abo';
+import dayjs from 'dayjs';
 
 /**
  * @param gId group id
@@ -55,6 +56,18 @@ export const findGroupChatData = async (gId: number, originId: number) => {
     messages: flattendMessages,
     memberCount,
   };
+};
+
+export const updateReadTimeStamp = async (uId: number, gId: number) => {
+  return db.groupMember.updateMany({
+    where: {
+      uId,
+      gId,
+    },
+    data: {
+      lastReadAt: dayjs().toDate(),
+    },
+  });
 };
 
 export const findClosestAttachedEvent = async (_gId: number) => {};
@@ -184,6 +197,21 @@ export const findGroupByGId = async (gId: number) => {
   });
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} nicht gefunden`));
   return group;
+};
+
+export const sendMessage = async (
+  uId: number,
+  gId: number,
+  message: string,
+) => {
+  return db.message.create({
+    data: {
+      gId,
+      text: message,
+      uId,
+    },
+    select: query.group.groupMessageCreationSelection,
+  });
 };
 
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {
