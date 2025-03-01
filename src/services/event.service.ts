@@ -110,17 +110,15 @@ export const participateEvent = async (
   const blockingGroup = await db.attachedEvent.findFirst({
     where: {
       eId,
+      isPublic: true,
       participations: {
         some: {
           aId,
-          vote: {
-            equals: true,
-          },
         },
       },
     },
     select: {
-      Group: {
+      group: {
         select: {
           name: true,
         },
@@ -131,7 +129,7 @@ export const participateEvent = async (
   if (blockingGroup && !attendance) {
     throw new ApiError(
       CONFLICT,
-      `Von Gruppe ${blockingGroup.Group.name} blockiert`,
+      `Durch Gruppe ${blockingGroup.group.name} blockiert`,
     );
   }
 

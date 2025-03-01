@@ -12,7 +12,7 @@ import { initialiseAdapter } from './ws/redisAdapter';
 import { initializeWebSocket } from './ws';
 import { initialiseChatNameSpace } from './ws/chat';
 
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 process.env.UV_THREADPOOL = `${cpus.length}`;
 const PORT = config.PORT;
