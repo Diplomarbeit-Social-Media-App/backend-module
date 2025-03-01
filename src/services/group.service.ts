@@ -53,6 +53,7 @@ export const findGroupChatData = async (gId: number, originId: number) => {
     lastReadAt: memberData?.lastReadAt,
     messages: flattendMessages,
     memberCount,
+    gId,
   };
 };
 
