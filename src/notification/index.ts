@@ -31,6 +31,7 @@ emitter.on(
       await pushNotifications.sendNotifications(
         'Neue Nachricht',
         `${userName} hat eine Nachricht gesendet`,
+        true,
         ...fcmTokens,
       );
     } catch (e) {
@@ -58,6 +59,7 @@ emitter.on(
       await pushNotifications.sendNotification(
         'Gruppeneinladung',
         `Du hast eine Einladung für die Gruppe ${name} erhalten`,
+        false,
         fcmToken.token,
       );
     } catch (e) {
@@ -83,6 +85,7 @@ emitter.on(event.FRIEND_REQ_RECEIVED, async (frId: number) => {
     await pushNotifications.sendNotification(
       'Freundschaftsanfrage',
       `Du hast eine Freundschaftsanfrage von ${origin.account.userName} bekommen`,
+      false,
       fcmToken.token,
     );
   } catch (e) {
@@ -113,6 +116,7 @@ emitter.on(
       await pushNotifications.sendNotification(
         'Freundschaft akzeptiert',
         `${friends.friend.account.userName} hat deine Freundschaftsanfrage angenommen`,
+        false,
         token.token,
       );
     } catch (e) {
@@ -141,6 +145,7 @@ emitter.on(
       await pushNotifications.sendNotifications(
         'Neues Event',
         `${eventName} wurde gerade veröffentlicht`,
+        false,
         ...fcmTokens,
       );
     } catch (e) {
@@ -152,7 +157,7 @@ emitter.on(
 emitter.on(
   event.CUSTOM_PUSH,
   (title: string, body: string, ...tokens: string[]) =>
-    pushNotifications.sendNotifications(title, body, ...tokens),
+    pushNotifications.sendNotifications(title, body, false, ...tokens),
 );
 
 export default emitter;
