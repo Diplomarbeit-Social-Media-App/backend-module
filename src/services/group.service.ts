@@ -12,6 +12,8 @@ import { Event, Location } from '@prisma/client';
 import { TOKEN_TYPES } from '../types/token';
 import { BasicAccountRepresentation } from '../types/abo';
 import dayjs from 'dayjs';
+import notification, { GENERIC_NOT_EVENT } from '../notification/index';
+import service from '.';
 
 export const findAttachedEvents = async (gId: number) => {
   const attachedEvents = await db.attachedEvent.findMany({
@@ -246,7 +248,7 @@ export const sendMessage = async (
   gId: number,
   message: string,
 ) => {
-  return db.message.create({
+  const msg = await db.message.create({
     data: {
       gId,
       text: message,
@@ -254,6 +256,14 @@ export const sendMessage = async (
     },
     select: query.group.groupMessageCreationSelection,
   });
+  const account = await service.auth.findAccountByUId(uId);
+  notification.emit(
+    GENERIC_NOT_EVENT.GROUP_MESSAGE,
+    gId,
+    account.userName,
+    uId,
+  );
+  return msg;
 };
 
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {

@@ -23,6 +23,16 @@ export const findAccountByEmail = async (email: string) => {
   return account;
 };
 
+export const findAccountByUId = async (uId: number) => {
+  const account = await db.account.findFirst({
+    where: {
+      user: { uId },
+    },
+  });
+  assert(account, new ApiError(NOT_FOUND, 'Kein Account gefunden'));
+  return account;
+};
+
 export const updateLoginOs = async (aId: number, os: LOGIN_OS) => {
   await db.account.update({
     where: {
