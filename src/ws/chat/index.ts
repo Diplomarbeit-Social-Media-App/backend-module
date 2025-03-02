@@ -120,8 +120,18 @@ export const initialiseChatNameSpace = (ws: Server) => {
       }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       logger.debug(`🔴 User ${socket.data.auth.uId} getrennt`);
+      const uId = socket.data.auth.uId;
+      const room = socket.data.room;
+      if (!uId || !room) return;
+      try {
+        await service.group.updateReadTimeStamp(uId, room);
+      } catch {
+        logger.error(
+          `Failed to update timestamp on userId ${uId}, gId ${room}`,
+        );
+      }
     });
   });
 
