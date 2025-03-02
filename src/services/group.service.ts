@@ -42,6 +42,7 @@ export const findGroupChatData = async (gId: number, originId: number) => {
   const messages = await db.message.findMany({
     where: { gId },
     select: {
+      mId: true,
       text: true,
       timeStamp: true,
       user: {
@@ -51,14 +52,17 @@ export const findGroupChatData = async (gId: number, originId: number) => {
     },
     orderBy: { timeStamp: 'desc' },
   });
-  const flattendMessages = messages.map(({ text, timeStamp, uId, user }) => ({
-    text,
-    timeStamp,
-    uId,
-    userName: user.account.userName,
-    picture: user.account.picture,
-    isOwnMessage: uId === originId,
-  }));
+  const flattendMessages = messages.map(
+    ({ text, timeStamp, uId, user, mId }) => ({
+      text,
+      timeStamp,
+      uId,
+      mId,
+      userName: user.account.userName,
+      picture: user.account.picture,
+      isOwnMessage: uId === originId,
+    }),
+  );
 
   const memberCount = await db.groupMember.count({
     where: { gId, acceptedInvitation: true },
