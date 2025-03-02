@@ -145,7 +145,7 @@ export const getAttachedEvents = catchAsync(
 
 export const getChatInformations = catchAsync(
   async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
-    const { aId } = req.user as Account;
+    const { aId, userName } = req.user as Account;
     const { uId } = await service.user.findUserByAId(aId);
     const { gId } = req.params;
 
@@ -165,6 +165,8 @@ export const getChatInformations = catchAsync(
     const data = {
       ...grossGroupChatData,
       closestEvent,
+      uId,
+      userName,
     };
 
     return res.status(OK).json(data);
