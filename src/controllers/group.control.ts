@@ -344,6 +344,11 @@ export const getUserGroups = catchAsync(
         const lastMessage = await service.message.findLastMessageByGId(
           group.gId,
         );
+        const unreadMessageCount =
+          await service.message.findUnreadMessageCountByGId(
+            group.gId,
+            user.uId,
+          );
         const formatLastMessage = lastMessage
           ? {
               userName: lastMessage?.user?.account?.userName,
@@ -360,6 +365,7 @@ export const getUserGroups = catchAsync(
           isAdmin,
           hasAcceptedInvitation,
           lastMessage: formatLastMessage,
+          unreadMessageCount,
         };
       }),
     );
