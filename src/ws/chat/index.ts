@@ -57,7 +57,7 @@ export const initialiseChatNameSpace = (ws: Server) => {
   chatSpace.on('connection', (socket: Socket) => {
     logger.debug(`User with uId ${socket.data.auth.uId} connected`);
 
-    socket.on('join', async ({ gId }) => {
+    socket.on('join', async ({ gId }: { gId: number }) => {
       try {
         const userId = socket.data.auth.uId;
 
