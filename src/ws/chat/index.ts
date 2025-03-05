@@ -49,13 +49,15 @@ export const initialiseChatNameSpace = (ws: Server) => {
 
         next();
       } catch (err) {
-        next(err as Error);
+        const e: ExtendedError = err as ExtendedError;
+        next(e);
+        logger.debug(`🔴 ${e.message}`);
       }
     },
   );
 
   chatSpace.on('connection', (socket: Socket) => {
-    logger.debug(`User with uId ${socket.data.auth.uId} connected`);
+    logger.debug(`🟢 User with uId ${socket.data.auth.uId} connected`);
 
     socket.on('join', async ({ gId }: { gId: number }) => {
       try {
