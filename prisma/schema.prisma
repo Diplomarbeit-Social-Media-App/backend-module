@@ -118,17 +118,19 @@ model Message {
 }
 
 model Activity {
-  aId          Int        @id @default(autoincrement())
-  name         String
-  openingTimes String
-  description  String
-  minAge       Int
-  locationId   Int        @unique
-  creatorId    Int
-  host         Host       @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
-  location     Location   @relation(fields: [locationId], references: [lId])
-  groups       Group[]    @relation("AttachedActivites")
-  category     Category[] @relation("BelongsToCategory")
+  acId          Int      @id @default(autoincrement())
+  name          String
+  coverImage    String
+  galleryImages String[]
+  closed        Boolean  @default(false)
+  closureNote   String?
+  description   String?
+  openingTimes  Json
+  minAge        Int
+  lId           Int      @unique
+  hId           Int
+  location      Location @relation(fields: [lId], references: [lId], onDelete: Cascade)
+  Host          Host     @relation(fields: [hId], references: [hId], onDelete: Cascade)
 }
 
 model AdminProfile {
@@ -138,12 +140,11 @@ model AdminProfile {
 }
 
 model Category {
-  cId         Int        @id @default(autoincrement())
+  cId         Int     @id @default(autoincrement())
   description String
   name        String
   icon        String
   seasonal    Boolean
-  activity    Activity[] @relation("BelongsToCategory")
 }
 
 model Event {
@@ -196,7 +197,6 @@ model Group {
   description String?
   members     GroupMember[]
   messages    Message[]
-  activities  Activity[]    @relation("AttachedActivites")
 
   events        AttachedEvent[]
   notifications Notification[]
