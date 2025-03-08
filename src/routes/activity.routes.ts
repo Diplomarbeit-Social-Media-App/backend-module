@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import controllers from '../controllers';
-import { hasHostPermission } from '../middlewares/permission';
+import { hasHostPermission, hasValidAccunt } from '../middlewares/permission';
 import {
   createActivitySchema,
   deleteActivitySchema,
@@ -8,7 +8,7 @@ import {
 import { validate } from '../middlewares/validation';
 const router = Router();
 
-router.get('/', controllers.activity.getAllActivities);
+router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
 router.post(
   '/',
   [hasHostPermission, validate(createActivitySchema)],

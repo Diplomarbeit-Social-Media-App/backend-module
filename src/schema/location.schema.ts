@@ -11,5 +11,5 @@ export const locationSchema = object({
   houseNumber: coerce.string({
     message: 'Bitte gib eine Hausnummer an',
   }),
-  city: coerce.string({ message: 'Bitte gib einen Ortsnamen an' }).optional(),
+  city: coerce.string({ message: 'Bitte gib einen Ortsnamen an' }),
 });

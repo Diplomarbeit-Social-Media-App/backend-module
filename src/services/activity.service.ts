@@ -1,74 +1,43 @@
-import { NOT_FOUND } from 'http-status';
+import service from '.';
 import { createActivityType } from '../types/activity';
-import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
-import assert from 'assert';
 
-export const deleteActivityByAId = async (aId: number) => {
-  await db.activity.delete({
-    where: {
-      aId,
-    },
-  });
-};
-
-export const findActivityByAId = async (aId: number) => {
-  const activity = await db.activity.findFirst({
-    where: {
-      aId,
-    },
-    include: {
-      category: true,
-      groups: true,
-      host: true,
-      location: true,
-    },
-  });
-  return activity;
-};
-
-export const createActivity = async (data: createActivityType, hId: number) => {
-  const location = await db.location.findFirst({
-    where: {
-      lId: data.locationId,
-    },
-  });
-  assert(
-    location != null,
-    new ApiError(
-      NOT_FOUND,
-      'Location konnte mit dieser ID nicht gefunden werden',
-    ),
-  );
-  return await db.activity.create({
+export const createActivity = async (
+  data: createActivityType,
+  hostId: number,
+) => {
+  const location = await service.loc.createLocation(data.location);
+  return db.activity.create({
     data: {
-      ...data,
-      creatorId: hId,
+      coverImage: data.coverImage,
+      minAge: data.minAge,
+      name: data.name,
+      openingTimes: data.businessHours,
+      closureNote: data.closureNote,
+      closed: data.isClosed,
+      description: data.description,
+      hId: hostId,
+      galleryImages: data.galleryImages,
+      lId: location.lId,
     },
   });
 };
 
-export const getAllActivities = async () => {
-  const activities = await db.activity.findMany({
-    select: {
-      category: true,
-      minAge: true,
-      openingTimes: true,
-      host: {
-        select: {
-          companyName: true,
-          verified: true,
-        },
-      },
-      description: true,
-      location: {
-        select: {
-          postCode: true,
-          city: true,
-        },
-      },
+export const findTrendingActivities = async () => {
+  const LOAD_MAX = 50;
+  return db.activity.findMany({
+    where: {
+      closed: { equals: false },
     },
-    take: 100,
+    take: LOAD_MAX,
   });
-  return activities;
+};
+
+export const deleteActivityByAcId = async (acId: number, hId: number) => {
+  return db.activity.deleteMany({
+    where: {
+      acId,
+      hId,
+    },
+  });
 };
