@@ -69,6 +69,7 @@ model User {
   privateEventParticipations PrivateEventParticipation[]
   notifications              Notification[]              @relation("Targeted")
   linkedNotifications        Notification[]              @relation("Referenced")
+  activities                 ActivityParticipation[]
 }
 
 model Host {
@@ -118,19 +119,29 @@ model Message {
 }
 
 model Activity {
-  acId          Int      @id @default(autoincrement())
-  name          String
-  coverImage    String
-  galleryImages String[]
-  closed        Boolean  @default(false)
-  closureNote   String?
-  description   String?
-  openingTimes  Json
-  minAge        Int
-  lId           Int      @unique
-  hId           Int
-  location      Location @relation(fields: [lId], references: [lId], onDelete: Cascade)
-  Host          Host     @relation(fields: [hId], references: [hId], onDelete: Cascade)
+  acId           Int                     @id @default(autoincrement())
+  name           String
+  coverImage     String
+  galleryImages  String[]
+  closed         Boolean                 @default(false)
+  closureNote    String?
+  description    String?
+  openingTimes   Json
+  minAge         Int
+  lId            Int                     @unique
+  hId            Int
+  participations ActivityParticipation[]
+  location       Location                @relation(fields: [lId], references: [lId], onDelete: Cascade)
+  host           Host                    @relation(fields: [hId], references: [hId], onDelete: Cascade)
+}
+
+model ActivityParticipation {
+  apId     Int      @id @default(autoincrement())
+  uId      Int
+  acId     Int
+  on       DateTime
+  activity Activity @relation(fields: [acId], references: [acId])
+  user     User     @relation(fields: [uId], references: [uId])
 }
 
 model AdminProfile {

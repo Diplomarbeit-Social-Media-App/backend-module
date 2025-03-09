@@ -1,7 +1,8 @@
-import { array, coerce, object, string } from 'zod';
+import { array, boolean, coerce, number, object, string } from 'zod';
 import { isUtf8 } from 'buffer';
 import { locationSchema } from './location.schema';
 import validator from 'validator';
+import dayjs from 'dayjs';
 
 export const openingDay = object({
   index: coerce
@@ -56,7 +57,7 @@ export const createActivitySchema = object({
           (w) => givenWeek.find((g) => g === w) !== undefined,
         );
       },
-      { message: 'Bitte definiere alle Tage für die Öffnungszeiten' },
+      { message: 'Bitte definiere die Öffnungszeiten für alle Wochentage' },
     ),
   }),
 });
@@ -64,5 +65,24 @@ export const createActivitySchema = object({
 export const deleteActivitySchema = object({
   params: object({
     aId: coerce.number({ message: 'ID fehlt' }),
+  }),
+});
+
+export const participationSchema = object({
+  body: object({
+    acId: number({ message: 'Aktivität-Id fehlt' }),
+    attendance: boolean({ message: 'Teilnehmestatus fehlt' }),
+    date: coerce
+      .date({ message: 'Teilnahmedatum fehlt' })
+      .refine((date) => dayjs().isBefore(date), {
+        message: 'Teilnahmedatum darf nicht in der Vergangenheit liegen',
+      })
+      .refine(
+        (date) => {
+          const futureYear = dayjs().add(1, 'year');
+          return futureYear.isAfter(date);
+        },
+        { message: 'Teilnahmedatum auf nächstes Jahr beschränkt' },
+      ),
   }),
 });

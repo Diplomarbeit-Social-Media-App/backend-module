@@ -1,9 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../utils/catchAsync';
 import service from '../services';
-import { CONFLICT, CREATED, OK } from 'http-status';
-import { createActivityType, deleteActivityType } from '../types/activity';
+import { CONFLICT, CREATED, NOT_FOUND, OK } from 'http-status';
+import {
+  createActivityType,
+  deleteActivityType,
+  participationType,
+} from '../types/activity';
 import { Account } from '@prisma/client';
+import { ApiError } from '../utils/apiError';
+import assert from 'assert';
 
 export const getTrendingActivities = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
@@ -47,5 +53,20 @@ export const deleteActivity = catchAsync(
           };
 
     return res.status(result.status).json({ message: result.message });
+  },
+);
+
+export const postParticipateActivity = catchAsync(
+  async (req: Request<object, object, participationType>, res, _next) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { acId, attendance, date } = req.body;
+
+    const activity = await service.activity.findActivityByAcId(acId);
+    assert(activity, new ApiError(NOT_FOUND, 'Aktivität nicht gefunden'));
+
+    await service.activity.participateActivity(acId, uId, date, attendance);
+
+    return res.status(OK).json({});
   },
 );

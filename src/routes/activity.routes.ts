@@ -4,11 +4,18 @@ import { hasHostPermission, hasValidAccunt } from '../middlewares/permission';
 import {
   createActivitySchema,
   deleteActivitySchema,
+  participationSchema,
 } from '../schema/activity.schema';
 import { validate } from '../middlewares/validation';
 const router = Router();
 
 router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
+router.post(
+  '/attendance',
+  hasValidAccunt,
+  validate(participationSchema),
+  controllers.activity.postParticipateActivity,
+);
 router.post(
   '/',
   [hasHostPermission, validate(createActivitySchema)],

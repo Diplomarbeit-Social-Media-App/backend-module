@@ -1,6 +1,7 @@
 import {
   createActivitySchema,
   deleteActivitySchema,
+  participationSchema,
 } from '../schema/activity.schema';
 
 type OpeningDay = {
@@ -17,3 +18,6 @@ export type createActivityType = Zod.infer<createActivityBody>;
 
 type deleteActivityParams = typeof deleteActivitySchema.shape.params;
 export type deleteActivityType = Zod.infer<deleteActivityParams>;
+
+type participationSchema = typeof participationSchema.shape.body;
+export type participationType = Zod.infer<participationSchema>;
