@@ -10,6 +10,7 @@ import {
 import dayjs from 'dayjs';
 import category from '../types/categorys';
 import { isUtf8 } from 'buffer';
+import { locationSchema } from './location.schema';
 
 export const participationSchema = object({
   body: object({
@@ -62,19 +63,7 @@ export const updateSchema = object({
       message: 'Bitte gib einen Image-Path für das Coverimage ein',
     }),
     galleryImages: array(string({})),
-    location: object({
-      plz: coerce
-        .number({ message: 'Bitte gib eine Plz ein' })
-        .min(1000, { message: 'Plz zu niedrig' })
-        .max(9999, { message: 'Plz zu hoch' }),
-      street: string({ message: 'Bitte gib eine Straße an' }).min(3, {
-        message: 'Straßenname zu kurz',
-      }),
-      houseNumber: string({
-        message: 'Bitte gib eine Hausnummer an',
-      }),
-      city: string({ message: 'Bitte gib einen Ortsnamen an' }).optional(),
-    }),
+    location: locationSchema,
   }),
 });
 
