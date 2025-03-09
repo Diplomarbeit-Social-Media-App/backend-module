@@ -70,3 +70,14 @@ export const postParticipateActivity = catchAsync(
     return res.status(OK).json({});
   },
 );
+
+export const getUserActivities = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const activities = await service.activity.findUserActivities(uId);
+
+    return res.status(OK).json(activities);
+  },
+);

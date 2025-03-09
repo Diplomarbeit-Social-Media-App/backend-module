@@ -9,6 +9,11 @@ import {
 import { validate } from '../middlewares/validation';
 const router = Router();
 
+router.get(
+  '/participating',
+  hasValidAccunt,
+  controllers.activity.getUserActivities,
+);
 router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
 router.post(
   '/attendance',

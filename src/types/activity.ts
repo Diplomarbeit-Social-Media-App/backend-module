@@ -13,6 +13,18 @@ type OpeningDay = {
 
 export type OpeningTimesFormat = OpeningDay[];
 
+export type UserActivityFormat = {
+  coverImage: string | null;
+  name: string;
+  participationDate: string | Date;
+  acId: number;
+  location: {
+    city: string;
+    postCode: string;
+  };
+  participationCount: number;
+}[];
+
 type createActivityBody = typeof createActivitySchema.shape.body;
 export type createActivityType = Zod.infer<createActivityBody>;
 

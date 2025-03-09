@@ -4,6 +4,8 @@ import { createActivityType } from '../types/activity';
 import db from '../utils/db';
 import { ApiError } from '../utils/apiError';
 import { CONFLICT } from 'http-status';
+import dayjs from 'dayjs';
+import { omit } from 'lodash';
 
 export const createActivity = async (
   data: createActivityType,
@@ -102,5 +104,65 @@ export const participateActivity = async (
 
   return db.activityParticipation.create({
     data: { on: day, uId, acId },
+  });
+};
+
+export const findUserActivities = async (uId: number) => {
+  const participations = await db.activityParticipation.findMany({
+    where: { uId },
+    include: {
+      activity: {
+        select: {
+          coverImage: true,
+          minAge: true,
+          name: true,
+          description: true,
+          host: {
+            select: {
+              account: {
+                select: {
+                  userName: true,
+                  picture: true,
+                },
+              },
+              companyName: true,
+            },
+          },
+          location: {
+            select: {
+              city: true,
+              postCode: true,
+            },
+          },
+          participations: true,
+          closed: true,
+          closureNote: true,
+        },
+      },
+      user: true,
+    },
+    orderBy: [{ on: 'asc' }, { acId: 'desc' }],
+  });
+
+  return participations.map((p) => {
+    const { on: participationDate } = p;
+
+    const partsOnDate = p.activity.participations.filter((u) =>
+      dayjs(u.on).isSame(p.on),
+    ).length;
+
+    const generalInfos = omit(p.activity, ['participations', 'host']);
+    const host = {
+      userName: p.activity.host.account.userName,
+      companyName: p.activity.host.companyName,
+      picture: p.activity.host.account.picture,
+    };
+
+    return {
+      ...generalInfos,
+      host,
+      participationDate,
+      participantCount: partsOnDate,
+    };
   });
 };
