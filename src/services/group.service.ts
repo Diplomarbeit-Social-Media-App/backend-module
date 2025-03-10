@@ -510,7 +510,6 @@ export const loadAllData = async (gId: number) => {
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
   const count = group._count;
   const data = {
-    activityCount: count.activities,
     eventCount: count.events,
     memberCount: count.members,
     messageCount: count.messages,

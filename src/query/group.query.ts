@@ -28,7 +28,6 @@ const richFormatSelection = {
   createdFrom: true,
   _count: {
     select: {
-      activities: true,
       events: true,
       members: {
         where: {
