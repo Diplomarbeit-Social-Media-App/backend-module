@@ -5,6 +5,7 @@ import { CONFLICT, CREATED, NOT_FOUND, OK } from 'http-status';
 import {
   createActivityType,
   deleteActivityType,
+  idOnlyType,
   participationType,
   searchType,
 } from '../types/activity';
@@ -90,5 +91,17 @@ export const getUserSearch = catchAsync(
     const activities = await service.activity.findActivityByName(search);
 
     return res.status(OK).json(activities);
+  },
+);
+
+export const getActivityDetail = catchAsync(
+  async (req: Request<idOnlyType>, res: Response, _next: NextFunction) => {
+    const { acId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const details = await service.activity.findActivityDetailsByAcId(acId, uId);
+
+    return res.status(OK).json(details);
   },
 );
