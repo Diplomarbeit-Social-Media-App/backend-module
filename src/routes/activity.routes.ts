@@ -11,12 +11,6 @@ import { validate } from '../middlewares/validation';
 const router = Router();
 
 router.get(
-  '/:acId',
-  hasValidAccunt,
-  validate(activityIdOnlySchema),
-  controllers.activity.getActivityDetail,
-);
-router.get(
   '/search/:query',
   hasValidAccunt,
   controllers.activity.getUserSearch,
@@ -25,6 +19,12 @@ router.get(
   '/participating',
   hasValidAccunt,
   controllers.activity.getUserActivities,
+);
+router.get(
+  '/:acId',
+  hasValidAccunt,
+  validate(activityIdOnlySchema),
+  controllers.activity.getActivityDetail,
 );
 router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
 router.post(
