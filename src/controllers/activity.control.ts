@@ -6,6 +6,7 @@ import {
   createActivityType,
   deleteActivityType,
   participationType,
+  searchType,
 } from '../types/activity';
 import { Account } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
@@ -77,6 +78,16 @@ export const getUserActivities = catchAsync(
     const { uId } = await service.user.findUserByAId(aId);
 
     const activities = await service.activity.findUserActivities(uId);
+
+    return res.status(OK).json(activities);
+  },
+);
+
+export const getUserSearch = catchAsync(
+  async (req: Request<searchType>, res: Response, _next: NextFunction) => {
+    const { search } = req.params;
+
+    const activities = await service.activity.findActivityByName(search);
 
     return res.status(OK).json(activities);
   },

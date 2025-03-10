@@ -166,3 +166,10 @@ export const findUserActivities = async (uId: number) => {
     };
   });
 };
+
+export const findActivityByName = async (query: string) => {
+  return db.activity.findMany({
+    where: { name: { mode: 'insensitive', equals: query } },
+    orderBy: { closed: 'desc' },
+  });
+};

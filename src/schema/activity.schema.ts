@@ -86,3 +86,9 @@ export const participationSchema = object({
       ),
   }),
 });
+
+export const searchSchema = object({
+  params: object({
+    search: string().max(100, 'Query zu lange'),
+  }),
+});
