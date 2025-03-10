@@ -2,6 +2,7 @@ import { Router } from 'express';
 import controllers from '../controllers';
 import { hasHostPermission, hasValidAccunt } from '../middlewares/permission';
 import {
+  activityIdOnlySchema,
   createActivitySchema,
   deleteActivitySchema,
   participationSchema,
@@ -10,9 +11,20 @@ import { validate } from '../middlewares/validation';
 const router = Router();
 
 router.get(
+  '/search/:query',
+  hasValidAccunt,
+  controllers.activity.getUserSearch,
+);
+router.get(
   '/participating',
   hasValidAccunt,
   controllers.activity.getUserActivities,
+);
+router.get(
+  '/:acId',
+  hasValidAccunt,
+  validate(activityIdOnlySchema),
+  controllers.activity.getActivityDetail,
 );
 router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
 router.post(

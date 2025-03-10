@@ -1,11 +1,12 @@
 import assert from 'node:assert';
 import service from '.';
-import { createActivityType } from '../types/activity';
+import { ActivityDetailResponse, createActivityType } from '../types/activity';
 import db from '../utils/db';
 import { ApiError } from '../utils/apiError';
-import { CONFLICT } from 'http-status';
+import { CONFLICT, NOT_FOUND } from 'http-status';
 import dayjs from 'dayjs';
 import { omit } from 'lodash';
+import query from '../query';
 
 export const createActivity = async (
   data: createActivityType,
@@ -68,6 +69,48 @@ export const hasAttendance = async (acId: number, uId: number, day: Date) => {
 
 export const findActivityByAcId = async (acId: number) => {
   return db.activity.findFirst({ where: { acId } });
+};
+
+/**
+ * Checks if acId is valid and throws error if not found!
+ * Made for GET /activity/{id} - Activity detail endpoint
+ * @param acId Activity id
+ * @param uId Id of requesting user
+ * @returns detailed information of activity acId in given ActivityDetailFormat
+ */
+export const findActivityDetailsByAcId = async (
+  acId: number,
+  uId: number,
+): Promise<ActivityDetailResponse> => {
+  const raw = await db.activity.findFirst({
+    where: { acId },
+    select: query.activity.activityDetailSelection(uId),
+  });
+  assert(raw, new ApiError(NOT_FOUND, `Aktivität ${acId} nicht gefunden`));
+  return {
+    myParticipations: raw.participations,
+    isClosed: raw.closed,
+    closureNote: raw.closureNote,
+    location: {
+      ...raw.location,
+      lId: raw.lId,
+    },
+    name: raw.name,
+    description: raw.description,
+    coverImage: raw.coverImage,
+    galleryImages: raw.galleryImages,
+    openingTimes: raw.openingTimes,
+    minAge: raw.minAge,
+    acId,
+    host: {
+      // @ts-expect-error prisma orm doesn't generate types for joined host account
+      userName: raw.host?.account?.userName,
+      // @ts-expect-error prisma orm doesn't generate types for joined host account
+      picture: raw.host?.account?.picture,
+      ...omit(raw.host, 'account'),
+      hId: raw.hId,
+    },
+  };
 };
 
 export const participateActivity = async (
@@ -164,5 +207,12 @@ export const findUserActivities = async (uId: number) => {
       participationDate,
       participantCount: partsOnDate,
     };
+  });
+};
+
+export const findActivityByName = async (query: string) => {
+  return db.activity.findMany({
+    where: { name: { mode: 'insensitive', equals: query } },
+    orderBy: { closed: 'desc' },
   });
 };

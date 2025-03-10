@@ -86,3 +86,18 @@ export const participationSchema = object({
       ),
   }),
 });
+
+export const searchSchema = object({
+  params: object({
+    search: string().max(100, 'Query zu lange'),
+  }),
+});
+
+export const activityIdOnlySchema = object({
+  params: object({
+    acId: coerce
+      .number({ invalid_type_error: 'Id besitzt einen falschen Datentyp' })
+      .min(0, 'Id zu klein')
+      .max(Number.MAX_VALUE, 'Id zu groß'),
+  }),
+});
