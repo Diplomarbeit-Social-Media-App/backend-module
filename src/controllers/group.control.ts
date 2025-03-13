@@ -1,4 +1,5 @@
 import {
+  BAD_REQUEST,
   CONFLICT,
   CREATED,
   FORBIDDEN,
@@ -11,6 +12,7 @@ import catchAsync from '../utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import {
   attachPublicEventType,
+  attendancePrivateEventType,
   createGroupType,
   generalEditGroupType,
   groupIdOnlyType,
@@ -28,6 +30,49 @@ import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
 import consumer from '../notification/consumer.notification';
+
+export const postParticipatePrivateEvent = catchAsync(
+  async (
+    req: Request<object, object, attendancePrivateEventType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { aeId, attendance } = req.body;
+
+    const ae = await service.group.findAttachedEventByAEId(aeId);
+    const group = await service.group.isInvitedOrMember(ae.gId, uId);
+    assert(
+      group.isMember,
+      new ApiError(FORBIDDEN, 'Kein Mitglied dieser Gruppe'),
+    );
+    const gm = await service.group.findGroupMemberByUId(uId, ae.gId);
+    assert(
+      gm && gm?.gmId,
+      new ApiError(INTERNAL_SERVER_ERROR, 'Fehler durch Gruppenmitgliedsid'),
+    );
+
+    const currAttend = await service.group.findAttendancePrivateEvent(
+      aeId,
+      uId,
+    );
+    const validAttendance = currAttend !== attendance;
+    assert(
+      validAttendance,
+      new ApiError(
+        BAD_REQUEST,
+        currAttend
+          ? 'Event bereits beigreteten'
+          : 'Keine Teilnahme an diesem Event',
+      ),
+    );
+
+    await service.group.participatePrivateEvent(aeId, uId, aId, gm?.gmId);
+
+    return res.status(OK).json({});
+  },
+);
 
 export const postPrivateEvent = catchAsync(
   async (
@@ -50,7 +95,7 @@ export const postPrivateEvent = catchAsync(
     );
     assert(ae, new ApiError(INTERNAL_SERVER_ERROR, 'Bitte probiere es erneut'));
 
-    return res.status(OK).json({});
+    return res.status(CREATED).json({});
   },
 );
 

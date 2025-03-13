@@ -7,6 +7,7 @@ import {
   postAttachPublicEventSchema,
   kickUserGroupSchema,
   privateEventSchema,
+  attendancePrivateEventSchema,
 } from '../schema/group.schema';
 import { BasicAccountRepresentation } from './abo';
 
@@ -37,3 +38,7 @@ export type kickUserGroupType = Zod.infer<kickUserGroupQuery>;
 
 type privateEventCreationBody = typeof privateEventSchema.shape.body;
 export type privateEventCreationType = Zod.infer<privateEventCreationBody>;
+
+type attendancePrivateEventBody =
+  typeof attendancePrivateEventSchema.shape.body;
+export type attendancePrivateEventType = Zod.infer<attendancePrivateEventBody>;

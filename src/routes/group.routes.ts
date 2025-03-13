@@ -3,6 +3,7 @@ import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import schema from '../schema';
 import {
+  attendancePrivateEventSchema,
   groupIdOnlySchema,
   postAttachPublicEventSchema,
   privateEventSchema,
@@ -80,6 +81,12 @@ router.post(
   '/events/new',
   [validate(privateEventSchema)],
   controllers.group.postPrivateEvent,
+);
+
+router.post(
+  '/attendance',
+  [validate(attendancePrivateEventSchema)],
+  controllers.group.postParticipatePrivateEvent,
 );
 
 export default router;

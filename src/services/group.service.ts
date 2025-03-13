@@ -1,7 +1,12 @@
 import db from '../utils/db';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
+import {
+  BAD_REQUEST,
+  CONFLICT,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+} from 'http-status';
 import {
   BasicGroupMemberPresentation,
   generalEditGroupType,
@@ -429,6 +434,27 @@ export const findAttachedEventByAEId = async (aeId: number) => {
   return event;
 };
 
+export const findAttendancePrivateEvent = async (aeId: number, uId: number) => {
+  const event = await db.attachedEvent.findFirst({
+    where: { aeId },
+    select: { isPublic: true, participations: { where: { uId } } },
+  });
+  assert(!event?.isPublic, new ApiError(BAD_REQUEST, 'Event ist öffentlich'));
+  const part = event?.participations;
+  return part && part.length > 0;
+};
+
+export const participatePrivateEvent = async (
+  aeId: number,
+  uId: number,
+  aId: number,
+  gmId: number,
+) => {
+  return db.privateEventParticipation.create({
+    data: { aeId, uId, aId, gmId },
+  });
+};
+
 export const inviteByUserName = async (
   gId: number,
   userName: string,
@@ -531,6 +557,12 @@ export const loadAllData = async (gId: number) => {
     messageCount: count.messages,
   };
   return { ...omit(group, '_count'), ...data };
+};
+
+export const findGroupMemberByUId = async (uId: number, gId: number) => {
+  return db.groupMember.findFirst({
+    where: { gId, uId },
+  });
 };
 
 export const editGroup = async (

@@ -139,3 +139,10 @@ export const privateEventSchema = object({
     ...locationSchema.shape,
   }),
 });
+
+export const attendancePrivateEventSchema = object({
+  body: object({
+    aeId: coerce.number({ message: 'Id ist ungültig' }).min(0, 'Id zu klein'),
+    attendance: coerce.boolean({ message: 'Attendance  ist ungültig' }),
+  }),
+});
