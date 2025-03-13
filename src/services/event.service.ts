@@ -5,6 +5,7 @@ import lodash from 'lodash';
 import { ApiError } from '../utils/apiError';
 import {
   CONFLICT,
+  FORBIDDEN,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   UNAUTHORIZED,
@@ -12,6 +13,46 @@ import {
 import dayjs from 'dayjs';
 import { User } from '@prisma/client';
 import assert from 'assert';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
+import { BasicAccountRepresentation } from '../types/abo';
+import query from '../query';
+
+/**
+ * Finds the attendees of an event who are also members of a specific group.
+ *
+ * This function retrieves all users who are part of the given group (`gId`) and
+ * checks which of them have attended the event (`eId`). It returns an array of
+ * attendees formatted as `BasicAccountRepresentation`.
+ *
+ * @param {number} eId - The ID of the event to search attendees for.
+ * @param {number} gId - The ID of the group whose members should be filtered.
+ * @returns {Promise<BasicAccountRepresentation[]>} A promise resolving to an array
+ * of attendees who are part of the given group.
+ */
+export const findAttendeesOfGroupByEId = async (
+  eId: number,
+  gId: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const groupMembers = await db.groupMember.findMany({
+    where: { gId, acceptedInvitation: true },
+    select: { uId: true },
+  });
+  const mappedUId = groupMembers.map((m) => m.uId);
+
+  const event = await db.event.findFirst({
+    where: { eId },
+    select: query.event.attendeesInGroupSelection(mappedUId),
+  });
+
+  const response: BasicAccountRepresentation[] =
+    event?.users?.map((u) => ({
+      ...u,
+      isUserAccount: true,
+      hId: null,
+    })) ?? [];
+
+  return response;
+};
 
 export const findEventByEId = async (eId: number) => {
   const event = await db.event.findFirst({
@@ -104,6 +145,32 @@ export const participateEvent = async (
       CONFLICT,
       hasAttendance ? 'Du nimmst bereits teil' : 'Du nimmst gerade nicht teil',
     );
+
+  const blockingGroup = await db.attachedEvent.findFirst({
+    where: {
+      eId,
+      isPublic: true,
+      participations: {
+        some: {
+          aId,
+        },
+      },
+    },
+    select: {
+      group: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (blockingGroup && !attendance) {
+    throw new ApiError(
+      CONFLICT,
+      `Durch Gruppe ${blockingGroup.group.name} blockiert`,
+    );
+  }
 
   const action = attendance ? { connect: { aId } } : { disconnect: { aId } };
 
@@ -350,6 +417,8 @@ export const createEvent = async (event: eventType, aId: number) => {
         'Location konnte nicht erzeugt werden',
       ),
     );
+    const host = await db.host.findFirst({ where: { account: { aId } } });
+    assert(host, new ApiError(FORBIDDEN, 'Keine Host-Berechtigungen'));
     const e = await db.event.create({
       data: {
         startsAt: dayjs(event.startsAt).toDate(),
@@ -372,6 +441,12 @@ export const createEvent = async (event: eventType, aId: number) => {
         },
       },
     });
+    notification.emit(
+      GENERIC_NOT_EVENT.EVENT_PUBLISHED,
+      e.eId,
+      host.hId,
+      e.name,
+    );
     return e;
   });
 };

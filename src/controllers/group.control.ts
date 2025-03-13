@@ -1,4 +1,5 @@
 import {
+  BAD_REQUEST,
   CONFLICT,
   CREATED,
   FORBIDDEN,
@@ -11,20 +12,92 @@ import catchAsync from '../utils/catchAsync';
 import { NextFunction, Request, Response } from 'express';
 import {
   attachPublicEventType,
+  attendancePrivateEventType,
   createGroupType,
   generalEditGroupType,
   groupIdOnlyType,
   inviteAcceptType,
   inviteGroupType,
-  participateAttachedEventType,
+  kickUserGroupType,
+  privateEventCreationType,
 } from '../types/group';
 import { Account } from '@prisma/client';
 import service from '../services';
 import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import logger from '../logger';
+import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
+import consumer from '../notification/consumer.notification';
+
+export const postParticipatePrivateEvent = catchAsync(
+  async (
+    req: Request<object, object, attendancePrivateEventType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { aeId, attendance } = req.body;
+
+    const ae = await service.group.findAttachedEventByAEId(aeId);
+    const group = await service.group.isInvitedOrMember(ae.gId, uId);
+    assert(
+      group.isMember,
+      new ApiError(FORBIDDEN, 'Kein Mitglied dieser Gruppe'),
+    );
+    const gm = await service.group.findGroupMemberByUId(uId, ae.gId);
+    assert(
+      gm && gm?.gmId,
+      new ApiError(INTERNAL_SERVER_ERROR, 'Fehler durch Gruppenmitgliedsid'),
+    );
+
+    const currAttend = await service.group.findAttendancePrivateEvent(
+      aeId,
+      uId,
+    );
+    const validAttendance = currAttend !== attendance;
+    assert(
+      validAttendance,
+      new ApiError(
+        BAD_REQUEST,
+        currAttend
+          ? 'Event bereits beigreteten'
+          : 'Keine Teilnahme an diesem Event',
+      ),
+    );
+
+    await service.group.participatePrivateEvent(aeId, uId, aId, gm?.gmId);
+
+    return res.status(OK).json({});
+  },
+);
+
+export const postPrivateEvent = catchAsync(
+  async (
+    req: Request<object, object, privateEventCreationType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { gId } = req.body;
+    const { aId, userName } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    // checks if group exists and req user has admin permissions
+    const _group = await service.group.findGroupByGId(gId);
+    const isAdminOfGroup = await service.group.isAdminOfGroup(gId, uId);
+    assert(isAdminOfGroup, new ApiError(FORBIDDEN, 'Adminrechte notwendig'));
+
+    const ae = await service.group.createPrivateAttachedEvent(
+      req.body,
+      userName,
+    );
+    assert(ae, new ApiError(INTERNAL_SERVER_ERROR, 'Bitte probiere es erneut'));
+
+    return res.status(CREATED).json({});
+  },
+);
 
 export const postCreateGroup = catchAsync(
   async (
@@ -32,7 +105,7 @@ export const postCreateGroup = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { description, name, picture } = req.body;
+    const { description, name, picture, invitations } = req.body;
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
     const group = await service.group.createGroup(
@@ -41,6 +114,23 @@ export const postCreateGroup = catchAsync(
       picture,
       user.uId,
     );
+    if (invitations && invitations?.length > 0) {
+      const statistic = await Promise.allSettled(
+        invitations.map(
+          async (invite) =>
+            await service.group.inviteByUserName(group.gId, invite, false),
+        ),
+      );
+      const { fulfilled, rejected } = statistic.reduce(
+        (acc, result) => {
+          if (result.status === 'fulfilled') acc.fulfilled++;
+          else acc.rejected++;
+          return acc;
+        },
+        { fulfilled: 0, rejected: 0 },
+      );
+      Object.assign(group, { invitations: { fulfilled, rejected } });
+    }
     return res.status(OK).json(group);
   },
 );
@@ -63,9 +153,95 @@ export const postInviteGroup = catchAsync(
       found,
       new ApiError(NOT_FOUND, `Du bist nicht der Besitzer einer Gruppe ${gId}`),
     );
-    await service.group.inviteByUserName(gId, userName, hasAdminPermission);
+    const { targetUId } = await service.group.inviteByUserName(
+      gId,
+      userName,
+      hasAdminPermission,
+    );
+
+    notification.emit(
+      GENERIC_NOT_EVENT.GROUP_INVITATION,
+      gId,
+      targetUId,
+      user.uId,
+    );
 
     return res.status(OK).json({});
+  },
+);
+
+export const getAttachedEvents = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { gId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const allowed = await service.group.isInvitedOrMember(gId, uId);
+    assert(
+      allowed.isMember,
+      new ApiError(FORBIDDEN, 'Kein Mitglied der Gruppe'),
+    );
+
+    const { privateEvents, publicEvents } =
+      await service.group.findAttachedEvents(gId);
+
+    const groupMemberCount = (await service.group.findMembersOfGroup(gId))
+      .length;
+
+    const publicWithAttendees = await Promise.all(
+      publicEvents.map(async (e) => {
+        const attendees = await service.event.findAttendeesOfGroupByEId(
+          e.eId!,
+          gId,
+        );
+        return { ...e, participations: attendees };
+      }),
+    );
+
+    const privateWithAttendees = privateEvents?.map((e) => ({
+      ...e,
+      participations: e.participations?.map((u) => ({
+        ...u,
+        hId: null,
+        isUserAccount: true,
+      })),
+    }));
+
+    return res.status(OK).json({
+      privateEvents: privateWithAttendees,
+      publicEvents: publicWithAttendees,
+      groupMemberCount,
+    });
+  },
+);
+
+export const getChatInformations = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { aId, userName } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const { gId } = req.params;
+
+    const { isMember, isInvited } = await service.group.isInvitedOrMember(
+      gId,
+      uId,
+    );
+    assert(!isInvited, new ApiError(FORBIDDEN, 'Nimm zuerst die Einladung an'));
+    assert(isMember, new ApiError(FORBIDDEN, 'Nicht in dieser Gruppe'));
+
+    const grossGroupChatData = await service.group.findGroupChatData(gId, uId);
+
+    await service.group.updateReadTimeStamp(uId, gId);
+
+    const closestEvent = await service.group.findClosestAttachedEvent(gId);
+
+    const data = {
+      ...grossGroupChatData,
+      closestEvent,
+      uId,
+      userName,
+    };
+
+    return res.status(OK).json(data);
   },
 );
 
@@ -84,9 +260,30 @@ export const putInviteAcceptGroup = catchAsync(
     );
     if (!accept) await service.group.deleteInvitation(gId, uId);
     else await service.group.acceptInvitation(gId, uId);
+
+    // Update app notification on consumed field
+    consumer.emit(GENERIC_NOT_EVENT.GROUP_INVITATION, gId, uId, accept);
+
     return res
       .status(OK)
       .json({ message: `Einladung ${accept ? 'angenommen' : 'abgelehnt'}` });
+  },
+);
+
+export const getFriendsNotInGroup = catchAsync(
+  async (req: Request<groupIdOnlyType>, res: Response, _next: NextFunction) => {
+    const { gId } = req.params;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    const isGroupMember = await service.group.isInvitedOrMember(gId, uId);
+    assert(
+      isGroupMember.isMember,
+      new ApiError(CONFLICT, 'Nicht in dieser Gruppe'),
+    );
+
+    const friends = await service.group.findFriendsNotInGroup(gId, uId);
+    return res.status(OK).json(friends);
   },
 );
 
@@ -99,11 +296,18 @@ export const getGroupData = catchAsync(
       gId,
       uId,
     );
+    const members = await service.group.findMembersAndFormat(gId);
     assert(
       isAssociatedWithGroup,
       new ApiError(UNAUTHORIZED, 'Kein Mitglied der Gruppe'),
     );
     const group = await service.group.loadAllData(gId);
+
+    const isSelfAdmin = await service.group.isAdminOfGroup(gId, uId);
+    Object.assign(group, { isSelfAdmin });
+
+    const mappedMembers = members.map((m) => ({ ...m, isSelf: m.uId === uId }));
+    Object.assign(group, { members: mappedMembers });
 
     return res.status(OK).json(group);
   },
@@ -169,27 +373,80 @@ export const putEditGroup = catchAsync(
   },
 );
 
+export const deleteKickUser = catchAsync(
+  async (req, res: Response, _next: NextFunction) => {
+    const { gId, userName } = req.query as object as kickUserGroupType;
+    const { aId } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+    const isAdmin = await service.group.isAdminOfGroup(gId, uId);
+    assert(isAdmin, new ApiError(UNAUTHORIZED, 'Kein Admin dieser Gruppe'));
+    const target = await service.user.findUserByUserName(userName);
+    assert(
+      target.aId !== aId,
+      new ApiError(CONFLICT, 'Du darfst dich nicht selbst kicken'),
+    );
+    const { uId: targetUId } = await service.user.findUserByAId(target.aId);
+    const { isInvited, isMember } = await service.group.isInvitedOrMember(
+      gId,
+      targetUId,
+    );
+    assert(
+      isInvited || isMember,
+      new ApiError(NOT_FOUND, `User ${target.userName} nicht in der Gruppe`),
+    );
+    if (isInvited) await service.group.deleteInvitation(gId, targetUId);
+    if (isMember) await service.group.leaveGroup(targetUId, gId);
+    return res.status(OK).json({});
+  },
+);
+
 export const getUserGroups = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;
     const user = await service.user.findUserByAId(aId);
 
     const raw = await service.group.findGroupsByUIdSimpleFormat(user.uId);
-    const groups = raw.map((group) => {
-      const member = group.members.at(0);
-      assert(member, new ApiError(NOT_FOUND, 'Fehler beim Laden der Gruppen'));
+    const groups = await Promise.allSettled(
+      raw.map(async (group) => {
+        const member = group.members.at(0);
+        assert(
+          member,
+          new ApiError(NOT_FOUND, 'Fehler beim Laden der Gruppen'),
+        );
+        const lastMessage = await service.message.findLastMessageByGId(
+          group.gId,
+        );
+        const unreadMessageCount =
+          await service.message.findUnreadMessageCountByGId(
+            group.gId,
+            user.uId,
+          );
+        const formatLastMessage = lastMessage
+          ? {
+              userName: lastMessage?.user?.account?.userName,
+              text: lastMessage?.text,
+              timeStamp: lastMessage?.timeStamp,
+            }
+          : null;
 
-      const { isAdmin, acceptedInvitation: hasAcceptedInvitation } = member;
-      const members = group._count.members;
-      return {
-        ...omit(group, '_count', 'members'),
-        members,
-        isAdmin,
-        hasAcceptedInvitation,
-      };
-    });
+        const { isAdmin, acceptedInvitation: hasAcceptedInvitation } = member;
+        const members = group._count.members;
+        return {
+          ...omit(group, '_count', 'members'),
+          members,
+          isAdmin,
+          hasAcceptedInvitation,
+          lastMessage: formatLastMessage,
+          unreadMessageCount,
+        };
+      }),
+    );
 
-    return res.status(OK).json(groups);
+    const filteredAndMapped = groups
+      .filter((g) => g.status === 'fulfilled')
+      .map((g) => g.value);
+
+    return res.status(OK).json(filteredAndMapped);
   },
 );
 
@@ -223,7 +480,7 @@ export const postAttachEvent = catchAsync(
     res: Response,
     _next: NextFunction,
   ) => {
-    const { eId, gId, meetingPoint, meetingTime, pollEndsAt } = req.body;
+    const { eId, gId } = req.body;
     const { aId, userName } = req.user as Account;
     const { uId } = await service.user.findUserByAId(aId);
     const group = await service.group.findGroupByGId(gId);
@@ -251,64 +508,8 @@ export const postAttachEvent = catchAsync(
       new ApiError(CONFLICT, 'Event bereits in dieser Gruppe'),
     );
 
-    await service.group.attachPublicEvent(gId, userName, event, location, {
-      meetingPoint,
-      meetingTime,
-      pollEndsAt,
-    });
+    await service.group.attachPublicEvent(gId, userName, event, location);
 
     return res.status(CREATED).json({ message: 'Event hinzugefügt' });
-  },
-);
-
-export const postParticipateAttachedEvent = catchAsync(
-  async (
-    req: Request<object, object, participateAttachedEventType>,
-    res: Response,
-    _next: NextFunction,
-  ) => {
-    const { aeId } = req.body;
-    const { aId } = req.user as Account;
-    const { uId } = await service.user.findUserByAId(aId);
-    const attachedEvent = await service.group.findAttachedEventByAEId(aeId);
-
-    const { gId, members } = attachedEvent.Group;
-    const { isMember } = await service.group.isInvitedOrMember(gId, uId);
-    assert(isMember, new ApiError(UNAUTHORIZED, 'Kein Gruppenmitglied'));
-    const member = members.find((m) => m.uId === uId);
-    assert(
-      member,
-      new ApiError(
-        INTERNAL_SERVER_ERROR,
-        'Konnte Mitglieder der Gruppe nicht richtig zuordnen',
-      ),
-    );
-
-    const pollEnded = dayjs(attachedEvent.pollEndsAt).isBefore(dayjs());
-    assert(
-      !pollEnded,
-      new ApiError(FORBIDDEN, 'Teilnahme-Umfrage geschlossen'),
-    );
-
-    const hasEntryYet = await service.group.hasEventParticipationEntry(
-      aeId,
-      uId,
-    );
-
-    const participation = await service.group.participateAttachedEvent(
-      uId,
-      member.gmId,
-      aId,
-      req.body,
-      hasEntryYet?.gevId,
-    );
-
-    const { eId, event } = attachedEvent;
-    if (eId && event)
-      await service.event.participateEvent(aId, eId, participation);
-
-    return res.status(OK).json({
-      message: `${participation ? 'Teilnahme bestätigt' : 'Teilnahme zurückgezogen'}`,
-    });
   },
 );

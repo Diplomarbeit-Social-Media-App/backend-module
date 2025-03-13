@@ -5,9 +5,15 @@ import {
   inviteAcceptGroupSchema,
   inviteGroupSchema,
   postAttachPublicEventSchema,
-  generalAttachmentData,
-  participateAttachedEventSchema,
+  kickUserGroupSchema,
+  privateEventSchema,
+  attendancePrivateEventSchema,
 } from '../schema/group.schema';
+import { BasicAccountRepresentation } from './abo';
+
+export type BasicGroupMemberPresentation = BasicAccountRepresentation & {
+  isAdmin: boolean;
+};
 
 type createGroupBody = typeof createGroupSchema.shape.body;
 export type createGroupType = Zod.infer<createGroupBody>;
@@ -27,9 +33,12 @@ export type generalEditGroupType = Zod.infer<generalEditGroupBody>;
 type postAttachPublicEventBody = typeof postAttachPublicEventSchema.shape.body;
 export type attachPublicEventType = Zod.infer<postAttachPublicEventBody>;
 
-export type generalAttachmentDataType = Zod.infer<typeof generalAttachmentData>;
+type kickUserGroupQuery = typeof kickUserGroupSchema.shape.query;
+export type kickUserGroupType = Zod.infer<kickUserGroupQuery>;
 
-type participateAttachedEventBody =
-  typeof participateAttachedEventSchema.shape.body;
-export type participateAttachedEventType =
-  Zod.infer<participateAttachedEventBody>;
+type privateEventCreationBody = typeof privateEventSchema.shape.body;
+export type privateEventCreationType = Zod.infer<privateEventCreationBody>;
+
+type attendancePrivateEventBody =
+  typeof attendancePrivateEventSchema.shape.body;
+export type attendancePrivateEventType = Zod.infer<attendancePrivateEventBody>;

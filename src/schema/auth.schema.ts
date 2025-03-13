@@ -33,7 +33,7 @@ export const loginSchema = object({
     loginOs: nativeEnum(LOGIN_OS, {
       message: 'Bitte gib ein gültiges Login-OS an',
     }).default(LOGIN_OS.WEB),
-    fcmToken: string({ message: 'Token ungültig ' }).optional(),
+    fcmToken: string({ message: 'Token ungültig ' }).optional().nullable(),
   }),
 });
 
@@ -64,11 +64,6 @@ export const updateAccountSchema = object({
       .trim()
       .min(2, { message: 'Vorname zu kurz' })
       .max(30, { message: 'Vorname zu lang' })
-      .optional(),
-    lastName: string()
-      .trim()
-      .min(2, { message: 'Nachname zu kurz' })
-      .max(50, { message: 'Nachname zu lang' })
       .optional(),
     userName: string({ message: 'Username muss enthalten sein' })
       .trim()
@@ -113,19 +108,7 @@ export const signUpSchema = object({
       .trim()
       .min(2, { message: 'Vorname zu kurz' })
       .max(30, { message: 'Vorname zu lang' }),
-    lastName: string({ message: 'Nachname muss enthalten sein' })
-      .trim()
-      .min(2, { message: 'Nachname zu kurz' })
-      .max(50, { message: 'Nachname zu lang' }),
-    picture: coerce
-      .string({ message: 'Das Profilbild fehlt' })
-      // .refine((s) => s.startsWith('image'), {
-      //   message: 'Der Pfad muss mit "image" beginnen',
-      // })
-      // .refine((s) => s.endsWith('.webp'), {
-      //   message: 'Der Pfad muss mit dem Format .webp aufhören',
-      // })
-      .optional(),
+    picture: coerce.string({ message: 'Das Profilbild fehlt' }).optional(),
     isUserAccount: coerce
       .boolean({ message: 'Der isUserAccount ist ungültig' })
       .default(true),

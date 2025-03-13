@@ -3,6 +3,7 @@ import {
   ExtractJwt,
   StrategyOptionsWithoutRequest,
 } from 'passport-jwt';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import passport, { DoneCallback } from 'passport';
 import { TOKEN_TYPES, tokenSchema } from '../types/token';
 import { ApiError } from '../utils/apiError';
@@ -58,6 +59,17 @@ export const auth = async (req: Request, res: Response, next: NextFunction) =>
         new ApiError(UNAUTHORIZED, `Anmeldung fehlgeschlagen! ${err.message}`),
       ),
     );
+
+export const manualVerifyToken = (
+  token: string,
+): Promise<JwtPayload | string> => {
+  return new Promise((resolve, reject) =>
+    jwt.verify(token, config.JWT_SECRET, (err, decoded) => {
+      if (err || !decoded) return reject(err);
+      resolve(decoded);
+    }),
+  );
+};
 
 const JwtStrategy = new Strategy(jwtOptions, verifyAccessToken);
 

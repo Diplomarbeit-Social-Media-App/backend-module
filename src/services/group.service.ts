@@ -1,16 +1,167 @@
-import dayjs from 'dayjs';
 import db from '../utils/db';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
-import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import {
-  generalAttachmentDataType,
+  BAD_REQUEST,
+  CONFLICT,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+} from 'http-status';
+import {
+  BasicGroupMemberPresentation,
   generalEditGroupType,
-  participateAttachedEventType,
+  privateEventCreationType,
 } from '../types/group';
 import query from '../query';
 import { omit } from 'lodash';
 import { Event, Location } from '@prisma/client';
+import { TOKEN_TYPES } from '../types/token';
+import { BasicAccountRepresentation } from '../types/abo';
+import dayjs from 'dayjs';
+import notification, { GENERIC_NOT_EVENT } from '../notification/index';
+import service from '.';
+
+export const findAttachedEvents = async (gId: number) => {
+  const attachedEvents = await db.attachedEvent.findMany({
+    where: { gId },
+    select: query.group.groupAttachedEventParticipationsSelection,
+    orderBy: [{ startsAt: 'desc' }, { isPublic: 'desc' }],
+  });
+
+  const privateEvents = attachedEvents.filter((e) => !e.isPublic);
+  const publicEvents = attachedEvents.filter((e) => e.isPublic);
+
+  return { publicEvents, privateEvents };
+};
+
+/**
+ * @param gId group id
+ * @param originId user id (requester)
+ * @returns gross group chat data needed for group chat endpoint
+ */
+export const findGroupChatData = async (gId: number, originId: number) => {
+  const memberData = await db.groupMember.findFirst({
+    where: { gId, uId: originId },
+    select: { lastReadAt: true },
+  });
+
+  const messages = await db.message.findMany({
+    where: { gId },
+    select: {
+      mId: true,
+      text: true,
+      timeStamp: true,
+      user: {
+        select: { account: { select: { userName: true, picture: true } } },
+      },
+      uId: true,
+    },
+    orderBy: { timeStamp: 'desc' },
+  });
+  const flattendMessages = messages.map(
+    ({ text, timeStamp, uId, user, mId }) => ({
+      text,
+      timeStamp,
+      uId,
+      mId,
+      userName: user.account.userName,
+      picture: user.account.picture,
+      isOwnMessage: uId === originId,
+    }),
+  );
+
+  const memberCount = await db.groupMember.count({
+    where: { gId, acceptedInvitation: true },
+  });
+
+  return {
+    lastReadAt: memberData?.lastReadAt,
+    messages: flattendMessages,
+    memberCount,
+    gId,
+  };
+};
+
+export const updateReadTimeStamp = async (uId: number, gId: number) => {
+  return db.groupMember.updateMany({
+    where: {
+      uId,
+      gId,
+    },
+    data: {
+      lastReadAt: dayjs().toDate(),
+    },
+  });
+};
+
+export const findClosestAttachedEvent = async (gId: number) => {
+  const futureEvent = await db.attachedEvent.findFirst({
+    where: {
+      gId,
+      startsAt: {
+        gte: dayjs().toDate(),
+      },
+    },
+    orderBy: {
+      startsAt: 'desc',
+    },
+    select: query.group.groupAttachedEventSelection,
+  });
+  if (futureEvent) return { ...futureEvent, isFutureEvent: true };
+
+  const pastEvent = await db.attachedEvent.findFirst({
+    where: {
+      gId,
+      startsAt: {
+        lte: dayjs().toDate(),
+      },
+    },
+    orderBy: {
+      startsAt: 'asc',
+    },
+    select: query.group.groupAttachedEventSelection,
+  });
+  if (pastEvent) return { ...pastEvent, isFutureEvent: false };
+
+  return null;
+};
+
+/**
+ * Lists friends of user uId who are not yet invited/ member of group gId
+ * @param gId Group id
+ * @param uId User id
+ * @returns array of friends - BasicAccountRepresentation[]
+ */
+export const findFriendsNotInGroup = async (
+  gId: number,
+  uId: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const friends = await db.friendship.findMany({
+    where: query.abo.isFriendedWhereCondition(uId),
+    select: { friendId: true, userId: true },
+  });
+  const uniqueMapped = friends.map((f) =>
+    f.friendId === uId ? f.userId : f.friendId,
+  );
+  const friendsNotInGroup = await db.user.findMany({
+    where: {
+      uId: {
+        in: uniqueMapped,
+      },
+      groups: {
+        none: {
+          gId,
+        },
+      },
+    },
+    select: query.abo.friendByUserTableSelection,
+  });
+  return friendsNotInGroup.map((f) => ({
+    isUserAccount: true,
+    hId: null,
+    ...f,
+  }));
+};
 
 export const createGroup = async (
   name: string,
@@ -28,7 +179,7 @@ export const createGroup = async (
   assert(account, new ApiError(NOT_FOUND, 'Account wurde nicht gefunden'));
   const group = await db.group.create({
     data: {
-      creationDate: dayjs().toDate(),
+      createdFrom: account.userName,
       description,
       name,
       picture,
@@ -83,6 +234,11 @@ export const deleteGroup = async (gId: number) => {
   });
 };
 
+export const isAdminOfGroup = async (gId: number, uId: number) => {
+  const groups = await findGroupsAdministratedByUId(uId);
+  return groups.some((g) => g.gId === gId);
+};
+
 export const findGroupByGId = async (gId: number) => {
   const group = await db.group.findFirst({
     where: {
@@ -97,13 +253,51 @@ export const findGroupByGId = async (gId: number) => {
   return group;
 };
 
+export const createPrivateAttachedEvent = async (
+  data: privateEventCreationType,
+  userName: string,
+) => {
+  return db.attachedEvent.create({
+    data: {
+      ...omit(data, 'plz'),
+      isPublic: false,
+      suggestedBy: userName,
+      gId: data.gId,
+      postCode: String(data.plz),
+    },
+  });
+};
+
+export const sendMessage = async (
+  uId: number,
+  gId: number,
+  message: string,
+) => {
+  const msg = await db.message.create({
+    data: {
+      gId,
+      text: message,
+      uId,
+    },
+    select: query.group.groupMessageCreationSelection,
+  });
+  const account = await service.auth.findAccountByUId(uId);
+  notification.emit(
+    GENERIC_NOT_EVENT.GROUP_MESSAGE,
+    gId,
+    account.userName,
+    uId,
+  );
+  return msg;
+};
+
 export const findGroupsByUIdSimpleFormat = async (uId: number) => {
-  return await db.group.findMany({
+  return db.group.findMany({
     select: query.group.simpleGroupSelection(uId),
     where: {
       members: {
         some: {
-          uId,
+          AND: [{ uId }, { acceptedInvitation: true }],
         },
       },
     },
@@ -115,10 +309,8 @@ export const attachPublicEvent = async (
   userName: string,
   event: Event,
   loc: Location,
-  additionalData: generalAttachmentDataType,
 ) => {
   const { city, country, houseNumber, postCode, street } = loc;
-  const { meetingPoint, meetingTime, pollEndsAt } = additionalData;
   const attached = await db.attachedEvent.create({
     data: {
       isPublic: true,
@@ -133,16 +325,14 @@ export const attachPublicEvent = async (
       country,
       street,
       eId: event.eId,
-      meetingPoint,
-      meetingTime: String(meetingTime),
-      pollEndsAt,
+      startsAt: event.startsAt!,
     },
   });
   return attached;
 };
 
 export const findGroupsByUId = async (uId: number) => {
-  return await db.group.findMany({
+  return db.group.findMany({
     where: {
       members: {
         some: {
@@ -164,7 +354,10 @@ export const isInvitedOrMember = async (gId: number, uId: number) => {
   });
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
   const member = group.members.find((m) => m.uId == uId);
-  assert(member, new ApiError(CONFLICT, `Keine Einladung erhalten`));
+  assert(
+    member,
+    new ApiError(CONFLICT, `Keine Einladung noch Mitglied der Gruppe`),
+  );
   return {
     isInvited: !member.acceptedInvitation,
     isMember: member.acceptedInvitation,
@@ -217,10 +410,14 @@ export const deleteInvitation = async (gId: number, uId: number) => {
 };
 
 export const acceptInvitation = async (gId: number, uId: number) => {
-  await db.groupMember.updateMany({
+  const member = await db.groupMember.findFirst({
+    where: { uId, gId },
+  });
+  assert(member, new ApiError(NOT_FOUND, 'Einladung nicht gefunden'));
+
+  await db.groupMember.update({
     where: {
-      gId,
-      uId,
+      gmId: member.gmId,
     },
     data: {
       acceptedInvitation: true,
@@ -231,46 +428,31 @@ export const acceptInvitation = async (gId: number, uId: number) => {
 export const findAttachedEventByAEId = async (aeId: number) => {
   const event = await db.attachedEvent.findFirst({
     where: { aeId },
-    include: { event: true, Group: { include: { members: true } } },
+    include: { event: true, group: { include: { members: true } } },
   });
   assert(event, new ApiError(NOT_FOUND, `Event ${aeId} not found`));
   return event;
 };
 
-export const hasEventParticipationEntry = async (aeId: number, uId: number) => {
-  return await db.groupEventParticipation.findFirst({
-    where: {
-      aeId,
-      uId,
-    },
+export const findAttendancePrivateEvent = async (aeId: number, uId: number) => {
+  const event = await db.attachedEvent.findFirst({
+    where: { aeId },
+    select: { isPublic: true, participations: { where: { uId } } },
   });
+  assert(!event?.isPublic, new ApiError(BAD_REQUEST, 'Event ist öffentlich'));
+  const part = event?.participations;
+  return part && part.length > 0;
 };
 
-export const participateAttachedEvent = async (
+export const participatePrivateEvent = async (
+  aeId: number,
   uId: number,
-  gmId: number,
   aId: number,
-  data: participateAttachedEventType,
-  oldGevId?: number,
+  gmId: number,
 ) => {
-  const upserted = await db.groupEventParticipation.upsert({
-    where: {
-      gevId: oldGevId ?? -1,
-    },
-    update: {
-      pickupOutbound: data.pickupOutbound,
-      pickupReturn: data.pickupOutbound,
-      vote: data.participation,
-    },
-    create: {
-      uId,
-      aId,
-      gmId,
-      ...omit(data, 'participation'),
-      vote: data.participation,
-    },
+  return db.privateEventParticipation.create({
+    data: { aeId, uId, aId, gmId },
   });
-  return upserted.vote;
 };
 
 export const inviteByUserName = async (
@@ -305,6 +487,59 @@ export const inviteByUserName = async (
       isAdmin: adminPerm,
     },
   });
+
+  return { gId, targetUId: acc.user.uId };
+};
+
+/**
+ * Searches for all group members of group gId who accepted the invitation
+ * @param gId group id
+ * @returns array of group members;
+ */
+export const findMembersAndFormat = async (
+  gId: number,
+): Promise<BasicGroupMemberPresentation[]> => {
+  const group = await db.groupMember.findMany({
+    where: {
+      gId,
+      acceptedInvitation: true,
+    },
+    select: { ...query.abo.friendByUserTableSelection, isAdmin: true },
+  });
+  return group.map((m) => ({ hId: null, isUserAccount: true, ...m }));
+};
+
+/**
+ * Only returns members who accepted the invitation
+ * Should be used to send messages; includes account and token
+ */
+export const findMembersOfGroup = async (gId: number) => {
+  const group = await db.group.findUnique({
+    where: {
+      gId,
+    },
+    select: {
+      members: {
+        select: {
+          uId: true,
+          account: {
+            select: {
+              token: {
+                where: {
+                  type: TOKEN_TYPES.NOTIFICATION.toString(),
+                },
+              },
+            },
+          },
+        },
+        where: {
+          acceptedInvitation: true,
+        },
+      },
+    },
+  });
+  assert(group, new ApiError(NOT_FOUND, "Group wasn't found"));
+  return group.members;
 };
 
 export const loadAllData = async (gId: number) => {
@@ -317,12 +552,17 @@ export const loadAllData = async (gId: number) => {
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} existiert nicht`));
   const count = group._count;
   const data = {
-    activityCount: count.activities,
     eventCount: count.events,
     memberCount: count.members,
     messageCount: count.messages,
   };
   return { ...omit(group, '_count'), ...data };
+};
+
+export const findGroupMemberByUId = async (uId: number, gId: number) => {
+  return db.groupMember.findFirst({
+    where: { gId, uId },
+  });
 };
 
 export const editGroup = async (

@@ -3,8 +3,10 @@ import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import schema from '../schema';
 import {
-  participateAttachedEventSchema,
+  attendancePrivateEventSchema,
+  groupIdOnlySchema,
   postAttachPublicEventSchema,
+  privateEventSchema,
 } from '../schema/group.schema';
 const router = Router();
 
@@ -24,6 +26,11 @@ router.put(
   controllers.group.putInviteAcceptGroup,
 );
 router.get(
+  '/friends/:gId',
+  [validate(schema.group.groupIdOnlySchema)],
+  controllers.group.getFriendsNotInGroup,
+);
+router.get(
   '/:gId',
   [validate(schema.group.groupIdOnlySchema)],
   controllers.group.getGroupData,
@@ -32,6 +39,11 @@ router.delete(
   '/leave/:gId',
   validate(schema.group.groupIdOnlySchema),
   controllers.group.deleteLeaveGroup,
+);
+router.delete(
+  '/kick',
+  validate(schema.group.kickUserGroupSchema),
+  controllers.group.deleteKickUser,
 );
 router.delete(
   '/:gId',
@@ -43,20 +55,38 @@ router.put(
   [validate(schema.group.generalEditGroupSchema)],
   controllers.group.putEditGroup,
 );
+router.get(
+  '/chat/:gId',
+  [validate(groupIdOnlySchema)],
+  controllers.group.getChatInformations,
+);
 router.get('/', controllers.group.getUserGroups);
 
 /**
- * Event/ Activity actions such as posting, reacting etc
+ * Event actions such as posting, reacting etc
  */
 router.post(
   '/events',
   [validate(postAttachPublicEventSchema)],
   controllers.group.postAttachEvent,
 );
+
+router.get(
+  '/events/:gId',
+  [validate(groupIdOnlySchema)],
+  controllers.group.getAttachedEvents,
+);
+
 router.post(
-  '/participate/event',
-  [validate(participateAttachedEventSchema)],
-  controllers.group.postParticipateAttachedEvent,
+  '/events/new',
+  [validate(privateEventSchema)],
+  controllers.group.postPrivateEvent,
+);
+
+router.post(
+  '/attendance',
+  [validate(attendancePrivateEventSchema)],
+  controllers.group.postParticipatePrivateEvent,
 );
 
 export default router;

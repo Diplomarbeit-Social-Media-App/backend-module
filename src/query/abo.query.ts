@@ -52,11 +52,25 @@ const suggestionAccountIncludation = {
   },
 };
 
+const isFriendedDoubleCondition = (uId1: number, uId2: number) => ({
+  OR: [
+    {
+      friendId: uId1,
+      userId: uId2,
+    },
+    {
+      userId: uId1,
+      friendId: uId2,
+    },
+  ],
+});
+
 const queries = {
   mutualFriendsSelection,
   friendByUserTableSelection,
   isFriendedWhereCondition,
   suggestionAccountIncludation,
+  isFriendedDoubleCondition,
 };
 
 export default queries;

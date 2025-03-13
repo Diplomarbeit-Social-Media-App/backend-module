@@ -9,9 +9,11 @@ import {
 import catchAsync from '../utils/catchAsync';
 import service from '../services';
 import { Account } from '@prisma/client';
-import { CONFLICT, CREATED, OK, UNAUTHORIZED } from 'http-status';
+import { CONFLICT, CREATED, NOT_FOUND, OK, UNAUTHORIZED } from 'http-status';
 import assert from 'assert';
 import { ApiError } from '../utils/apiError';
+import consumer from '../notification/consumer.notification';
+import { GENERIC_NOT_EVENT } from '../notification';
 
 export const getSuggestions = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
@@ -47,7 +49,9 @@ export const putRequestState = catchAsync(
       !isFriendedAlready,
       new ApiError(CONFLICT, 'Ihr seid bereits befreundet'),
     );
+    const not = await service.notification.findFriendReqNot(frId);
     await service.abo.modifyRequest(aboRequest, accept);
+    consumer.emit(GENERIC_NOT_EVENT.FRIEND_REQ_RECEIVED, not.ntId, accept);
     return res.status(OK).json({});
   },
 );
@@ -62,7 +66,8 @@ export const getSearchByUserName = catchAsync(
 
 export const getAboRequests = catchAsync(async (req: Request, res, _next) => {
   const { aId } = req.user as Account;
-  const aboRequests = await service.abo.loadOpenAboRequests(aId);
+  const { uId } = await service.user.findUserByAId(aId);
+  const aboRequests = await service.abo.loadOpenAboRequests(uId);
   return res.status(200).json(aboRequests);
 });
 
@@ -80,6 +85,7 @@ export const postAboRequests = catchAsync(
     const { aId } = req.user as Account;
 
     const user = await service.user.findUserByAId(aId);
+
     await service.abo.sendAboRequest(user, userName);
     return res.status(CREATED).json({});
   },
@@ -106,33 +112,40 @@ export const getForeignProfile = catchAsync(
 
     const followerCount = (await service.abo.loadFriendships(uId))?.length ?? 0;
 
-    const openAboReq =
-      (await service.abo.hasSentRequestToUser(uId, requestingUser.uId)) != null;
+    const openAboReq = await service.abo.hasSentRequestToUser(ruId, fuId);
 
-    const mutualFriends = await service.abo.findMutualFriends(fuId, ruId);
+    const mutualFriends = await service.friend.findMutualFriendIds(fuId, ruId);
     const mutualHosts = await service.host.findMutualHosts(fuId, ruId);
 
-    let allContacts: null | unknown[] = null;
+    // let allContacts: null | unknown[] = null;
     let participatingEvents: null | unknown[] = null;
+    let nonMutualContacts: null | unknown[] = null;
 
     const events = await service.event.findEventsPartUser(uId);
     const eventCount = events.length;
 
     if (isFriendedWith) {
-      const friends = await service.abo.findAllFriendsByUId(fuId);
-      const hosts = await service.host.findAllFollowedHostsByUid(fuId);
-      allContacts = [...friends.filter((f) => f.uId !== ruId), ...hosts];
       participatingEvents = [...events];
+      const nonMutFriends = await service.friend.findNonMutualFriendIds(
+        fuId,
+        ruId,
+      );
+      const nonMutHosts = await service.host.findNonMutualHostFollowings(
+        fuId,
+        ruId,
+      );
+      nonMutualContacts = [...nonMutFriends, ...nonMutHosts];
     }
 
     return res.status(OK).json({
+      uId: fuId,
       ...publicInformation,
       isFriendedWith,
       hasPendingAboReq: openAboReq,
       followerCount,
       eventCount,
       mutualContacts: [...mutualFriends, ...mutualHosts],
-      allContacts,
+      nonMutualContacts,
       participatingEvents,
     });
   },
@@ -144,11 +157,28 @@ export const deleteAbo = catchAsync(
     const { uId } = req.params;
 
     const user = await service.user.findUserByAId(aId);
+
     const isFriendedWith = await service.abo.isFriendedWith(uId, user.uId);
+    const hasPendingReq = await service.abo.hasSentRequestToUser(user.uId, uId);
 
-    assert(isFriendedWith, new ApiError(CONFLICT, 'Ihr seit nicht befreundet'));
+    assert(
+      isFriendedWith || hasPendingReq,
+      new ApiError(CONFLICT, 'Keine Anfrage oder Freundschaft'),
+    );
 
-    await service.abo.deleteFriendship(user.uId, uId);
+    if (isFriendedWith) await service.abo.deleteFriendship(user.uId, uId);
+    if (hasPendingReq) {
+      const requests = await service.abo.loadAllReqWithUser(aId);
+      const found = requests.sent?.find((r) => r.toUserId === uId);
+      assert(
+        found,
+        new ApiError(NOT_FOUND, 'Anfrage konnte nicht gefunden werden'),
+      );
+      // deleting notification when user revokes abo request
+      await service.notification.deleteFriendReqNot(found.frId);
+
+      await service.abo.deleteAboRequest(found.frId);
+    }
 
     return res.status(OK).json({});
   },

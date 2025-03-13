@@ -15,6 +15,33 @@ model PasswordResetToken {
   account Account  @relation(fields: [aId], references: [aId], onDelete: Cascade)
 }
 
+model Notification {
+  ntId      Int      @id @default(autoincrement())
+  type      String
+  timeStamp DateTime @default(now())
+  seen      Boolean  @default(false)
+
+  targetId Int
+  target   User @relation("Targeted", fields: [targetId], references: [uId], onDelete: Cascade)
+
+  userId Int?
+  user   User? @relation("Referenced", fields: [userId], references: [uId], onDelete: Cascade)
+
+  groupId Int?
+  group   Group? @relation(fields: [groupId], references: [gId], onDelete: Cascade)
+
+  eventId Int?
+  event   Event? @relation(fields: [eventId], references: [eId], onDelete: Cascade)
+
+  hostId Int?
+  host   Host? @relation(fields: [hostId], references: [hId], onDelete: Cascade)
+
+  frId Int?
+  abo  AboRequest? @relation(fields: [frId], references: [frId], onDelete: SetNull)
+
+  consumed Boolean?
+}
+
 model Location {
   lId         Int       @id @default(autoincrement())
   city        String
@@ -27,80 +54,94 @@ model Location {
 }
 
 model User {
-  uId                     Int                       @id @default(autoincrement())
-  aId                     Int                       @unique
-  sentAboRequests         AboRequest[]              @relation("FromUserFA")
-  receivedAboRequests     AboRequest[]              @relation("ToUserFA")
-  friendedBy              Friendship[]              @relation("UserFriendedBy")
-  friends                 Friendship[]              @relation("UserFriends")
-  groups                  GroupMember[]
-  HostRating              HostRating[]
-  Message                 Message[]
-  notifications           Notification[]
-  account                 Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  followedHosts           Host[]                    @relation("HostFollowers")
-  events                  Event[]                   @relation("Participates")
-  groupEventParticipation GroupEventParticipation[]
+  uId                        Int                         @id @default(autoincrement())
+  aId                        Int                         @unique
+  sentAboRequests            AboRequest[]                @relation("FromUserFA")
+  receivedAboRequests        AboRequest[]                @relation("ToUserFA")
+  friendedBy                 Friendship[]                @relation("UserFriendedBy")
+  friends                    Friendship[]                @relation("UserFriends")
+  groups                     GroupMember[]
+  HostRating                 HostRating[]
+  Message                    Message[]
+  account                    Account                     @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  followedHosts              Host[]                      @relation("HostFollowers")
+  events                     Event[]                     @relation("Participates")
+  privateEventParticipations PrivateEventParticipation[]
+  notifications              Notification[]              @relation("Targeted")
+  linkedNotifications        Notification[]              @relation("Referenced")
+  activities                 ActivityParticipation[]
 }
 
 model Host {
-  hId         Int           @id @default(autoincrement())
-  aId         Int           @unique
-  verified    Boolean       @default(false)
-  companyName String
-  Activity    Activity[]
-  Event       Event[]
-  account     Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  HostRating  HostRating[]
-  SocialLinks SocialLinks[]
-  followedBy  User[]        @relation("HostFollowers")
+  hId           Int            @id @default(autoincrement())
+  aId           Int            @unique
+  verified      Boolean        @default(false)
+  companyName   String
+  Activity      Activity[]
+  Event         Event[]
+  account       Account        @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  HostRating    HostRating[]
+  SocialLinks   SocialLinks[]
+  followedBy    User[]         @relation("HostFollowers")
+  notifications Notification[]
 }
 
 model Account {
-  aId                     Int                       @id @default(autoincrement())
-  userName                String                    @unique
-  firstName               String
-  lastName                String
-  password                String
-  email                   String                    @unique
-  description             String
-  picture                 String?
-  dateOfBirth             DateTime
-  disabled                Boolean                   @default(false)
-  activated               Boolean                   @default(false)
-  loginOs                 String                    @default("web")
-  host                    Host?
-  passwordResetToken      PasswordResetToken?
-  token                   Token[]                   @relation("UserTokens")
-  user                    User?
-  createdAt               DateTime                  @default(now())
-  groupMember             GroupMember[]
-  admin                   AdminProfile?
-  groupEventParticipation GroupEventParticipation[]
+  aId                       Int                         @id @default(autoincrement())
+  userName                  String                      @unique
+  firstName                 String
+  password                  String
+  email                     String                      @unique
+  description               String
+  picture                   String?
+  dateOfBirth               DateTime
+  disabled                  Boolean                     @default(false)
+  activated                 Boolean                     @default(false)
+  loginOs                   String                      @default("web")
+  host                      Host?
+  passwordResetToken        PasswordResetToken?
+  token                     Token[]                     @relation("UserTokens")
+  user                      User?
+  createdAt                 DateTime                    @default(now())
+  groupMember               GroupMember[]
+  admin                     AdminProfile?
+  privateEventParticipation PrivateEventParticipation[]
 }
 
 model Message {
   mId       Int      @id @default(autoincrement())
   text      String
   timeStamp DateTime @default(now())
-  groupGId  Int
-  sentBy    Int
-  group     Group    @relation(fields: [groupGId], references: [gId])
-  user      User     @relation(fields: [sentBy], references: [uId], onDelete: Cascade)
+  gId       Int
+  uId       Int
+  group     Group    @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  user      User     @relation(fields: [uId], references: [uId], onDelete: Cascade)
 }
 
 model Activity {
-  aId          Int        @id @default(autoincrement())
-  name         String
-  openingTimes String
-  description  String
-  minAge       Int
-  locationId   Int        @unique
-  creatorId    Int
-  host         Host       @relation(fields: [creatorId], references: [hId], onDelete: Cascade)
-  location     Location   @relation(fields: [locationId], references: [lId])
-  groups       Group[]    @relation("AttachedActivites")
-  category     Category[] @relation("BelongsToCategory")
+  acId           Int                     @id @default(autoincrement())
+  name           String
+  coverImage     String
+  galleryImages  String[]
+  closed         Boolean                 @default(false)
+  closureNote    String?
+  description    String?
+  openingTimes   Json
+  minAge         Int
+  lId            Int                     @unique
+  hId            Int
+  participations ActivityParticipation[]
+  location       Location                @relation(fields: [lId], references: [lId], onDelete: Cascade)
+  host           Host                    @relation(fields: [hId], references: [hId], onDelete: Cascade)
+}
+
+model ActivityParticipation {
+  apId     Int      @id @default(autoincrement())
+  uId      Int
+  acId     Int
+  on       DateTime
+  activity Activity @relation(fields: [acId], references: [acId])
+  user     User     @relation(fields: [uId], references: [uId])
 }
 
 model AdminProfile {
@@ -110,12 +151,11 @@ model AdminProfile {
 }
 
 model Category {
-  cId         Int        @id @default(autoincrement())
+  cId         Int     @id @default(autoincrement())
   description String
   name        String
   icon        String
   seasonal    Boolean
-  activity    Activity[] @relation("BelongsToCategory")
 }
 
 model Event {
@@ -135,6 +175,7 @@ model Event {
   location       Location        @relation(fields: [locationId], references: [lId])
   users          User[]          @relation("Participates")
   attachedEvents AttachedEvent[]
+  notifications  Notification[]
 }
 
 model Friendship {
@@ -159,84 +200,74 @@ model Token {
 }
 
 model Group {
-  gId          Int           @id @default(autoincrement())
-  picture      String?
-  name         String        @default("Party gurrrls")
-  creationDate DateTime
-  description  String?
-  members      GroupMember[]
-  messages     Message[]
-  activities   Activity[]    @relation("AttachedActivites")
+  gId         Int           @id @default(autoincrement())
+  picture     String?
+  name        String        @default("Party gurrrls")
+  createdAt   DateTime?     @default(now())
+  createdFrom String?
+  description String?
+  members     GroupMember[]
+  messages    Message[]
 
-  events AttachedEvent[]
+  events        AttachedEvent[]
+  notifications Notification[]
 }
 
 model AttachedEvent {
-  aeId           Int                       @id @default(autoincrement())
+  aeId           Int                         @id @default(autoincrement())
   suggestedBy    String
   isPublic       Boolean
   gId            Int
-  Group          Group                     @relation(fields: [gId], references: [gId], onDelete: Cascade)
-  eId            Int
-  event          Event                     @relation(fields: [eId], references: [eId], onDelete: Cascade)
-  pollEndsAt     DateTime
+  group          Group                       @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  eId            Int?
+  event          Event?                      @relation(fields: [eId], references: [eId], onDelete: Cascade)
   image          String?
   name           String
   description    String?
-  country        String                    @default("Austria")
+  country        String                      @default("Austria")
   street         String
   postCode       String
   city           String
   houseNumber    String
-  meetingPoint   String
-  meetingTime    String
-  participations GroupEventParticipation[]
+  startsAt       DateTime
+  participations PrivateEventParticipation[]
 }
 
-model GroupEventParticipation {
-  gevId          Int           @id @default(autoincrement())
-  uId            Int
-  aId            Int
-  gmId           Int
-  aeId           Int
-  user           User          @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  account        Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  groupMember    GroupMember   @relation(fields: [gmId], references: [gmId], onDelete: Cascade)
-  vote           Boolean
-  pickupOutbound Boolean       @default(false)
-  pickupReturn   Boolean       @default(false)
-  AttachedEvent  AttachedEvent @relation(fields: [aeId], references: [aeId], onDelete: Cascade)
+model PrivateEventParticipation {
+  pepId         Int           @id @default(autoincrement())
+  uId           Int
+  aId           Int
+  gmId          Int
+  aeId          Int
+  user          User          @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  account       Account       @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  groupMember   GroupMember   @relation(fields: [gmId], references: [gmId], onDelete: Cascade)
+  attachedEvent AttachedEvent @relation(fields: [aeId], references: [aeId], onDelete: Cascade)
 }
 
 model GroupMember {
-  gmId                Int                       @id @default(autoincrement())
-  uId                 Int
-  aId                 Int
-  gId                 Int
-  isAdmin             Boolean                   @default(false)
-  acceptedInvitation  Boolean                   @default(false)
-  invitedAt           DateTime                  @default(now())
-  group               Group                     @relation(fields: [gId], references: [gId], onDelete: Cascade)
-  user                User                      @relation(fields: [uId], references: [uId], onDelete: Cascade)
-  account             Account                   @relation(fields: [aId], references: [aId], onDelete: Cascade)
-  eventParticipations GroupEventParticipation[]
-}
-
-model Notification {
-  nId       Int      @id @default(autoincrement())
-  text      String
-  timeStamp DateTime @default(now())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [uId])
+  gmId                      Int                         @id @default(autoincrement())
+  uId                       Int
+  aId                       Int
+  gId                       Int
+  isAdmin                   Boolean                     @default(false)
+  acceptedInvitation        Boolean                     @default(false)
+  invitedAt                 DateTime                    @default(now())
+  lastReadAt                DateTime                    @default(now())
+  group                     Group                       @relation(fields: [gId], references: [gId], onDelete: Cascade)
+  user                      User                        @relation(fields: [uId], references: [uId], onDelete: Cascade)
+  account                   Account                     @relation(fields: [aId], references: [aId], onDelete: Cascade)
+  PrivateEventParticipation PrivateEventParticipation[]
 }
 
 model AboRequest {
-  frId       Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now()) @updatedAt
-  fromUserId Int
-  toUserId   Int
-  fromUser   User     @relation("FromUserFA", fields: [fromUserId], references: [uId], onDelete: Cascade)
-  toUser     User     @relation("ToUserFA", fields: [toUserId], references: [uId], onDelete: Cascade)
+  frId          Int            @id @default(autoincrement())
+  createdAt     DateTime       @default(now()) @updatedAt
+  fromUserId    Int
+  toUserId      Int
+  fromUser      User           @relation("FromUserFA", fields: [fromUserId], references: [uId], onDelete: Cascade)
+  toUser        User           @relation("ToUserFA", fields: [toUserId], references: [uId], onDelete: Cascade)
+  notifications Notification[]
 }
 
 model HostRating {

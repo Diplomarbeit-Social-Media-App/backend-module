@@ -23,6 +23,16 @@ export const findAccountByEmail = async (email: string) => {
   return account;
 };
 
+export const findAccountByUId = async (uId: number) => {
+  const account = await db.account.findFirst({
+    where: {
+      user: { uId },
+    },
+  });
+  assert(account, new ApiError(NOT_FOUND, 'Kein Account gefunden'));
+  return account;
+};
+
 export const updateLoginOs = async (aId: number, os: LOGIN_OS) => {
   await db.account.update({
     where: {
@@ -37,11 +47,10 @@ export const updateLoginOs = async (aId: number, os: LOGIN_OS) => {
 export const updateAccountData = async (
   aId: number,
   firstName?: string,
-  lastName?: string,
   userName?: string,
   description?: string,
 ) => {
-  const origin = { firstName, lastName, userName, description };
+  const origin = { firstName, userName, description };
   const updatedValues = Object.fromEntries(
     Object.entries(origin).filter(([_, value]) => value !== undefined),
   );
@@ -58,7 +67,6 @@ export const updateAccountData = async (
         },
         select: {
           firstName: true,
-          lastName: true,
           userName: true,
           description: true,
           aId: true,
@@ -219,23 +227,10 @@ export const handleLogout = async (aId: number) => {
 export const createAccount = async (
   account: signUpSchema,
 ): Promise<Account> => {
-  const {
-    dateOfBirth,
-    email,
-    firstName,
-    lastName,
-    userName,
-    password,
-    picture,
-  } = pick(account, [
-    'dateOfBirth',
-    'email',
-    'firstName',
-    'lastName',
-    'userName',
-    'password',
-    'picture',
-  ]);
+  const { dateOfBirth, email, firstName, userName, password, picture } = pick(
+    account,
+    ['dateOfBirth', 'email', 'firstName', 'userName', 'password', 'picture'],
+  );
 
   const date: Date = dayjs(dateOfBirth).toDate();
   try {
@@ -245,7 +240,6 @@ export const createAccount = async (
         description: '',
         email,
         firstName,
-        lastName,
         userName,
         password,
         picture,

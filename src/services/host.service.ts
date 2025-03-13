@@ -2,9 +2,25 @@ import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
 import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import assert from 'assert';
-import { Activity, User } from '@prisma/client';
+import { Activity, Token, User } from '@prisma/client';
 import service from '.';
 import query from '../query';
+import logger from '../logger';
+import { BasicAccountRepresentation } from '../types/abo';
+
+export const findFollowersByHId = async (hId: number) => {
+  const host = await db.host.findFirst({
+    where: {
+      hId,
+    },
+    select: {
+      followedBy: true,
+      hId: true,
+    },
+  });
+  assert(host, new ApiError(NOT_FOUND, `Host ${hId} not found`));
+  return host;
+};
 
 export const unsubscribeHost = async (user: User, hId: number) => {
   const host = await db.host.findFirst({
@@ -191,7 +207,9 @@ export const createHostRating = async (
   });
 };
 
-export const findAllFollowedHostsByUid = async (uId: number) => {
+export const findAllFollowedHostsByUid = async (
+  uId: number,
+): Promise<BasicAccountRepresentation[]> => {
   const hosts = await db.host.findMany({
     where: {
       followedBy: {
@@ -208,33 +226,41 @@ export const findAllFollowedHostsByUid = async (uId: number) => {
 };
 
 export const findMutualHosts = async (uId1: number, uId2: number) => {
-  const fromUser = await db.host.findMany({
+  const mutualHosts = await db.host.findMany({
     where: {
-      followedBy: {
-        some: {
-          uId: uId1,
-        },
-      },
-    },
-  });
-  const toUser = await db.host.findMany({
-    where: {
-      followedBy: {
-        some: {
-          uId: uId2,
-        },
-      },
+      AND: [
+        { followedBy: { some: { uId: uId1 } } },
+        { followedBy: { some: { uId: uId2 } } },
+      ],
     },
     select: query.host.mutualHostSelection,
   });
+  logger.debug('mutual hosts length: ' + mutualHosts.length);
+  const mapped = mutualHosts.map((host) => ({
+    ...host,
+    isUserAccount: false,
+    uId: null,
+  }));
+  return mapped;
+};
 
-  const mapped: number[] = fromUser.map((u) => u.hId);
-
-  return toUser
-    .filter((h) => mapped.includes(h.hId))
-    .map((h) => {
-      return { ...h, isUserAccount: false, uId: null };
-    });
+/**
+ * The main idea of this fn is to return all necessary information of host followers
+ * in order to send them notifications if xxx happens.
+ * Only tokens of type "Notification" (FCM) are found in this token array!
+ * @throws { ApiError(404) } if host not found with #hId
+ * @param hId Primary key of host
+ */
+export const findHostFollowers = async (
+  hId: number,
+): Promise<{
+  followedBy?: { uId: number; account: { aId: number; token: Token[] } }[];
+}> => {
+  const host = await db.host.findFirst(
+    query.host.completeHostFollowerQuery(hId),
+  );
+  assert(host, new ApiError(NOT_FOUND, 'Host nicht gefunden'));
+  return host;
 };
 
 export const loadHostDetails = async (hostName: string, fromName: string) => {
@@ -355,4 +381,49 @@ export const createHostByAccount = async (aId: number, companyName: string) => {
     },
   });
   return host;
+};
+
+export const findNonMutualHostFollowings = async (
+  target: number,
+  origin: number,
+): Promise<BasicAccountRepresentation[]> => {
+  const originHostFollowings = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: origin,
+        },
+      },
+    },
+    select: {
+      hId: true,
+    },
+  });
+  const originIds: number[] = originHostFollowings.map((h) => h.hId);
+  logger.debug('Origin host followings' + originIds);
+
+  const targetHostFollowings = await db.host.findMany({
+    where: {
+      followedBy: {
+        some: {
+          uId: target,
+        },
+      },
+      NOT: {
+        hId: {
+          in: originIds,
+        },
+      },
+    },
+    select: query.host.mutualHostSelection,
+  });
+
+  const mapped = targetHostFollowings.map((h) => ({
+    hId: h.hId,
+    uId: null,
+    isUserAccount: false,
+    account: h.account,
+  }));
+
+  return mapped;
 };

@@ -1,6 +1,7 @@
 const publicInformationSelection = {
   account: {
     select: {
+      aId: true,
       picture: true,
       firstName: true,
       userName: true,

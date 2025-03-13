@@ -1,74 +1,218 @@
-import { NOT_FOUND } from 'http-status';
-import { createActivityType } from '../types/activity';
-import { ApiError } from '../utils/apiError';
+import assert from 'node:assert';
+import service from '.';
+import { ActivityDetailResponse, createActivityType } from '../types/activity';
 import db from '../utils/db';
-import assert from 'assert';
+import { ApiError } from '../utils/apiError';
+import { CONFLICT, NOT_FOUND } from 'http-status';
+import dayjs from 'dayjs';
+import { omit } from 'lodash';
+import query from '../query';
 
-export const deleteActivityByAId = async (aId: number) => {
-  await db.activity.delete({
-    where: {
-      aId,
-    },
-  });
-};
-
-export const findActivityByAId = async (aId: number) => {
-  const activity = await db.activity.findFirst({
-    where: {
-      aId,
-    },
-    include: {
-      category: true,
-      groups: true,
-      host: true,
-      location: true,
-    },
-  });
-  return activity;
-};
-
-export const createActivity = async (data: createActivityType, hId: number) => {
-  const location = await db.location.findFirst({
-    where: {
-      lId: data.locationId,
-    },
-  });
-  assert(
-    location != null,
-    new ApiError(
-      NOT_FOUND,
-      'Location konnte mit dieser ID nicht gefunden werden',
-    ),
-  );
-  return await db.activity.create({
+export const createActivity = async (
+  data: createActivityType,
+  hostId: number,
+) => {
+  const location = await service.loc.createLocation(data.location);
+  return db.activity.create({
     data: {
-      ...data,
-      creatorId: hId,
+      coverImage: data.coverImage,
+      minAge: data.minAge,
+      name: data.name,
+      openingTimes: data.businessHours,
+      closureNote: data.closureNote,
+      closed: data.isClosed,
+      description: data.description,
+      hId: hostId,
+      galleryImages: data.galleryImages,
+      lId: location.lId,
     },
   });
 };
 
-export const getAllActivities = async () => {
-  const activities = await db.activity.findMany({
-    select: {
-      category: true,
-      minAge: true,
-      openingTimes: true,
-      host: {
-        select: {
-          companyName: true,
-          verified: true,
-        },
-      },
-      description: true,
-      location: {
-        select: {
-          postCode: true,
-          city: true,
-        },
+export const findTrendingActivities = async () => {
+  const LOAD_MAX = 50;
+  return db.activity.findMany({
+    where: {
+      closed: { equals: false },
+    },
+    take: LOAD_MAX,
+  });
+};
+
+export const deleteActivityByAcId = async (acId: number, hId: number) => {
+  return db.activity.deleteMany({
+    where: {
+      acId,
+      hId,
+    },
+  });
+};
+
+export const hasAttendance = async (acId: number, uId: number, day: Date) => {
+  const startOfDay = new Date(
+    Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()),
+  );
+  const endOfDay = new Date(
+    Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + 1),
+  );
+  return db.activityParticipation.findFirst({
+    where: {
+      acId,
+      uId,
+      on: {
+        gte: startOfDay,
+        lt: endOfDay,
       },
     },
-    take: 100,
   });
-  return activities;
+};
+
+export const findActivityByAcId = async (acId: number) => {
+  return db.activity.findFirst({ where: { acId } });
+};
+
+/**
+ * Checks if acId is valid and throws error if not found!
+ * Made for GET /activity/{id} - Activity detail endpoint
+ * @param acId Activity id
+ * @param uId Id of requesting user
+ * @returns detailed information of activity acId in given ActivityDetailFormat
+ */
+export const findActivityDetailsByAcId = async (
+  acId: number,
+  uId: number,
+): Promise<ActivityDetailResponse> => {
+  const raw = await db.activity.findFirst({
+    where: { acId },
+    select: query.activity.activityDetailSelection(uId),
+  });
+  assert(raw, new ApiError(NOT_FOUND, `Aktivität ${acId} nicht gefunden`));
+  return {
+    myParticipations: raw.participations,
+    isClosed: raw.closed,
+    closureNote: raw.closureNote,
+    location: {
+      ...raw.location,
+      lId: raw.lId,
+    },
+    name: raw.name,
+    description: raw.description,
+    coverImage: raw.coverImage,
+    galleryImages: raw.galleryImages,
+    openingTimes: raw.openingTimes,
+    minAge: raw.minAge,
+    acId,
+    host: {
+      // @ts-expect-error prisma orm doesn't generate types for joined host account
+      userName: raw.host?.account?.userName,
+      // @ts-expect-error prisma orm doesn't generate types for joined host account
+      picture: raw.host?.account?.picture,
+      ...omit(raw.host, 'account'),
+      hId: raw.hId,
+    },
+  };
+};
+
+export const participateActivity = async (
+  acId: number,
+  uId: number,
+  day: Date,
+  attendance: boolean,
+) => {
+  const currAttendance = await hasAttendance(acId, uId, day);
+
+  const isConflict = !!currAttendance === attendance;
+  const attendanceError = new ApiError(
+    CONFLICT,
+    attendance ? 'Du nimmst bereits teil' : 'Keine Teilnahme an diesem Tag',
+  );
+  assert(!isConflict, attendanceError);
+
+  const startOfDay = new Date(
+    Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()),
+  );
+  const endOfDay = new Date(
+    Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() + 1),
+  );
+
+  if (!attendance)
+    return db.activityParticipation.delete({
+      where: {
+        on: { gte: startOfDay, lt: endOfDay },
+        uId,
+        acId,
+        apId: currAttendance?.apId,
+      },
+    });
+
+  return db.activityParticipation.create({
+    data: { on: day, uId, acId },
+  });
+};
+
+export const findUserActivities = async (uId: number) => {
+  const participations = await db.activityParticipation.findMany({
+    where: { uId },
+    include: {
+      activity: {
+        select: {
+          coverImage: true,
+          minAge: true,
+          name: true,
+          description: true,
+          host: {
+            select: {
+              account: {
+                select: {
+                  userName: true,
+                  picture: true,
+                },
+              },
+              companyName: true,
+            },
+          },
+          location: {
+            select: {
+              city: true,
+              postCode: true,
+            },
+          },
+          participations: true,
+          closed: true,
+          closureNote: true,
+        },
+      },
+      user: true,
+    },
+    orderBy: [{ on: 'asc' }, { acId: 'desc' }],
+  });
+
+  return participations.map((p) => {
+    const { on: participationDate } = p;
+
+    const partsOnDate = p.activity.participations.filter((u) =>
+      dayjs(u.on).isSame(p.on),
+    ).length;
+
+    const generalInfos = omit(p.activity, ['participations', 'host']);
+    const host = {
+      userName: p.activity.host.account.userName,
+      companyName: p.activity.host.companyName,
+      picture: p.activity.host.account.picture,
+    };
+
+    return {
+      ...generalInfos,
+      host,
+      participationDate,
+      participantCount: partsOnDate,
+    };
+  });
+};
+
+export const findActivityByName = async (query: string) => {
+  return db.activity.findMany({
+    where: { name: { mode: 'insensitive', equals: query } },
+    orderBy: { closed: 'desc' },
+  });
 };
