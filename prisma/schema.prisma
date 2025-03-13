@@ -219,8 +219,8 @@ model AttachedEvent {
   isPublic       Boolean
   gId            Int
   group          Group                       @relation(fields: [gId], references: [gId], onDelete: Cascade)
-  eId            Int
-  event          Event                       @relation(fields: [eId], references: [eId], onDelete: Cascade)
+  eId            Int?
+  event          Event?                      @relation(fields: [eId], references: [eId], onDelete: Cascade)
   image          String?
   name           String
   description    String?

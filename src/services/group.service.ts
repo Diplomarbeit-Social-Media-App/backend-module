@@ -5,6 +5,7 @@ import { CONFLICT, INTERNAL_SERVER_ERROR, NOT_FOUND } from 'http-status';
 import {
   BasicGroupMemberPresentation,
   generalEditGroupType,
+  privateEventCreationType,
 } from '../types/group';
 import query from '../query';
 import { omit } from 'lodash';
@@ -245,6 +246,21 @@ export const findGroupByGId = async (gId: number) => {
   });
   assert(group, new ApiError(NOT_FOUND, `Gruppe ${gId} nicht gefunden`));
   return group;
+};
+
+export const createPrivateAttachedEvent = async (
+  data: privateEventCreationType,
+  userName: string,
+) => {
+  return db.attachedEvent.create({
+    data: {
+      ...omit(data, 'plz'),
+      isPublic: false,
+      suggestedBy: userName,
+      gId: data.gId,
+      postCode: String(data.plz),
+    },
+  });
 };
 
 export const sendMessage = async (

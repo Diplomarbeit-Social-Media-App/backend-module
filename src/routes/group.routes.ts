@@ -5,6 +5,7 @@ import schema from '../schema';
 import {
   groupIdOnlySchema,
   postAttachPublicEventSchema,
+  privateEventSchema,
 } from '../schema/group.schema';
 const router = Router();
 
@@ -61,7 +62,7 @@ router.get(
 router.get('/', controllers.group.getUserGroups);
 
 /**
- * Event/ Activity actions such as posting, reacting etc
+ * Event actions such as posting, reacting etc
  */
 router.post(
   '/events',
@@ -73,6 +74,12 @@ router.get(
   '/events/:gId',
   [validate(groupIdOnlySchema)],
   controllers.group.getAttachedEvents,
+);
+
+router.post(
+  '/events/new',
+  [validate(privateEventSchema)],
+  controllers.group.postPrivateEvent,
 );
 
 export default router;

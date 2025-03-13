@@ -1,5 +1,7 @@
 import { array, coerce, object, string } from 'zod';
 import validator from 'validator';
+import { locationSchema } from './location.schema';
+import dayjs from 'dayjs';
 
 export const kickUserGroupSchema = object({
   query: object({
@@ -110,5 +112,30 @@ export const postAttachPublicEventSchema = object({
         required_error: 'Event-Id fehlt',
       })
       .min(0, { message: 'Event-Id muss positiv sein' }),
+  }),
+});
+
+export const privateEventSchema = object({
+  body: object({
+    gId: coerce
+      .number({
+        invalid_type_error: 'Gruppen-Id ist ungültig',
+        required_error: 'Gruppen-Id fehlt',
+      })
+      .min(0, { message: 'Negative Gruppen-Id ist ungültig' }),
+    name: string({ message: 'Name ist ungültig' })
+      .min(2, {
+        message: 'Name ist zu kurz',
+      })
+      .max(40, { message: 'Name ist zu lang' }),
+    image: string({ message: 'Bild ist ungültig' }).nullable(),
+    description: string({ message: 'Beschreibung ist ungültig' }).nullable(),
+    startsAt: coerce
+      .date({ message: 'Startdatum ist ungültig' })
+      .refine(
+        (d) => dayjs(d).isAfter(dayjs()),
+        'Events müssen in der Zukunft beginnen',
+      ),
+    ...locationSchema.shape,
   }),
 });

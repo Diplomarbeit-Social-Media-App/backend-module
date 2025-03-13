@@ -2,6 +2,7 @@ import {
   CONFLICT,
   CREATED,
   FORBIDDEN,
+  INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   OK,
   UNAUTHORIZED,
@@ -16,6 +17,7 @@ import {
   inviteAcceptType,
   inviteGroupType,
   kickUserGroupType,
+  privateEventCreationType,
 } from '../types/group';
 import { Account } from '@prisma/client';
 import service from '../services';
@@ -26,6 +28,31 @@ import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { omit } from 'lodash';
 import dayjs from 'dayjs';
 import consumer from '../notification/consumer.notification';
+
+export const postPrivateEvent = catchAsync(
+  async (
+    req: Request<object, object, privateEventCreationType>,
+    res: Response,
+    _next: NextFunction,
+  ) => {
+    const { gId } = req.body;
+    const { aId, userName } = req.user as Account;
+    const { uId } = await service.user.findUserByAId(aId);
+
+    // checks if group exists and req user has admin permissions
+    const _group = await service.group.findGroupByGId(gId);
+    const isAdminOfGroup = await service.group.isAdminOfGroup(gId, uId);
+    assert(isAdminOfGroup, new ApiError(FORBIDDEN, 'Adminrechte notwendig'));
+
+    const ae = await service.group.createPrivateAttachedEvent(
+      req.body,
+      userName,
+    );
+    assert(ae, new ApiError(INTERNAL_SERVER_ERROR, 'Bitte probiere es erneut'));
+
+    return res.status(OK).json({});
+  },
+);
 
 export const postCreateGroup = catchAsync(
   async (
@@ -119,7 +146,7 @@ export const getAttachedEvents = catchAsync(
     const publicWithAttendees = await Promise.all(
       publicEvents.map(async (e) => {
         const attendees = await service.event.findAttendeesOfGroupByEId(
-          e.eId,
+          e.eId!,
           gId,
         );
         return { ...e, participations: attendees };
