@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: bonfire_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Password123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bonfire_network
+
+  redis:
+    image: redis:6.0
+    container_name: bonfire_redis
+    command: redis-server --requirepass Password123! --user bonfire on >Password123! ~* &* +@all
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bonfire_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: bonfire_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"  # MinIO API port
+      - "9001:9001"  # MinIO console port
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - bonfire_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  bonfire_network:
+    driver: bridge
