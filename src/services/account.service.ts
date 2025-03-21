@@ -42,3 +42,13 @@ export const isHostAccount = async (
 ): Promise<boolean> => {
   return !!(await db.host.findFirst({ where: { aId: account.aId } }));
 };
+
+export const disableAccount = async (
+  aId: number,
+  disable: boolean,
+): Promise<void> => {
+  await db.account.update({
+    where: { aId },
+    data: { disabled: disable },
+  });
+};

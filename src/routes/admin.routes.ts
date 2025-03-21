@@ -26,3 +26,8 @@ router.delete(
   [validate(aIdParamsSchema)],
   controllers.admin.deleteAccountByAId,
 );
+router.put(
+  '/users/ban/:aId',
+  [validate(aIdParamsSchema)],
+  controllers.admin.putToggleBanAccount,
+);

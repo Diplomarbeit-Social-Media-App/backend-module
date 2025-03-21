@@ -56,3 +56,14 @@ export const deleteAccountByAId = catchAsync(
     return res.status(OK).json({});
   },
 );
+
+export const putToggleBanAccount = catchAsync(
+  async (req: Request<aIdType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.params;
+    const { disabled, email } = await service.account.findAccountByPk(aId);
+    await service.account.disableAccount(aId, !disabled);
+    await service.mail.sendAccountDisabledByAdmin(email);
+
+    return res.status(OK).json({});
+  },
+);

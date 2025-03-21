@@ -150,6 +150,78 @@ export const sendAccountDeletionByAdmin = async (email: string) => {
   });
 };
 
+export const sendAccountDisabledByAdmin = async (email: string) => {
+  return await transport.sendMail({
+    to: email,
+    from: config.EMAIL_FROM_ADDRESS,
+    subject: 'Ihr Account wurde deaktiviert',
+    html: `
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f9f9f9;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }
+            .email-container {
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                text-align: center;
+            }
+            .header {
+                background-color:rgb(235, 113, 0);
+                color: #fff;
+                padding: 20px;
+            }
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .content p {
+                margin: 15px 0;
+                line-height: 1.6;
+            }
+            .footer {
+                font-size: 12px;
+                color: #666;
+                margin: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <h1>Account deaktiviert</h1>
+            </div>
+            <div class="content">
+                <p>Hallo!</p>
+                <p>Ihr Account wurde von unserem Management deaktiviert!</p>
+                <p>Falls Sie Fragen zu dieser Aktion haben, schreiben sie uns bitte eine E-Mail an management@bonfire.at</p>
+                <p>Vielen Dank für Ihr Verständnis.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2024 Bonfire. Alle Rechte vorbehalten. Diplomarbeit @ HTBLA-WELS</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `,
+  });
+};
+
 export const sendVerifyEmail = async (token: string, toMail: string) => {
   return await transport.sendMail({
     to: toMail,
