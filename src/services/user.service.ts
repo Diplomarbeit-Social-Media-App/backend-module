@@ -7,6 +7,11 @@ import assert from 'node:assert';
 import { PublicUserInformationResponse } from '../types/user';
 import query from '../query';
 
+export const hasUserProfileByAId = async (aId: number): Promise<boolean> => {
+  const user = await db.user.findFirst({ where: { aId } });
+  return !!user;
+};
+
 export const findUserByUId = async (uId: number): Promise<User> => {
   const user = await db.user.findUnique({
     where: {

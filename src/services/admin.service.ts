@@ -8,3 +8,9 @@ export const findAdminProfileByAId = async (aId: number) => {
   });
   return admin;
 };
+
+export const hasAdminPermissionByAId = async (
+  aId: number,
+): Promise<boolean> => {
+  return (await findAdminProfileByAId(aId)) != null;
+};

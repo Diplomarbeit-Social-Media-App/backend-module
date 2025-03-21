@@ -8,6 +8,11 @@ import query from '../query';
 import logger from '../logger';
 import { BasicAccountRepresentation } from '../types/abo';
 
+export const hasHostProfileByAId = async (aId: number): Promise<boolean> => {
+  const host = await db.host.findFirst({ where: { aId } });
+  return !!host;
+};
+
 export const findFollowersByHId = async (hId: number) => {
   const host = await db.host.findFirst({
     where: {

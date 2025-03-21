@@ -20,6 +20,7 @@ router.post(
   validate(renewTokenSchema),
   controllers.auth.postRenewToken,
 );
+router.get('/type', [auth], controllers.auth.getAccountType);
 router.get(
   '/reset/:userName',
   validate(requestPasswordResetSchema),

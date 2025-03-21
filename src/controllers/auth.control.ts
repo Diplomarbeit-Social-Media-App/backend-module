@@ -18,6 +18,23 @@ import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 import dayjs from 'dayjs';
 
+export const getAccountType = catchAsync(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+
+    const [hasUserProfile, hasHostProfile, hasAdminPrivileges] =
+      await Promise.all([
+        service.user.hasUserProfileByAId(aId),
+        service.host.hasHostProfileByAId(aId),
+        service.admin.hasAdminPermissionByAId(aId),
+      ]);
+
+    return res
+      .status(OK)
+      .json({ hasUserProfile, hasHostProfile, hasAdminPrivileges });
+  },
+);
+
 export const updateAccountData = catchAsync(
   async (
     req: Request<object, object, updateAccountType>,
