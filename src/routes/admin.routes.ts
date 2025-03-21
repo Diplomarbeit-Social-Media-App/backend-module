@@ -2,6 +2,7 @@ import { Router } from 'express';
 import controllers from '../controllers';
 import { validate } from '../middlewares/validation';
 import {
+  aIdParamsSchema,
   postNotificationSchema,
   userNameParamSchema,
 } from '../schema/admin.schema';
@@ -18,4 +19,10 @@ router.post(
   '/notification',
   [validate(postNotificationSchema)],
   controllers.admin.postBroadcastNotification,
+);
+router.get('/users', controllers.admin.getUsers);
+router.delete(
+  '/users/:aId',
+  [validate(aIdParamsSchema)],
+  controllers.admin.deleteAccountByAId,
 );

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import catchAsync from '../utils/catchAsync';
 import service from '../services';
 import { CONFLICT, OK } from 'http-status';
-import { adminNotificationType, userNameType } from '../types/admin';
+import { adminNotificationType, aIdType, userNameType } from '../types/admin';
 import { ApiError } from '../utils/apiError';
 import assert from 'assert';
 
@@ -34,6 +34,25 @@ export const postBroadcastNotification = catchAsync(
   ) => {
     const { title, message } = req.body;
     await service.notification.broadcastMessage(title, message);
+    return res.status(OK).json({});
+  },
+);
+
+export const getUsers = catchAsync(
+  async (_req: Request, res: Response, _next: NextFunction) => {
+    const getUsers = await service.admin.getUsersByFormat();
+
+    return res.status(OK).json(getUsers);
+  },
+);
+
+export const deleteAccountByAId = catchAsync(
+  async (req: Request<aIdType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.params;
+    const { email } = await service.account.findAccountByPk(aId);
+    await service.auth.deleteAccount(aId);
+    await service.mail.sendAccountDeletionByAdmin(email);
+
     return res.status(OK).json({});
   },
 );

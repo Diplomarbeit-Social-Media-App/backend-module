@@ -1,4 +1,4 @@
-import { object, string } from 'zod';
+import { coerce, object, string } from 'zod';
 
 export const postNotificationSchema = object({
   body: object({
@@ -10,5 +10,11 @@ export const postNotificationSchema = object({
 export const userNameParamSchema = object({
   params: object({
     userName: string({ message: 'Username invalid' }),
+  }),
+});
+
+export const aIdParamsSchema = object({
+  params: object({
+    aId: coerce.number({ message: 'AId ist ungültig' }),
   }),
 });
