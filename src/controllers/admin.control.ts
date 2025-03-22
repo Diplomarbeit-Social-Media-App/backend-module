@@ -67,3 +67,19 @@ export const putToggleBanAccount = catchAsync(
     return res.status(OK).json({});
   },
 );
+
+export const putVerifyAccount = catchAsync(
+  async (req: Request<aIdType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.params;
+    const host = await service.host.findHostByAId(aId);
+
+    assert(
+      !host.verified,
+      new ApiError(CONFLICT, 'Account bereits verifiziert'),
+    );
+
+    await service.host.verifyAccountByHId(host.hId);
+
+    return res.status(OK).json({});
+  },
+);

@@ -31,3 +31,8 @@ router.put(
   [validate(aIdParamsSchema)],
   controllers.admin.putToggleBanAccount,
 );
+router.put(
+  '/users/verify/:aId',
+  [validate(aIdParamsSchema)],
+  controllers.admin.putVerifyAccount,
+);
