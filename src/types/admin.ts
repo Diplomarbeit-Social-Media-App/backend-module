@@ -21,6 +21,7 @@ export type UserList = {
   isActivated: boolean;
   isVerified: boolean;
   isHost: boolean;
+  isAdmin: boolean;
   isBanned: boolean;
   joined: string;
 }[];

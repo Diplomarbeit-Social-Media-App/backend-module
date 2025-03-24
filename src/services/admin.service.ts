@@ -28,6 +28,7 @@ export const getUsersByFormat = async (): Promise<UserList> => {
       activated: true,
       disabled: true,
       createdAt: true,
+      admin: true,
     },
   });
 
@@ -41,6 +42,7 @@ export const getUsersByFormat = async (): Promise<UserList> => {
     joined: dayjs(u.createdAt).format('DD-MM-YYYY'),
     role: u.user != null ? 'User' : 'Host',
     userName: u.userName,
+    isAdmin: u.admin != null,
   }));
 
   return format;

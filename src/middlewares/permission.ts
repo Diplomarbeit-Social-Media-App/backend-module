@@ -57,6 +57,6 @@ const hasAdminPermission = catchAsync(
   },
 );
 
-export const hasValidAccunt = [auth, hasActivatedAccount, hasBlockedAccount];
+export const hasValidAccount = [auth, hasActivatedAccount, hasBlockedAccount];
 
-export const isAdmin = [...hasValidAccunt, hasAdminPermission];
+export const isAdmin = [...hasValidAccount, hasAdminPermission];
