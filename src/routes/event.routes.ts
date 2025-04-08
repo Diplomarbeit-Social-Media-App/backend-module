@@ -37,5 +37,10 @@ router.get(
   [validate(attendanceSchema)],
   controllers.event.getAttendanceState,
 );
+router.delete(
+  '/:eId',
+  [validate(attendanceSchema)],
+  controllers.event.deleteEvent,
+);
 
 export default router;

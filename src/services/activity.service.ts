@@ -72,11 +72,11 @@ export const findActivityByAcId = async (acId: number) => {
 };
 
 /**
- * Checks if acId is valid and throws error if not found!
- * Made for GET /activity/{id} - Activity detail endpoint
- * @param acId Activity id
- * @param uId Id of requesting user
- * @returns detailed information of activity acId in given ActivityDetailFormat
+ * Checks if acId is valid and throws an error if not found.
+ * Made for GET /activity/{id} - Activity detail endpoint.
+ * @param {number} acId - Activity id.
+ * @param {number} uId - Id of requesting user.
+ * @returns {Promise<ActivityDetailResponse>} - Detailed information of activity acId in the given ActivityDetailFormat.
  */
 export const findActivityDetailsByAcId = async (
   acId: number,
@@ -214,5 +214,28 @@ export const findActivityByName = async (query: string) => {
   return db.activity.findMany({
     where: { name: { mode: 'insensitive', equals: query } },
     orderBy: { closed: 'desc' },
+  });
+};
+
+export const loadActivitiesFromHost = async (hId: number) => {
+  return db.activity.findMany({
+    where: { hId },
+    include: {
+      location: true,
+      participations: {
+        select: {
+          on: true,
+          user: {
+            select: {
+              account: {
+                select: {
+                  userName: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 };

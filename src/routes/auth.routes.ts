@@ -10,7 +10,7 @@ import {
 } from '../schema/auth.schema';
 import controllers from '../controllers/index';
 import { auth } from '../middlewares/auth';
-import { hasBlockedAccount, hasValidAccunt } from '../middlewares/permission';
+import { hasBlockedAccount, hasValidAccount } from '../middlewares/permission';
 const router = Router();
 
 router.post('/login', validate(loginSchema), controllers.auth.postLogin);
@@ -32,8 +32,8 @@ router.post(
   controllers.auth.postResetPassword,
 );
 router.post('/logout', [auth], controllers.auth.postLogout);
-router.get('/profile', hasValidAccunt, controllers.auth.getProfileDetails);
-router.put('/picture', hasValidAccunt, controllers.auth.putProfilePicture);
+router.get('/profile', hasValidAccount, controllers.auth.getProfileDetails);
+router.put('/picture', hasValidAccount, controllers.auth.putProfilePicture);
 router.post(
   '/activate',
   [auth, hasBlockedAccount],
@@ -47,7 +47,7 @@ router.get(
 router.delete('/', [auth], controllers.auth.deleteAccount);
 router.put(
   '/account',
-  hasValidAccunt,
+  hasValidAccount,
   [validate(updateAccountSchema)],
   controllers.auth.updateAccountData,
 );

@@ -17,6 +17,10 @@ import notification, { GENERIC_NOT_EVENT } from '../notification';
 import { BasicAccountRepresentation } from '../types/abo';
 import query from '../query';
 
+export const deleteEvent = async (eId: number) => {
+  await db.event.delete({ where: { eId } });
+};
+
 /**
  * Finds the attendees of an event who are also members of a specific group.
  *

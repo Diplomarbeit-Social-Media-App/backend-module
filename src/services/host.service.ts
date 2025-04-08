@@ -2,7 +2,7 @@ import { BAD_REQUEST, CONFLICT, NOT_FOUND } from 'http-status';
 import { ApiError } from '../utils/apiError';
 import db from '../utils/db';
 import assert from 'assert';
-import { Activity, Token, User } from '@prisma/client';
+import { Token, User } from '@prisma/client';
 import service from '.';
 import query from '../query';
 import logger from '../logger';
@@ -348,8 +348,10 @@ export const loadHostDetails = async (hostName: string, fromName: string) => {
     (f) => f.account.userName == fromName,
   );
   const events = await service.event.loadEventsFromHost(account.host.hId);
-  // TODO: as soon as possible, fix load real activities
-  const activitys: Activity[] = [];
+
+  const activitys = await service.activity.loadActivitiesFromHost(
+    account.host.hId,
+  );
   return {
     host: account.host,
     events,

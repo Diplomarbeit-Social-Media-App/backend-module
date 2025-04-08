@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import controllers from '../controllers';
-import { hasHostPermission, hasValidAccunt } from '../middlewares/permission';
+import { hasHostPermission } from '../middlewares/permission';
 import {
   activityIdOnlySchema,
   createActivitySchema,
@@ -10,26 +10,16 @@ import {
 import { validate } from '../middlewares/validation';
 const router = Router();
 
-router.get(
-  '/search/:query',
-  hasValidAccunt,
-  controllers.activity.getUserSearch,
-);
-router.get(
-  '/participating',
-  hasValidAccunt,
-  controllers.activity.getUserActivities,
-);
+router.get('/search/:query', controllers.activity.getUserSearch);
+router.get('/participating', controllers.activity.getUserActivities);
 router.get(
   '/:acId',
-  hasValidAccunt,
   validate(activityIdOnlySchema),
   controllers.activity.getActivityDetail,
 );
-router.get('/', hasValidAccunt, controllers.activity.getTrendingActivities);
+router.get('/', controllers.activity.getTrendingActivities);
 router.post(
   '/attendance',
-  hasValidAccunt,
   validate(participationSchema),
   controllers.activity.postParticipateActivity,
 );

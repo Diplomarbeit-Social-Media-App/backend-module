@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { renewTokenSchema } from '../../src/schema/auth';
+import { renewTokenSchema } from '../../src/schema/auth.schema';
 import { shouldFail, shouldPass } from '../../src/utils/testUtils';
 
 describe('Validation tests for renew token schema', () => {

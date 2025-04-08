@@ -6,13 +6,13 @@ import httpStatus from 'http-status';
 
 export const validate =
   (schema: AnyZodObject) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, _res: Response, next: NextFunction) => {
     const parsed = schema.safeParse({
       body: req.body,
       params: req.params,
       query: req.query,
     });
-    if (parsed.error && !res.headersSent) {
+    if (parsed.error) {
       const validationError = parsed.error.errors?.at(0)?.message;
       logger.debug(`Validation failed: ${validationError}`);
       return next(

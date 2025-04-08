@@ -18,6 +18,21 @@ import {
 } from 'http-status';
 import { Account, User } from '@prisma/client';
 
+export const deleteEvent = catchAsync(
+  async (req: Request<attendanceType>, res: Response, _next: NextFunction) => {
+    const { aId } = req.user as Account;
+    const { eId } = req.params;
+
+    const host = await service.host.findHostByAId(aId);
+    const event = await service.event.findEventByEId(eId);
+    assert(host && host.hId === event.creatorId);
+
+    await service.event.deleteEvent(eId);
+
+    return res.status(OK).json({});
+  },
+);
+
 export const getParticipatingEvents = catchAsync(
   async (req: Request, res: Response, _next: NextFunction) => {
     const { aId } = req.user as Account;

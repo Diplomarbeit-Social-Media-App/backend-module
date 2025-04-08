@@ -1,6 +1,6 @@
 import service from '../../src/services/index';
 import assert from 'assert';
-import { signUpSchema } from '../../src/schema/auth';
+import { signUpSchema } from '../../src/schema/auth.schema';
 import type { signUpSchema as signUp } from '../../src/types/auth';
 import { faker } from '@faker-js/faker';
 import dayjs from 'dayjs';
@@ -15,10 +15,10 @@ const baseSignUp: signUp = {
   dateOfBirth: dayjs(faker.date.birthdate()).subtract(14, 'year').toDate(),
   email: faker.internet.email(),
   firstName: faker.person.firstName(),
-  lastName: faker.person.lastName(),
   isUserSignUp: true,
   userName: 'UserTest1',
   password: faker.internet.password({ length: 10, prefix: 'a!D:_3' }),
+  isUserAccount: true,
 };
 
 const buildSignUp = (values?: Partial<signUp>): ISignUpSchema => {
@@ -34,17 +34,19 @@ test('if hashing and comparing password functions work properly', async () => {
   assert.ok(await service.auth.comparePassword(password, hashedPwd));
 });
 
-describe('Checking of signup validation', () => {
+describe('Check signup validation', () => {
   test('if validation fails on invalid email', async () => {
     const mailWithoutTopLevelDomain = 'internal.support@bonfire';
     const mailWithoutDomain = 'internal.support.de';
     const mailWithoutAt = 'internal.supportbonfire.de';
     const mailWithoutLocalPart = '@bonfire.de';
+    const emptyMail = ' ';
 
     shouldFail(signUpSchema, buildSignUp({ email: mailWithoutTopLevelDomain }));
     shouldFail(signUpSchema, buildSignUp({ email: mailWithoutDomain }));
     shouldFail(signUpSchema, buildSignUp({ email: mailWithoutAt }));
     shouldFail(signUpSchema, buildSignUp({ email: mailWithoutLocalPart }));
+    shouldFail(signUpSchema, buildSignUp({ email: emptyMail }));
   });
 
   test('if validation fails on invalid firstName', async () => {
@@ -57,18 +59,6 @@ describe('Checking of signup validation', () => {
     shouldFail(signUpSchema, buildSignUp({ firstName: tooLong }));
     shouldFail(signUpSchema, buildSignUp({ firstName: empty }));
     shouldFail(signUpSchema, buildSignUp({ firstName: notDefined }));
-  });
-
-  test('if validation fails on invalid lastName', async () => {
-    const tooShort = 'a';
-    const tooLong = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-    const empty = '';
-    const notDefined = undefined;
-
-    shouldFail(signUpSchema, buildSignUp({ lastName: tooShort }));
-    shouldFail(signUpSchema, buildSignUp({ lastName: tooLong }));
-    shouldFail(signUpSchema, buildSignUp({ lastName: empty }));
-    shouldFail(signUpSchema, buildSignUp({ lastName: notDefined }));
   });
 
   test('if invalid password fails', async () => {
