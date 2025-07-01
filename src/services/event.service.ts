@@ -311,8 +311,11 @@ export const findEventCountByUser = async (uId: number) => {
   return count._count;
 };
 
-export const loadEventsFromHost = async (_hId: number) => {
+export const loadEventsFromHost = async (hId: number) => {
   const events = await db.event.findMany({
+    where: {
+      creatorId: hId,
+    },
     select: {
       coverImage: true,
       name: true,

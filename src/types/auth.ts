@@ -1,3 +1,4 @@
+import * as Zod from 'zod';
 import {
   activateTokenSchema,
   loginSchema,

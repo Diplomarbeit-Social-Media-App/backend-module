@@ -23,9 +23,9 @@ server.listen(PORT, async () => {
     throw new ApiError(INTERNAL_SERVER_ERROR, 'DB connection failed', false);
   firebase();
 
-  const clients = await initialiseAdapter();
-  const ws = initializeWebSocket(server, clients.pubClient, clients.subClient);
-  initialiseChatNameSpace(ws);
+  // const clients = await initialiseAdapter();
+  // const ws = initializeWebSocket(server, clients.pubClient, clients.subClient);
+  // initialiseChatNameSpace(ws);
 
   logger.info('✨ Database initialized');
   logger.info(`🚀 Service started on PORT :${PORT}`);

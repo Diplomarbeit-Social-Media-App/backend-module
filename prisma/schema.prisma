@@ -2,21 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator dbml {
-  provider   = "prisma-dbml-generator"
-  output     = "../dbml"
-  outputName = "awesome.dbml"
-  projectName = "Project Name"
-  projectDatabaseType = "PostgreSQL"
-  projectNote = "Test project description"
-}
-
-generator markdown {
-  provider = "prisma-markdown"
-  title    = "Shopping Mall"
-  output   = "./ERD.md"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

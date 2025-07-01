@@ -7,6 +7,7 @@ import {
   searchSchema,
 } from '../schema/abo.schema';
 import { AboRequest } from '@prisma/client';
+import * as Zod from 'zod';
 
 type postAboBody = typeof postAboSchema.shape.body;
 export type postAboType = Zod.infer<postAboBody>;
